@@ -64,7 +64,7 @@ namespace WaveletSAT
 		B
 		*/
 		size_t UGetNrOfBins() const {	return vvdBinCoefs.size();	};
-		
+
 		//! A lookup table to map the coefficient to its levels per dim.
 		/*! size: D x C: 
 		Map each coefficients c, c = 0 ... C - 1 = prod l[d] - 1, to the the corresponding D levels
@@ -78,6 +78,14 @@ namespace WaveletSAT
 		*/
 		vector<vector<size_t>> vvuSubLevel2Coef;
 
+
+		// ADD-BY-LEETEN 09/07/2012-BEGIN
+		//! The denomator for Wavelet basis
+		/*!
+		W = sqrt(prod n[0], ... n[d], ... n[D])
+		*/
+		double dWaveletDenomiator;
+		// ADD-BY-LEETEN 09/07/2012-END
 protected:		
 		void 
 		_UpdateBin
@@ -85,6 +93,7 @@ protected:
 			const vector<size_t>& vuPos, 
 			const T& value,
 			size_t uBin, 
+			double dWeight,	// ADD-BY-LEETEN 09/07/2012
 			void *_Reserved = NULL
 		)
 		{
@@ -114,20 +123,25 @@ protected:
 							dWavelet = (double)(w - uPosInWavelet);
 						dWavelet *= -sqrt((double)(1 << (l - 1) ));	
 					}
-					dWavelet /= sqrt((double)(uMaxWin/2));
+					// DEL-BY-LEETEN 09/07/2012:	dWavelet /= sqrt((double)(uMaxWin/2));
 					
 					vdWavelets.push_back( dWavelet );
 				}
 			}
 			
 			// compute the weight from this value
-			double dW;
-			_MapValueToBinWeight(vuPos, value, uBin, dW);
-			
+			#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
+				double dW;
+				_MapValueToBinWeight(vuPos, value, uBin, dW);
+			#endif		// DEL-BY-LEETEN 09/07/2012-END
+
 			// now find the combination of the coefficients of all dimensions
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				double dWavelet = dW;
+				// MOD-BY-LEETEN 09/07/2012-FROM:	double dWavelet = dW;
+				double dWavelet = dWeight;
+				// MOD-BY-LEETEN 09/07/2012-END
+
 				size_t uCoefId = 0;
 				for(size_t d = 0, uBase = 0, uCoefBase = 1;
 					d < UGetNrOfDims(); 
@@ -146,7 +160,6 @@ protected:
 					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 					uCoefId += uCoef * uCoefBase;
 				}
-				
 				// update the corresponding wavelet coeffcients
 				vvdBinCoefs[uBin][uCoefId] += dWavelet;
 			}
@@ -166,28 +179,39 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			vector<size_t> vuBins;
-			_MapValueToBins(vuPos, value, vuBins);
+			#if	0	// MOD-BY-LEETEN 09/07/2012-FROM:
+				vector<size_t> vuBins;
+				_MapValueToBins(vuPos, value, vuBins);
+				for(vector<size_t>::iterator ivuBin  = vuBins.begin(); ivuBin != vuBins.end(); ivuBin++)
+					_UpdateBin(vuPos, value, *ivuBin);
+			#else		// MOD-BY-LEETEN 09/07/2012-TO:
+			vector<pair<size_t, double>> vpBins;
+			_MapValueToBins(vuPos, value, vpBins);
+
+			for(vector<pair<size_t, double>>::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
+				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
+			#endif		// MOD-BY-LEETEN 09/07/2012-END
 			
-			for(vector<size_t>::iterator ivuBin  = vuBins.begin(); ivuBin != vuBins.end(); ivuBin++)
-				_UpdateBin(vuPos, value, *ivuBin);
 		}
 
 		////////////////////////////////////////////////////////////////////
 		/*
 		The interface that should be overloaed by the sub class
 		*/
-		//! Map the given value to the weight contributed to the given bin in the histogram
-		virtual
-		void
-		_MapValueToBinWeight
-		(
-			const vector<size_t>& vuPos,
-			const T& value, 
-			size_t uBin,
-			double& dW,
-			void *_Reserved = NULL
-		) = 0;
+
+		#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
+			//! Map the given value to the weight contributed to the given bin in the histogram
+			virtual
+			void
+			_MapValueToBinWeight
+			(
+				const vector<size_t>& vuPos,
+				const T& value, 
+				size_t uBin,
+				double& dW,
+				void *_Reserved = NULL
+			) = 0;
+		#endif		// DEL-BY-LEETEN 09/07/2012-END
 		
 		//! This method should be overloaded to return the indices of bins that will be changed
 		virtual 
@@ -196,7 +220,9 @@ protected:
 		(
 			const vector<size_t>& vuPos,
 			const T& value, 
-			vector<size_t>& vuBins,
+			// MOD-BY-LEETEN 09/07/2012-FROM:			vector<size_t>& vuBins,
+			vector<pair<size_t, double>>& vuBins,
+			// MOD-BY-LEETEN 09/07/2012-END
 			void *_Reserved = NULL
 		) = 0;
 public:
@@ -204,6 +230,29 @@ public:
 		/*
 		The public interface. 
 		*/
+		
+		// ADD-BY-LEETEN 09/07/2012-BEGIN
+		//! Finalize the computation of SAT
+		void 
+		_Finalize
+		(
+			void *_Reserved = NULL
+		)
+		{
+			int iWaveletDenomiator = 1;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				iWaveletDenomiator *= 1 << (vuDimLevels[d] - 1);
+			dWaveletDenomiator = sqrt((double)iWaveletDenomiator);
+
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
+				{
+					double dCoef = this->vvdBinCoefs[b][w];
+					if( dCoef )
+						this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
+				}
+		}
+		// ADD-BY-LEETEN 09/07/2012-END
 
 		//! Get the energy of all bin SATs.
 		void
@@ -321,6 +370,7 @@ public:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
+
 				vector<double> vdWaveletBasis;
 				for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 				{
@@ -345,12 +395,11 @@ public:
 							
 						if( l >= 2 )
 							dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
-						dWaveletBasis /= sqrt( (double)(uMaxWin/2) );
+						// DEL-BY-LEETEN 09/07/2012:	dWaveletBasis /= sqrt( (double)(uMaxWin/2) );
 					
 						vdWaveletBasis.push_back( dWaveletBasis );
 					}
 				}
-				
 				// now find the combination of the coefficients of all dimensions 
 				double dCount = 0.0;	// the combined wavelet basis value. Initially it is one
 				for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++, p+= UGetNrOfDims())
@@ -385,6 +434,7 @@ public:
 							dCount += dWavelet * vvdBinCoefs[b][uCoefId];
 					}
 				}
+				dCount /= dWaveletDenomiator;	// ADD-BY-LEETEN 09/07/2012
 				vdSums.push_back(dCount);
 			}
 		}
