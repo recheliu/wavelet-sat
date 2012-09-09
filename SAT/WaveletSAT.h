@@ -34,7 +34,7 @@ namespace WaveletSAT
 		//! pool of the coefficents
 		/*!
 		*/
-		vector<vector<double>> vvdBinCoefs;
+		vector< vector<double> > vvdBinCoefs;
 		
 		//!
 		/*!
@@ -72,14 +72,15 @@ namespace WaveletSAT
 		Map each coefficients c, c = 0 ... C - 1 = prod l[d] - 1, to the the corresponding D levels
 		*/
 		vector<size_t> vuCoefDim2Level;
-		
+
 		//! The look up table per dimension to quickly conver dim. subscript to the coefficient indices
 		/*!
 		For each dim d, 
 			the size is l[d] x n[d]: map the spatial location i, i = 0 ... n[d], to its l[d] coefficient locations
 		*/
-		vector<vector<size_t>> vvuSubLevel2Coef;
-
+		// MOD-BY-LEETEN 09/09/2012-FROM: vector<vector<size_t>> vvuSubLevel2Coef;
+		vector< vector<size_t> > vvuSubLevel2Coef;
+		// MOD-BY-LEETEN 09/09/2012-END
 
 		// ADD-BY-LEETEN 09/07/2012-BEGIN
 		//! The denomator for Wavelet basis
@@ -187,10 +188,17 @@ protected:
 				for(vector<size_t>::iterator ivuBin  = vuBins.begin(); ivuBin != vuBins.end(); ivuBin++)
 					_UpdateBin(vuPos, value, *ivuBin);
 			#else		// MOD-BY-LEETEN 09/07/2012-TO:
-			vector<pair<size_t, double>> vpBins;
+			// MOD-BY-LEETEN 09/09/2012-FROM: vector<pair<size_t, double>> vpBins;
+			vector< pair<size_t, double> > vpBins;
+			// MOD-BY-LEETEN 09/09/2012-END
+
 			_MapValueToBins(vuPos, value, vpBins);
 
+#if 0 // MOD-BY-LEETEN 09/09/2012-FROM:
 			for(vector<pair<size_t, double>>::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
+#else // MOD-BY-LEETEN 09/09/2012-TO:
+			for(vector< pair<size_t, double> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
+#endif // MOD-BY-LEETEN 09/09/2012-END
 				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
 			#endif		// MOD-BY-LEETEN 09/07/2012-END
 			
@@ -223,7 +231,9 @@ protected:
 			const vector<size_t>& vuPos,
 			const T& value, 
 			// MOD-BY-LEETEN 09/07/2012-FROM:			vector<size_t>& vuBins,
-			vector<pair<size_t, double>>& vuBins,
+			// MOD-BY-LEETEN 09/09/2012-FROM: vector<pair<size_t, double>>& vuBins,
+			vector< pair<size_t, double> >& vuBins,
+			// MOD-BY-LEETEN 09/09/2012-END
 			// MOD-BY-LEETEN 09/07/2012-END
 			void *_Reserved = NULL
 		) = 0;

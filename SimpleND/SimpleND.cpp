@@ -1,5 +1,6 @@
 #include <math.h>
 #include <assert.h>
+#include <stdlib.h> // ADD-BY-LEETEN 09/09/2012
 #include "libclock.h"
 #include "libopt.h"
 
@@ -23,7 +24,9 @@ public:
 		const vector<size_t>& vuPos,
 		const T& value, 
 		// MOD-BY-LEETEN 09/07/2012-FROM:	vector<size_t>& vuBins,
-		vector<pair<size_t, double>>& vpBins,
+		// MOD-BY-LEETEN 09/09/2012-FROM:	vector<pair<size_t, double>>& vpBins,
+		vector< pair<size_t, double> >& vpBins,
+		// MOD-BY-LEETEN 09/09/2012-END
 		// MOD-BY-LEETEN 09/07/2012-END
 		void *_Reserved = NULL
 	)
@@ -238,7 +241,9 @@ main(int argn, char* argv[])
 			cSimpleND._MapValueToBins(vuPos, iValue, vuBins);
 			vuValueBins.push_back(vuBins[0]);
 		#else		// MOD-BY-LEETEN 09/07/2012-TO:
-		vector<pair<size_t, double>> vuBins;
+		// MOD-BY-LEETEN 09/09/2012-FROM:		vector<pair<size_t, double>> vuBins;
+		vector< pair<size_t, double> > vuBins;
+		// MOD-BY-LEETEN 09/09/2012-END
 		cSimpleND._MapValueToBins(vuPos, iValue, vuBins);
 		vuValueBins.push_back(vuBins[0].first);
 		#endif		// MOD-BY-LEETEN 09/07/2012-END
@@ -279,7 +284,9 @@ main(int argn, char* argv[])
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	size_t uNrOfIHs = 1 << uNrOfDims;
-	vector<vector<size_t>> vvuOffsets;
+	// MOD-BY-LEETEN 09/09/2012-FROM:	vector<vector<size_t>> vvuOffsets;
+	vector< vector<size_t> > vvuOffsets;
+	// MOD-BY-LEETEN 09/09/2012-END
 	vvuOffsets.resize(uNrOfIHs);
 	for(size_t i = 0; i < uNrOfIHs; i++)
 	{
@@ -313,12 +320,19 @@ main(int argn, char* argv[])
 			uIndex += uPos * uDimLengthProduct;
 
 			if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+#if 0 // MOD-BY-LEETEN 09/09/2012-FROM:
+			  
 			printf("%3d,", uPos);	// MOD-BY-LEETEN	09/09/2012-FROM:	printf("%4d,", uPos);
+#else // MOD-BY-LEETEN 09/09/2012-TO:
+			printf("%3d,", (int)uPos);
+#endif // MOD-BY-LEETEN 09/09/2012-END
 			// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		}
 		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		// MOD-BY-LEETEN 09/09/2012-FROM:		printf(")=%d,", vuValueBins[uIndex]);
-		printf(")=%d,\n", vuValueBins[uIndex]);
+		  // MOD-BY-LEETEN 09/09/2012-FROM:		printf(")=%d,\n", vuValueBins[uIndex]);
+		printf(")=%d,\n", (int)vuValueBins[uIndex]);
+		// MOD-BY-LEETEN 09/09/2012-END
 		// MOD-BY-LEETEN 09/09/2012-END
 		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 

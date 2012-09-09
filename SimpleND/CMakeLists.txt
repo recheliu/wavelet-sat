@@ -23,7 +23,15 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 )
 
 # ADD-BY-LEETEN 09/09/2012-BEGIN
-target_link_libraries(${PROJECT_NAME}
-	debug	libopt_d	optimized	libopt_r
-)
+if( DEFINED WIN32 ) # ADD-BY-LEETEN 09/09/2012
+  target_link_libraries(${PROJECT_NAME}
+    debug	libopt_d	optimized	libopt_r
+    )
+# ADD-BY-LEETEN 09/09/2012-BEGIN
+else()
+  target_link_libraries(${PROJECT_NAME}
+    libopt
+    )
+endif()
+# ADD-BY-LEETEN 09/09/2012-END
 # ADD-BY-LEETEN 09/09/2012-END
