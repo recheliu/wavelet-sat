@@ -4,6 +4,8 @@
 using namespace std;
 #include <math.h>
 
+#include "liblog.h"	// ADD-BY-LEETEN	09/09/2012
+
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
 Then the user call _Update(vuPos, value) to update the value at the given location.
@@ -254,6 +256,7 @@ public:
 		}
 		// ADD-BY-LEETEN 09/07/2012-END
 
+		#if	0	// MOD-BY-LEETEN	09/09/2012-FROM:
 		//! Get the energy of all bin SATs.
 		void
 		_GetEnergy
@@ -273,9 +276,47 @@ public:
 				}
 				vdBinEnergies.push_back(dEnergy);
 			}
-
 		}
+		#else	// MOD-BY-LEETEN	09/09/2012-TO:
+		void
+		_ShowStatistics
+		(
+		)
+		{
+			size_t uNrOfNonZeroCoefs = 0;
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			{
+				double dEnergy = 0.0;
+				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
+				{
+					double dCoef = this->vvdBinCoefs[b][w];
+					dEnergy += pow(dCoef, 2.0);
+					if( dCoef )
+						uNrOfNonZeroCoefs++;
+				}
+				// printf("Energy[%d] = %f\n", b, dEnergy);
+			}
+			LOG_VAR(uNrOfNonZeroCoefs);
 
+			size_t uNrOfDataItems = 1;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				LOG_VAR(vuDimLengths[d]);
+				uNrOfDataItems *= this->vuDimLengths[d];
+			}
+			LOG_VAR(uNrOfDataItems);
+			LOG_VAR(UGetNrOfBins());
+
+			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+			LOG_VAR(dCR);
+
+			double dOverhead = (double)uNrOfNonZeroCoefs / (double)uNrOfDataItems;
+			LOG_VAR(dOverhead);
+		}
+		#endif	// MOD-BY-LEETEN	09/09/2012-END
+
+		//! Compute statistics of the compressed result.
+		virtual
 		void
 		_SetDimLengths
 		(
@@ -335,7 +376,9 @@ public:
 				else
 					uMaxLevel = min(uMaxLevel, vuDimLevels[d]);
 				this->uNrOfUpdatingCoefs *= uMaxLevel;
-				uCoefLength = 1 << (uMaxLevel - 1);
+				// MOD-BY-LEETEN 09/09/2012-FROM:				uCoefLength = 1 << (uMaxLevel - 1);
+				uCoefLength = (size_t)1 << (uMaxLevel - 1);
+				// MOD-BY-LEETEN 09/09/2012-END
 				vuCoefLengths.push_back(uCoefLength);
 				this->vuDimMaxLevels.push_back(uMaxLevel);
 				uNrOfCoefs *= uCoefLength;		// update the total number of coefficient to store for all dimension

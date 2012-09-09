@@ -22,3 +22,8 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	SimpleND.cpp
 )
 
+# ADD-BY-LEETEN 09/09/2012-BEGIN
+target_link_libraries(${PROJECT_NAME}
+	debug	libopt_d	optimized	libopt_r
+)
+# ADD-BY-LEETEN 09/09/2012-END

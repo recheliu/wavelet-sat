@@ -1,10 +1,11 @@
 #include <math.h>
 #include <assert.h>
 #include "libclock.h"
+#include "libopt.h"
 
 #include "WaveletSAT.h"
 
-#define PRINT_OUTPUT	0	// ADD-BY-LEETEN 09/07/2012
+// DEL-BY-LEETEN	09/09/2012:	#define PRINT_OUTPUT	1	// ADD-BY-LEETEN 09/07/2012
 
 using namespace WaveletSAT;
 
@@ -82,22 +83,85 @@ public:
 };
 
 int
-main(int arhn, char* argv[])
+// MOD-BY-LEETEN	09/09/2012-FROM:	main(int arhn, char* argv[])
+main(int argn, char* argv[])
+// DEL-BY-LEETEN	09/09/2012-END
 {
 	bool bIsPrintingTiming = true;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	CSimpleND<int> cSimpleND;
 
-	size_t uDimLength = 128;
-	size_t uNrOfDims = 2;
-	// DEL-BY-LEETEN 09/07/2012:	size_t uNrOfValues = 1;
-	size_t uMaxLevel = 0;
-	size_t uWinSize = 1;
-	// ADD-By-LEETEN 09/07/2012-BEGIN
+	#if	0	// MOD-BY-LEETEN	09/09/2012-FROM:
+		size_t uDimLength = 128;
+		size_t uNrOfDims = 2;
+		// DEL-BY-LEETEN 09/07/2012:	size_t uNrOfValues = 1;
+		size_t uMaxLevel = 0;
+		size_t uWinSize = 1;
+		// ADD-By-LEETEN 09/07/2012-BEGIN
+		int iValueMax = 32;
+		size_t uNrOfBins = 8;	// iValueMax;
+		// ADD-By-LEETEN 09/07/2012-END
+	#else		// MOD-BY-LEETEN	09/09/2012-TO:
+	_OPTInit();			// initialize the option parser
+
+	enum {
+		DATA_SAMPLING_BLOCK,
+		DATA_SAMPLING_RANDOM,
+		DATA_SAMPLING_JUMP,
+		NR_OF_DATA_SAMPLING,
+		DATA_SAMPLING_DEFAULT = DATA_SAMPLING_BLOCK
+	};
+	int iDataSampling;
+	_OPTAddEnum("--data-sampling", &iDataSampling, DATA_SAMPLING_DEFAULT, NR_OF_DATA_SAMPLING,
+		"block",	DATA_SAMPLING_BLOCK,
+		"random",	DATA_SAMPLING_RANDOM,
+		"jump",		DATA_SAMPLING_JUMP,
+		NULL);
+
+	int iDimLength = 128;
+	_OPTAddIntegerVector(
+		"--dim-length", 1,
+		&iDimLength, iDimLength);
+
+	int iNrOfDims = 2;
+	_OPTAddIntegerVector(
+		"--n-dims", 1,
+		&iNrOfDims, iNrOfDims);
+
+	int iMaxLevel = 0;
+	_OPTAddIntegerVector(
+		"--max-level", 1,
+		&iMaxLevel, iMaxLevel);
+
 	int iValueMax = 32;
-	size_t uNrOfBins = 8;	// iValueMax;
+	_OPTAddIntegerVector(
+		"--value-max", 1,
+		&iValueMax, iValueMax);
+
+	int iNrOfBins = 8;	// iValueMax;
+	_OPTAddIntegerVector(
+		"--n-bins", 1,
+		&iNrOfBins, iNrOfBins);
+
+	int iIsTestingQuery = 0; 
+	_OPTAddBoolean(
+		"--is-testing-query", &iIsTestingQuery, iIsTestingQuery);
+
+	int iIsVerbose = 0; 
+	_OPTAddBoolean(
+		"--is-verbose", &iIsVerbose, iIsVerbose);
+
+	bool bIsOptParsed = BOPTParse(argv, argn, 1);
+	assert(bIsOptParsed);
+
+	size_t uDimLength = iDimLength;
+	size_t uNrOfDims = iNrOfDims;
+	size_t uMaxLevel = iMaxLevel;
+	size_t uWinSize = 1;
+	size_t uNrOfBins = iNrOfBins;
 	// ADD-By-LEETEN 09/07/2012-END
+	#endif	// MOD-BY-LEETEN	09/09/2012-END
 
 	size_t uNrOfTestingValues = uDimLength;
 	#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
@@ -135,7 +199,38 @@ main(int arhn, char* argv[])
 			uCoord /= vuDimLengths[d], d++)
 			vuPos.push_back(uCoord % vuDimLengths[d]);
 
-		int iValue = rand()%iValueMax;
+		// MOD-BY-LEETEN	09/09/2012-FROM:		int iValue = rand()%iValueMax;
+		int iValue = 0;
+		switch(iDataSampling)
+		{
+		case DATA_SAMPLING_RANDOM:
+			iValue = rand()%iValueMax;
+			break;
+
+		case DATA_SAMPLING_BLOCK:
+			{
+			int iValueDimMax = (int)floor(pow((double)iValueMax, 1.0/(double)uNrOfDims));
+			for(size_t 
+				d = 0, uPrevDimSize = 1; 
+				d < uNrOfDims; 
+				uPrevDimSize *= iValueDimMax, d++)
+				iValue += (int)uPrevDimSize * (int)floorf((float)iValueDimMax * (float)vuPos[d] / (float)vuDimLengths[d]);
+			}
+			break;
+
+		case DATA_SAMPLING_JUMP:
+			{
+			int iDimBin = (int)floor(pow((double)uNrOfBins, 1.0/(double)uNrOfDims));
+			for(size_t 
+				d = 0, uPrevValue = 1; 
+				d < uNrOfDims; 
+				uPrevValue *= iDimBin, d++)
+				iValue += (int)uPrevValue * (int)(vuPos[d] % iDimBin);
+			}
+			break;
+		}
+		// MOD-BY-LEETEN	09/09/2012-END
+
 		cSimpleND._AddValue(vuPos, iValue);
 
 		#if	0	// MOD-BY-LEETEN 09/07/2012-FROM:
@@ -159,21 +254,28 @@ main(int arhn, char* argv[])
 
 	////////////////////////////////////////////////////////////////////////////
 	// Now we can start to query SATs
-
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
-	vector<double> vdBinEnergies;
-	cSimpleND._GetEnergy
-	(
-		vdBinEnergies
-	);
+	#if	0	// MOD-BY-LEETEN	09/09/2012-FROM:
+		vector<double> vdBinEnergies;
+		cSimpleND._GetEnergy
+		(
+			vdBinEnergies
+		);
 
-	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
-	for(size_t b = 0; b < vdBinEnergies.size(); b++)
-		printf("Bin (%d): %f\n", b, vdBinEnergies[b]);
-	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+		for(size_t b = 0; b < vdBinEnergies.size(); b++)
+			printf("Bin (%d): %f\n", b, vdBinEnergies[b]);
+		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+	#else		// MOD-BY-LEETEN	09/09/2012-TO:
+	cSimpleND._ShowStatistics();
+	#endif		// MOD-BY-LEETEN	09/09/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	// ADD-BY-LEETEN	09/09/2012-BEGIN
+	if(iIsTestingQuery)
+	{
+	// ADD-BY-LEETEN	09/09/2012-END
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	size_t uNrOfIHs = 1 << uNrOfDims;
@@ -198,9 +300,9 @@ main(int arhn, char* argv[])
 	{
 		vector<size_t> vuBase;
 		size_t uIndex = 0;
-		#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		printf("B(");
-		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		for(size_t 
 			d = 0, uDimLengthProduct = 1; 
 			d < uNrOfDims; 
@@ -210,13 +312,15 @@ main(int arhn, char* argv[])
 			vuBase.push_back(uPos);
 			uIndex += uPos * uDimLengthProduct;
 
-			#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
-			printf("%4d,", uPos);
-			#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+			if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+			printf("%3d,", uPos);	// MOD-BY-LEETEN	09/09/2012-FROM:	printf("%4d,", uPos);
+			// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		}
-		#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
-		printf(")=%d,", vuValueBins[uIndex]);
-		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		// MOD-BY-LEETEN 09/09/2012-FROM:		printf(")=%d,", vuValueBins[uIndex]);
+		printf(")=%d,\n", vuValueBins[uIndex]);
+		// MOD-BY-LEETEN 09/09/2012-END
+		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 
 		vector<double> vdH;
 		vdH.resize(uNrOfBins);
@@ -232,29 +336,41 @@ main(int arhn, char* argv[])
 			vector<double> vdIH;
 			cSimpleND._GetAllSums(vuPos, vdIH);
 
+			// ADD-BY-LEETEN 09/09/2012-BEGIN
+			if( iIsVerbose )
+				printf("\t%+d,", iSign);
+			// ADD-BY-LEETEN 09/09/2012-END
 			for(size_t b = 0; b < uNrOfBins; b++)
+			{	// ADD-BY-LEETEN 09/09/2012
 				vdH[b] += iSign * vdIH[b]; 
+			// ADD-BY-LEETEN 09/09/2012-BEGIN
+				printf( "%+.2f,", vdIH[b]);
+			}
+			if( iIsVerbose )	
+				printf("\n");
+			// ADD-BY-LEETEN 09/09/2012-END
 		}
 
 		double dError = 0.0;
-		#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
 		printf("H:");
-		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		for(size_t b = 0; b < uNrOfBins; b++)
 		{
-			#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+			if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
 			printf( "%+.2f,", vdH[b]);
-			#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+			// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 			if(b == vuValueBins[uIndex])
 				dError += pow(1.0 - vdH[b], 2.0);
 			else
 				dError += pow(vdH[b], 2.0);
 		}
-		#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
 		printf("E:%f\n", dError);
-		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 	}
 	LIBCLOCK_END(bIsPrintingTiming);
+	}	// ADD-BY-LEETEN	09/09/2012-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;
