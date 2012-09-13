@@ -1,5 +1,20 @@
 #pragma once
 
+// ADD-BY-LEETEN 09/12/2012-BEGIN
+#define WITH_SPARSE_WAVELET_COEFS	1
+
+#if WITH_SPARSE_WAVELET_COEFS
+#include <map>	
+#if defined (WIN32)
+	#include <psapi.h>	
+	#pragma comment (lib "psapi.lib")
+#else	// #if defined (WIN32)
+	#include <sys/time.h>
+	#include <sys/resource.h>
+#endif	// #if defined (WIN32)
+#endif	// #if WITH_SPARSE_WAVELET_COEFS
+// ADD-BY-LEETEN 09/12/2012-END
+
 #include <vector>
 using namespace std;
 #include <math.h>
@@ -16,6 +31,17 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
+	//! The base class of WaveletSAT.
+	/*!
+	In order to apply wavelet transform for SATs or Integral Histograms, please follow the procedure below:
+	1. Setup the data size by _SetDimLengths().
+	2. Setup the #SATs by _AllocateBins().
+	3. Call _Update() for each data point to incrementally compute wavelet.
+	4. Call _Finalize() to finish the computation.
+
+	To query the entry for a certain location:
+	1. Call _GetAllSums() to get all SAT values for the given location.
+	*/
 	template<class T>
 	class CBase
 	{
@@ -34,7 +60,13 @@ namespace WaveletSAT
 		//! pool of the coefficents
 		/*!
 		*/
+		#if	!WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 		vector< vector<double> > vvdBinCoefs;
+		// ADD-BY-LEETEN 09/12/2012-BEGIN
+		#else	// #if !WITH_SPARSE_WAVELET_COEFS
+		vector< map<size_t, double> > vmapBinCoefs;
+		#endif	// #if !WITH_SPARSE_WAVELET_COEFS
+		// ADD-BY-LEETEN 09/12/2012-END
 		
 		//!
 		/*!
@@ -65,7 +97,13 @@ namespace WaveletSAT
 		/*!
 		B
 		*/
+		#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 		size_t UGetNrOfBins() const {	return vvdBinCoefs.size();	};
+		// ADD-BY-LEETEN 09/12/2012-BEGIN
+		#else	// #if !WITH_SPARSE_WAVELET_COEFS
+		size_t UGetNrOfBins() const {	return vmapBinCoefs.size();	};
+		#endif	// #if !WITH_SPARSE_WAVELET_COEFS
+		// ADD-BY-LEETEN 09/12/2012-END
 
 		//! A lookup table to map the coefficient to its levels per dim.
 		/*! size: D x C: 
@@ -89,7 +127,8 @@ namespace WaveletSAT
 		*/
 		double dWaveletDenomiator;
 		// ADD-BY-LEETEN 09/07/2012-END
-protected:		
+protected:	
+		//! Update the specified bin.
 		void 
 		_UpdateBin
 		(
@@ -164,14 +203,51 @@ protected:
 					uCoefId += uCoef * uCoefBase;
 				}
 				// update the corresponding wavelet coeffcients
+				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				vvdBinCoefs[uBin][uCoefId] += dWavelet;
+				// ADD-BY-LEETEN 09/12/2012-BEGIN
+				#else	// #if !WITH_SPARSE_WAVELET_COEFS
+				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
+				if(this->vmapBinCoefs[uBin].end() == ipairCoef )
+				{
+					this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dWavelet));
+
+					static size_t uCount;
+					static size_t uMaxCount = 100000;
+					if( 0 == uCount % uMaxCount )
+					{
+						LOG_VAR(uCount);
+						LOG_VAR(this->vmapBinCoefs[uBin].size());
+						#if defined(WIN32)
+						PROCESS_MEMORY_COUNTERS memCounter;
+						bool result = GetProcessMemoryInfo(
+								GetCurrentProcess(),
+								&memCounter,
+								sizeof( memCounter ));
+						LOG_VAR(memCounter.WorkingSetSize);
+						#else	// #if defined(WIN32)
+						int who = RUSAGE_SELF; 
+						struct rusage usage; 
+						int ret; 
+						getrusage(who,&usage);
+						LOG_VAR(usage.ru_maxrss);
+						#endif	// #if defined(WIN32)
+					}
+					uCount++;
+				}
+				else
+				{
+					ipairCoef->second += dWavelet;
+				}
+				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+				// ADD-BY-LEETEN 09/12/2012-END
 			}
 		}
 
 		//! Given the subscript of a point, update the corresponding bin SAT
 		/*!
 		Note: As this method is not public, it is not intended to be directly used by the application. 
-		Instead, the sub class should define additional methods to call this method for each all grid points.
+		Instead, the sub class should define additional methods to call this method.
 		This design is for the case that not all data's area available
 		*/
 		void 
@@ -257,12 +333,26 @@ public:
 			dWaveletDenomiator = sqrt((double)iWaveletDenomiator);
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
+				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
 					if( dCoef )
 						this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
 				}
+				// ADD-BY-LEETEN 09/12/2012-BEGIN
+				#else	// #if !WITH_SPARSE_WAVELET_COEFS
+				for(map<size_t, double>::iterator 
+					ipairCoef = this->vmapBinCoefs[b].begin();
+					ipairCoef != this->vmapBinCoefs[b].end();
+					ipairCoef++)
+				{
+					double dCoef = ipairCoef->second;
+					if( dCoef )
+						ipairCoef->second /= dWaveletDenomiator;
+				}
+				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+				// ADD-BY-LEETEN 09/12/2012-END
 		}
 		// ADD-BY-LEETEN 09/07/2012-END
 
@@ -288,6 +378,7 @@ public:
 			}
 		}
 		#else	// MOD-BY-LEETEN	09/09/2012-TO:
+		//! Compute and display statistics for the computed wavelet coefficients.
 		void
 		_ShowStatistics
 		(
@@ -297,9 +388,20 @@ public:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				double dEnergy = 0.0;
+				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
+				// ADD-BY-LEETEN 09/12/2012-BEGIN
+				#else	// #if !WITH_SPARSE_WAVELET_COEFS	
+				for(map<size_t, double>::iterator
+					ipairCoef = vmapBinCoefs[b].begin();
+					ipairCoef != vmapBinCoefs[b].end();
+					ipairCoef++)
+				{
+					double dCoef = ipairCoef->second;
+				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+				// ADD-BY-LEETEN 09/12/2012-END
 					dEnergy += pow(dCoef, 2.0);
 					if( dCoef )
 						uNrOfNonZeroCoefs++;
@@ -404,9 +506,15 @@ public:
 					this->vuCoefDim2Level[c * UGetNrOfDims() + d] = uLevel;
  				}
 
+			#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 			vvdBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)
 				vvdBinCoefs[b].resize(uNrOfCoefs);
+			// ADD-BY-LEETEN 09/12/2012-BEGIN
+			#else	// #if !WITH_SPARSE_WAVELET_COEFS
+			vmapBinCoefs.resize(uNrOfBins);
+			#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+			// ADD-BY-LEETEN 09/12/2012-END
 		}
 		
 		//! Return the sum of all bins at the given position
@@ -469,8 +577,16 @@ public:
 						uCoefId += uCoef * uCoefBase;
 					}
 
+					#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 					if( 0.0 != vvdBinCoefs[b][uCoefId] )
 					{
+					// ADD-BY-LEETEN 09/12/2012-BEGIN
+					#else	// #if !WITH_SPARSE_WAVELET_COEFS	
+					map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[b].find(uCoefId);
+					if( this->vmapBinCoefs[b].end() != ipairCoef && 0.0 != ipairCoef->second )
+					{
+					#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+					// ADD-BY-LEETEN 09/12/2012-END
 						double dWavelet = 1.0;
 						for(size_t d = 0, uBase = 0;
 							d < UGetNrOfDims() && 0.0 != dWavelet; 
@@ -484,7 +600,13 @@ public:
 						
 						// update the corresponding wavelet coeffcients
 						if( 0.0 != dWavelet )
+							#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 							dCount += dWavelet * vvdBinCoefs[b][uCoefId];
+							// ADD-BY-LEETEN 09/12/2012-BEGIN
+							#else	// #if !WITH_SPARSE_WAVELET_COEFS
+							dCount += dWavelet * ipairCoef->second;
+							#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+							// ADD-BY-LEETEN 09/12/2012-END
 					}
 				}
 				dCount /= dWaveletDenomiator;	// ADD-BY-LEETEN 09/07/2012

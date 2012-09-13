@@ -7,7 +7,6 @@
 #include "WaveletSAT.h"
 
 // DEL-BY-LEETEN	09/09/2012:	#define PRINT_OUTPUT	1	// ADD-BY-LEETEN 09/07/2012
-
 using namespace WaveletSAT;
 
 template<class T>
@@ -358,6 +357,7 @@ main(int argn, char* argv[])
 			{	// ADD-BY-LEETEN 09/09/2012
 				vdH[b] += iSign * vdIH[b]; 
 			// ADD-BY-LEETEN 09/09/2012-BEGIN
+				if( iIsVerbose )	// ADD-BY-LEETEN 09/12/2012
 				printf( "%+.2f,", vdIH[b]);
 			}
 			if( iIsVerbose )	
