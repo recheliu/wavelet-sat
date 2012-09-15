@@ -1,18 +1,20 @@
 #pragma once
 
 // ADD-BY-LEETEN 09/12/2012-BEGIN
-#define WITH_SPARSE_WAVELET_COEFS	1
+// DEL-BY-LEETEN 09/13:	#define WITH_SPARSE_WAVELET_COEFS	0
 
-#if WITH_SPARSE_WAVELET_COEFS
+#define WITH_VECTORS_FOR_COUNTED_COEFS	1	// ADD-BY-LEETEN 09/14/2012
+
+// DEL-BY-LEETEN 09/13:	#if WITH_SPARSE_WAVELET_COEFS
 #include <map>	
 #if defined (WIN32)
 	#include <psapi.h>	
-	#pragma comment (lib "psapi.lib")
+	#pragma comment (lib, "psapi.lib")	// MOD-BY-LEETEN 09/14/2012-FROM:	#pragma comment (lib "psapi.lib")
 #else	// #if defined (WIN32)
 	#include <sys/time.h>
 	#include <sys/resource.h>
 #endif	// #if defined (WIN32)
-#endif	// #if WITH_SPARSE_WAVELET_COEFS
+// DEL-BY-LEETEN 09/13:	#endif	// #if WITH_SPARSE_WAVELET_COEFS
 // ADD-BY-LEETEN 09/12/2012-END
 
 #include <vector>
@@ -60,13 +62,41 @@ namespace WaveletSAT
 		//! pool of the coefficents
 		/*!
 		*/
-		#if	!WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+		// DEL-BY-LEETEN 09/13:	#if	!WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 		vector< vector<double> > vvdBinCoefs;
 		// ADD-BY-LEETEN 09/12/2012-BEGIN
-		#else	// #if !WITH_SPARSE_WAVELET_COEFS
+		// DEL-BY-LEETEN 09/13:	#else	// #if !WITH_SPARSE_WAVELET_COEFS
 		vector< map<size_t, double> > vmapBinCoefs;
-		#endif	// #if !WITH_SPARSE_WAVELET_COEFS
+		// DEL-BY-LEETEN 09/13:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS
+		// ADD-BY-LEETEN 09/13-BEGIN
+		//! #Coefs stored in full arrays
+		size_t uNrOfCoefsInFullArray;	
+		// ADD-BY-LEETEN 09/13-END
+
+		// ADD-BY-LEETEN 09/14/2012-BEGIN
+		//! Total #coefs stored in full arrays from all bin SATs.
+		size_t uSizeOfFullArrays;
+		// ADD-BY-LEETEN 09/14/2012-END
 		// ADD-BY-LEETEN 09/12/2012-END
+
+		// ADD-BY-LEETEN 09/14/2012-BEGIN
+		#if	WITH_VECTORS_FOR_COUNTED_COEFS
+		struct CWaveletTempCoef {
+			size_t uCount;
+			double dCoef;
+			CWaveletTempCoef ():
+				uCount(0),
+				dCoef(0.0)
+			{}
+			CWaveletTempCoef (size_t uC, double dC):
+				uCount(uC),
+				dCoef(dC)
+			{}
+		};
+		vector< map<size_t, CWaveletTempCoef> > vmapBinTempCoefs;
+		vector< vector< pair<size_t, double> > > vvdBinTempCoefs; 
+		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+		// ADD-BY-LEETEN 09/14/2012-END
 		
 		//!
 		/*!
@@ -97,13 +127,17 @@ namespace WaveletSAT
 		/*!
 		B
 		*/
-		#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+		// DEL-BY-LEETEN 09/13:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 		size_t UGetNrOfBins() const {	return vvdBinCoefs.size();	};
+		// DEL-BY-LEETEN 09/13-BEGIN
+		/*
 		// ADD-BY-LEETEN 09/12/2012-BEGIN
 		#else	// #if !WITH_SPARSE_WAVELET_COEFS
 		size_t UGetNrOfBins() const {	return vmapBinCoefs.size();	};
 		#endif	// #if !WITH_SPARSE_WAVELET_COEFS
 		// ADD-BY-LEETEN 09/12/2012-END
+		*/
+		// DEL-BY-LEETEN 09/13-END
 
 		//! A lookup table to map the coefficient to its levels per dim.
 		/*! size: D x C: 
@@ -184,13 +218,22 @@ protected:
 				double dWavelet = dWeight;
 				// MOD-BY-LEETEN 09/07/2012-END
 
+				// ADD-BY-LEETEN 09/14/2012-BEGIN
+				#if	WITH_VECTORS_FOR_COUNTED_COEFS
+				size_t uMaxCountPerCoef = 1;	// max # coefficnet
+				#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+				// ADD-BY-LEETEN 09/14/2012-END
 				size_t uCoefId = 0;
 				for(size_t d = 0, uBase = 0, uCoefBase = 1;
 					d < UGetNrOfDims(); 
 					uBase += vuDimMaxLevels[d], uCoefBase *= vuCoefLengths[d], d++, p++)
 				{
 					size_t uLevel = vuCoefDim2Level[p];
-					
+					// ADD-BY-LEETEN 09/14/2012-BEGIN
+					#if	WITH_VECTORS_FOR_COUNTED_COEFS
+					uMaxCountPerCoef *= 1 << (vuDimLevels[d] - uLevel);
+					#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+					// ADD-BY-LEETEN 09/14/2012-END					
 					/*
 					// skip the level if it is larger than the threshold 
 					if( uLevel >= vuDimMaxLevels[d] )
@@ -203,24 +246,40 @@ protected:
 					uCoefId += uCoef * uCoefBase;
 				}
 				// update the corresponding wavelet coeffcients
-				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+				// MOD-BY-LEETEN 09/13/2012-FROM:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+				if( uCoefId < uNrOfCoefsInFullArray ) 
+				{
+				// MOD-BY-LEETEN 09/13/2012-END
 				vvdBinCoefs[uBin][uCoefId] += dWavelet;
 				// ADD-BY-LEETEN 09/12/2012-BEGIN
-				#else	// #if !WITH_SPARSE_WAVELET_COEFS
+				// MOD-BY-LEETEN 09/13/2012-FROM:	#else	// #if !WITH_SPARSE_WAVELET_COEFS
+				}
+				else 
+				{
+				// MOD-BY-LEETEN 09/13/2012-END
+				#if	!WITH_VECTORS_FOR_COUNTED_COEFS	// ADD-BY-LEETEN 09/14/2012-ADD
 				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
 				if(this->vmapBinCoefs[uBin].end() == ipairCoef )
 				{
 					this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dWavelet));
+				// ADD-BY-LEETEN 09/14/2012-BEGIN
+				#else	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+				map<size_t, CWaveletTempCoef>::iterator ipairTempCoef = this->vmapBinTempCoefs[uBin].find(uCoefId);
+				if(this->vmapBinTempCoefs[uBin].end() == ipairTempCoef )
+				{
+					this->vmapBinTempCoefs[uBin].insert(pair<size_t, CWaveletTempCoef>(uCoefId, CWaveletTempCoef(1, dWavelet)));
+				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+				// ADD-BY-LEETEN 09/14/2012-END
 
 					static size_t uCount;
 					static size_t uMaxCount = 100000;
 					if( 0 == uCount % uMaxCount )
 					{
 						LOG_VAR(uCount);
-						LOG_VAR(this->vmapBinCoefs[uBin].size());
+						// DEL-BY-LEETEN 09/13:	LOG_VAR(this->vmapBinCoefs[uBin].size());
 						#if defined(WIN32)
 						PROCESS_MEMORY_COUNTERS memCounter;
-						bool result = GetProcessMemoryInfo(
+						BOOL result = GetProcessMemoryInfo(	// MOD-BY-LEETEN 09/13/2012:	bool result = GetProcessMemoryInfo(
 								GetCurrentProcess(),
 								&memCounter,
 								sizeof( memCounter ));
@@ -237,9 +296,22 @@ protected:
 				}
 				else
 				{
+					#if	!WITH_VECTORS_FOR_COUNTED_COEFS	// ADD-BY-LEETEN 09/14/2012
 					ipairCoef->second += dWavelet;
+					// ADD-BY-LEETEN 09/14/2012-BEGIN
+					#else	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+					ipairTempCoef->second.uCount++;
+					ipairTempCoef->second.dCoef += dWavelet;
+
+					if( uMaxCountPerCoef == ipairTempCoef->second.uCount )
+					{
+						this->vvdBinTempCoefs[uBin].push_back(pair<size_t, double>(uCoefId, ipairTempCoef->second.dCoef));
+						this->vmapBinTempCoefs[uBin].erase(ipairTempCoef);
+					}
+					#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+					// ADD-BY-LEETEN 09/14/2012-END
 				}
-				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+				}	// MOD-BY-LEETEN 09/13/2012-FROM:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 				// ADD-BY-LEETEN 09/12/2012-END
 			}
 		}
@@ -318,6 +390,32 @@ public:
 		/*
 		The public interface. 
 		*/
+
+		// ADD-BY-LEETEN 09/14/2012-BEGIN
+		enum EParameter
+		{
+			//! Total size in MB of all bin SATs.
+			SIZE_OF_FULL_ARRAYS,
+
+			NR_OF_ENUMS
+		};
+
+		void
+		_SetLong(
+			enum EParameter eName,
+			long lValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case SIZE_OF_FULL_ARRAYS:
+				uSizeOfFullArrays = (size_t)lValue * 1024 * 1024;
+				break;
+			}
+		}
+		// ADD-BY-LEETEN 09/14/2012-END
+
 		
 		// ADD-BY-LEETEN 09/07/2012-BEGIN
 		//! Finalize the computation of SAT
@@ -333,15 +431,34 @@ public:
 			dWaveletDenomiator = sqrt((double)iWaveletDenomiator);
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
-				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+			{	// MOD-BY-LEETEN 09/13/2012-FROM:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
 					if( dCoef )
 						this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
 				}
+
+				// ADD-BY-LEETEN 09/14/2012-BEGIN
+				#if	WITH_VECTORS_FOR_COUNTED_COEFS
+				for(map<size_t, CWaveletTempCoef>::iterator 
+					ipairTempCoef = this->vmapBinTempCoefs[b].begin();
+					ipairTempCoef != this->vmapBinTempCoefs[b].end();
+					ipairTempCoef++)
+					this->vmapBinCoefs[b].insert(pair<size_t, double>(ipairTempCoef->first, ipairTempCoef->second.dCoef));
+				this->vmapBinTempCoefs[b].clear();
+
+				for(vector< pair<size_t, double> >::iterator 
+					ivdTempCoef = this->vvdBinTempCoefs[b].begin();
+					ivdTempCoef != this->vvdBinTempCoefs[b].end();
+					ivdTempCoef++)
+					this->vmapBinCoefs[b].insert(*ivdTempCoef);
+				this->vvdBinTempCoefs[b].clear();
+				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+				// ADD-BY-LEETEN 09/14/2012-END
+
 				// ADD-BY-LEETEN 09/12/2012-BEGIN
-				#else	// #if !WITH_SPARSE_WAVELET_COEFS
+				// DEL-BY-LEETEN 09/13:		#else	// #if !WITH_SPARSE_WAVELET_COEFS
 				for(map<size_t, double>::iterator 
 					ipairCoef = this->vmapBinCoefs[b].begin();
 					ipairCoef != this->vmapBinCoefs[b].end();
@@ -351,7 +468,7 @@ public:
 					if( dCoef )
 						ipairCoef->second /= dWaveletDenomiator;
 				}
-				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+			}	// MOD-BY-LEETEN 09/13/2012-FROM:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 				// ADD-BY-LEETEN 09/12/2012-END
 		}
 		// ADD-BY-LEETEN 09/07/2012-END
@@ -388,19 +505,25 @@ public:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				double dEnergy = 0.0;
-				#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+				// DEL-BY-LEETEN 09/13:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
+				// ADD-BY-LEETEN 09/13/2012-BEGIN
+					dEnergy += pow(dCoef, 2.0);
+					if( dCoef )
+						uNrOfNonZeroCoefs++;
+				}
+				// ADD-BY-LEETEN 09/13/2012-END
 				// ADD-BY-LEETEN 09/12/2012-BEGIN
-				#else	// #if !WITH_SPARSE_WAVELET_COEFS	
+				// DEL-BY-LEETEN 09/13/2012:	#else	// #if !WITH_SPARSE_WAVELET_COEFS	
 				for(map<size_t, double>::iterator
 					ipairCoef = vmapBinCoefs[b].begin();
 					ipairCoef != vmapBinCoefs[b].end();
 					ipairCoef++)
 				{
 					double dCoef = ipairCoef->second;
-				#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+				// DEL-BY-LEETEN 09/13:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 				// ADD-BY-LEETEN 09/12/2012-END
 					dEnergy += pow(dCoef, 2.0);
 					if( dCoef )
@@ -496,6 +619,13 @@ public:
 				uNrOfCoefs *= uCoefLength;		// update the total number of coefficient to store for all dimension
 			}
 
+			// ADD-BY-LEETEN 09/13/2012-BEGIN
+			uNrOfCoefsInFullArray = min(
+				(size_t)floor( (double)uSizeOfFullArrays/(double)(uNrOfBins * sizeof(this->vvdBinCoefs[0][0]))), 
+				uNrOfCoefs);
+			LOG_VAR(uNrOfCoefsInFullArray);
+			// ADD-BY-LEETEN 09/13/2012-END
+
 			this->vuCoefDim2Level.resize(uNrOfUpdatingCoefs * UGetNrOfDims());
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 				for(size_t uCoef = c, d = 0; d < UGetNrOfDims(); d++)
@@ -506,15 +636,27 @@ public:
 					this->vuCoefDim2Level[c * UGetNrOfDims() + d] = uLevel;
  				}
 
-			#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
+			// DEL-BY-LEETEN 09/13:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 			vvdBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)
-				vvdBinCoefs[b].resize(uNrOfCoefs);
+				vvdBinCoefs[b].resize(uNrOfCoefsInFullArray);	// MOD-BY-LEETEN 09/13/2012:	vvdBinCoefs[b].resize(uNrOfCoefs);
+
 			// ADD-BY-LEETEN 09/12/2012-BEGIN
-			#else	// #if !WITH_SPARSE_WAVELET_COEFS
+			// DEL-BY-LEETEN 09/13:	#else	// #if !WITH_SPARSE_WAVELET_COEFS
+			for(size_t b = 0; b < uNrOfBins; b++)	// ADD-BY-LEETEN 09/13/2012
 			vmapBinCoefs.resize(uNrOfBins);
-			#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
+			// DEL-BY-LEETEN 09/13:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 			// ADD-BY-LEETEN 09/12/2012-END
+
+			// ADD-BY-LEETEN 09/14/2012-BEGIN
+			#if	WITH_VECTORS_FOR_COUNTED_COEFS
+			for(size_t b = 0; b < uNrOfBins; b++)	
+			{
+				vmapBinTempCoefs.resize(uNrOfBins);
+				vvdBinTempCoefs.resize(uNrOfBins);
+			}
+			#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+			// ADD-BY-LEETEN 09/14/2012-END
 		}
 		
 		//! Return the sum of all bins at the given position
@@ -577,6 +719,7 @@ public:
 						uCoefId += uCoef * uCoefBase;
 					}
 
+					#if	0	// MOD-BY-LEETEN 09/13/2012-FROM:
 					#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 					if( 0.0 != vvdBinCoefs[b][uCoefId] )
 					{
@@ -608,6 +751,31 @@ public:
 							#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 							// ADD-BY-LEETEN 09/12/2012-END
 					}
+					#else	// MOD-BY-LEETEN 09/13/2012-TO:
+					double dWaveletCoef = 0.0;
+					if( uCoefId < this->uNrOfCoefsInFullArray )
+						dWaveletCoef = vvdBinCoefs[b][uCoefId];
+					else
+					{
+						map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[b].find(uCoefId);
+						if( this->vmapBinCoefs[b].end() != ipairCoef )
+							dWaveletCoef = ipairCoef->second;
+					}
+
+					if( 0.0 != dWaveletCoef )
+					{
+						double dWavelet = 1.0;
+						for(size_t d = 0, uBase = 0;
+							d < UGetNrOfDims() && 0.0 != dWavelet; 
+							uBase += vuDimMaxLevels[d], d++)
+							// combine the wavelet basis value
+							dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p + d]];	
+							
+						// update the corresponding wavelet coeffcients
+						if( 0.0 != dWavelet )
+							dCount += dWavelet * dWaveletCoef;
+					}
+					#endif	// MOD-BY-LEETEN 09/13/2012-END
 				}
 				dCount /= dWaveletDenomiator;	// ADD-BY-LEETEN 09/07/2012
 				vdSums.push_back(dCount);

@@ -109,6 +109,7 @@ main(int argn, char* argv[])
 
 	enum {
 		DATA_SAMPLING_BLOCK,
+		DATA_SAMPLING_RANDOM_BLOCK,	// ADD-BY-LEETEN 09/14/2012
 		DATA_SAMPLING_RANDOM,
 		DATA_SAMPLING_JUMP,
 		NR_OF_DATA_SAMPLING,
@@ -117,6 +118,7 @@ main(int argn, char* argv[])
 	int iDataSampling;
 	_OPTAddEnum("--data-sampling", &iDataSampling, DATA_SAMPLING_DEFAULT, NR_OF_DATA_SAMPLING,
 		"block",	DATA_SAMPLING_BLOCK,
+		"random-block",	DATA_SAMPLING_RANDOM_BLOCK,	// ADD-BY-LEETEN 09/14/2012
 		"random",	DATA_SAMPLING_RANDOM,
 		"jump",		DATA_SAMPLING_JUMP,
 		NULL);
@@ -154,6 +156,15 @@ main(int argn, char* argv[])
 	_OPTAddBoolean(
 		"--is-verbose", &iIsVerbose, iIsVerbose);
 
+	// ADD-BY-LEETEN 09/14/2012-BEGIN
+	int iSizeOfFullArrays = 0;
+	_OPTAddIntegerVector(
+		"--size-of-full-arrays", 1,
+		&iSizeOfFullArrays, iSizeOfFullArrays);
+	_OPTAddComment("--size-of-full-arrays", 
+		"Size (in MB) of the full arrays from all bin SATs");
+	// ADD-BY-LEETEN 09/14/2012-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
 
@@ -164,6 +175,21 @@ main(int argn, char* argv[])
 	size_t uNrOfBins = iNrOfBins;
 	// ADD-By-LEETEN 09/07/2012-END
 	#endif	// MOD-BY-LEETEN	09/09/2012-END
+
+	// ADD-BY-LEETEN 09/14/2012-BEGIN
+	cSimpleND._SetLong(CSimpleND<int>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+
+	// create a lookup table to shuffule the value
+	vector<int> viShuffleTable;
+	for(size_t i = 0; i < iValueMax; i++)
+		viShuffleTable.push_back((int)i);
+
+	for(size_t i = iValueMax; i > 0; i--)
+	{
+		size_t uRand = rand() % i;
+		swap(viShuffleTable[i - 1], viShuffleTable[uRand]);
+	}
+	// ADD-BY-LEETEN 09/14/2012-END
 
 	size_t uNrOfTestingValues = uDimLength;
 	#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
@@ -209,6 +235,7 @@ main(int argn, char* argv[])
 			iValue = rand()%iValueMax;
 			break;
 
+		case DATA_SAMPLING_RANDOM_BLOCK:	// ADD-BY-LEETEN 09/14/2012
 		case DATA_SAMPLING_BLOCK:
 			{
 			int iValueDimMax = (int)floor(pow((double)iValueMax, 1.0/(double)uNrOfDims));
@@ -217,6 +244,15 @@ main(int argn, char* argv[])
 				d < uNrOfDims; 
 				uPrevDimSize *= iValueDimMax, d++)
 				iValue += (int)uPrevDimSize * (int)floorf((float)iValueDimMax * (float)vuPos[d] / (float)vuDimLengths[d]);
+
+			// ADD-BY-LEETEN 09/14/2012-BEGIN
+			switch(iDataSampling)
+			{
+			case DATA_SAMPLING_RANDOM_BLOCK:
+				iValue = (int)viShuffleTable[iValue];
+				break;
+			}
+			// ADD-BY-LEETEN 09/14/2012-END
 			}
 			break;
 
