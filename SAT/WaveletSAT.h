@@ -29,6 +29,22 @@ Then the user call _Update(vuPos, value) to update the value at the given locati
 */
 namespace WaveletSAT
 {
+  // ADD-BY-LEETEN 06/15/2012-BEGIN
+  struct CWaveletTempCoef 
+  {
+    size_t uCount;
+    double dCoef;
+    CWaveletTempCoef ():
+    uCount(0),
+      dCoef(0.0)
+    {}
+    CWaveletTempCoef (size_t uC, double dC):
+    uCount(uC),
+      dCoef(dC)
+    {}
+  };
+  // ADD-BY-LEETEN 06/15/2012-END
+
 	/* usage: 
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
@@ -81,6 +97,7 @@ namespace WaveletSAT
 
 		// ADD-BY-LEETEN 09/14/2012-BEGIN
 		#if	WITH_VECTORS_FOR_COUNTED_COEFS
+#if 0 // DEL-BY-LEETEN 06/15/2012-BEGIN
 		struct CWaveletTempCoef {
 			size_t uCount;
 			double dCoef;
@@ -93,6 +110,7 @@ namespace WaveletSAT
 				dCoef(dC)
 			{}
 		};
+#endif // DEL-BY-LEETEN 06/15/2012-END
 		vector< map<size_t, CWaveletTempCoef> > vmapBinTempCoefs;
 		vector< vector< pair<size_t, double> > > vvdBinTempCoefs; 
 		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
