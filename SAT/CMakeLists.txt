@@ -20,6 +20,7 @@ link_directories(
 # The source codes
 set(HEADER_FILES
 		WaveletSAT.h
+		Base.h	# ADD-BY-LEETEN 09/29/2012
 	)
 
 add_custom_target (

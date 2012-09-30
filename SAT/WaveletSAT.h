@@ -21,6 +21,7 @@
 using namespace std;
 #include <math.h>
 
+#include "Base.h"	// ADD-BY-LEETEN 09/29/2012
 #include "liblog.h"	// ADD-BY-LEETEN	09/09/2012
 
 /*
@@ -62,6 +63,7 @@ namespace WaveletSAT
 	*/
 	template<class T>
 	class CBase
+		:public SAT::CBase<T>	// ADD-BY-LEETEN 09/29/2012
 	{
 		//! The maximun number of wavelet levels per dim. 
 		/*!
@@ -249,7 +251,9 @@ protected:
 					size_t uLevel = vuCoefDim2Level[p];
 					// ADD-BY-LEETEN 09/14/2012-BEGIN
 					#if	WITH_VECTORS_FOR_COUNTED_COEFS
-					uMaxCountPerCoef *= 1 << (vuDimLevels[d] - uLevel);
+					// MOD-BY-LEETEN 09/29/2012-FROM:	uMaxCountPerCoef *= 1 << (vuDimLevels[d] - uLevel);
+					uMaxCountPerCoef *= (size_t)1 << (vuDimLevels[d] - uLevel);
+					// MOD-BY-LEETEN 09/29/2012-END
 					#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 					// ADD-BY-LEETEN 09/14/2012-END					
 					/*
@@ -340,6 +344,7 @@ protected:
 		Instead, the sub class should define additional methods to call this method.
 		This design is for the case that not all data's area available
 		*/
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void 
 		_Update
 		(
@@ -418,6 +423,7 @@ public:
 			NR_OF_ENUMS
 		};
 
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void
 		_SetLong(
 			enum EParameter eName,
@@ -437,6 +443,7 @@ public:
 		
 		// ADD-BY-LEETEN 09/07/2012-BEGIN
 		//! Finalize the computation of SAT
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void 
 		_Finalize
 		(
@@ -514,6 +521,7 @@ public:
 		}
 		#else	// MOD-BY-LEETEN	09/09/2012-TO:
 		//! Compute and display statistics for the computed wavelet coefficients.
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void
 		_ShowStatistics
 		(
@@ -609,6 +617,7 @@ public:
 		//! Allocate the space to store coefficients for all bins. 
 		/*! 
 		*/
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void 
 		_AllocateBins
 		(
@@ -678,6 +687,7 @@ public:
 		}
 		
 		//! Return the sum of all bins at the given position
+		virtual	// ADD-BY-LEETEN 09/29/2012
 		void
 		_GetAllSums
 		(
