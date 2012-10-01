@@ -4,6 +4,7 @@
 #include "libclock.h"
 #include "libopt.h"
 
+#if	0	// MOD-BY-LEETEN 09/30/2012-FROM:
 #include "WaveletSAT.h"
 
 // DEL-BY-LEETEN	09/09/2012:	#define PRINT_OUTPUT	1	// ADD-BY-LEETEN 09/07/2012
@@ -83,6 +84,11 @@ public:
 		_Update(vuPos, value);
 	}
 };
+#else	// MOD-BY-LEETEN 09/30/2012-TO:
+
+#include "SimpleND.h"
+
+#endif	// MOD-BY-LEETEN 09/30/2012-END
 
 int
 // MOD-BY-LEETEN	09/09/2012-FROM:	main(int arhn, char* argv[])

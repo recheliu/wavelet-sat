@@ -65,6 +65,8 @@ namespace WaveletSAT
 	class CBase
 		:public SAT::CBase<T>	// ADD-BY-LEETEN 09/29/2012
 	{
+protected:	// ADD-BY-LEETEN 09/30/2012
+
 		//! The maximun number of wavelet levels per dim. 
 		/*!
 		m[0], ... m[d], ... m[D - 1]
@@ -118,7 +120,12 @@ namespace WaveletSAT
 		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 		// ADD-BY-LEETEN 09/14/2012-END
 		
-		//!
+		// ADD-BY-LEETEN 09/30/2012-BEGIN
+		//! The dim length of the input data
+		vector<size_t> vuDataDimLengths;
+		// ADD-BY-LEETEN 09/30/2012-END
+
+		//! The dim length of the coefficients
 		/*!
 		n[0], ..., n[d], ... n[D - 1]
 		*/
@@ -181,7 +188,9 @@ namespace WaveletSAT
 		*/
 		double dWaveletDenomiator;
 		// ADD-BY-LEETEN 09/07/2012-END
-protected:	
+		
+// DEL-BY-LEETEN 09/30/2012:	protected:	
+
 		//! Update the specified bin.
 		void 
 		_UpdateBin
@@ -563,7 +572,7 @@ public:
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				LOG_VAR(vuDimLengths[d]);
-				uNrOfDataItems *= this->vuDimLengths[d];
+				uNrOfDataItems *= this->vuDataDimLengths[d];	// MOD-BY-LEETEN 09/30/2012-FROM:	uNrOfDataItems *= this->vuDimLengths[d];
 			}
 			LOG_VAR(uNrOfDataItems);
 			LOG_VAR(UGetNrOfBins());
@@ -587,12 +596,27 @@ public:
 		{
 			this->vuDimLengths.clear();
 			this->vuDimLevels.clear();
+
+			// ADD-BY-LEETEN 09/30/2012-BEGIN
+			this->vuDataDimLengths.clear();
+			size_t uMaxDimLength = 0;
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
 				ivuDimLength != vuDimLengths.end();
 				ivuDimLength++)
 			{
 				size_t uDimLength = *ivuDimLength;
+				this->vuDataDimLengths.push_back(uDimLength);
+				uMaxDimLength = max(uMaxDimLength, uDimLength);
+			}
+			// ADD-BY-LEETEN 09/30/2012-END
+
+			for(vector<size_t>::const_iterator 
+				ivuDimLength = vuDimLengths.begin();
+				ivuDimLength != vuDimLengths.end();
+				ivuDimLength++)
+			{
+				size_t uDimLength = uMaxDimLength;	// MOD-BY-LEETEN 09/30/2012-FROM:	size_t uDimLength = *ivuDimLength;
 				this->vuDimLengths.push_back(uDimLength);
 				
 				size_t uDimLevel  = (size_t)ceilf(logf((float)uDimLength)/logf(2.0f)) + 1;

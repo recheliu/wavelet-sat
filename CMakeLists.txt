@@ -23,6 +23,9 @@ add_subdirectory(SimpleND)
 
 add_dependencies(SimpleND SAT)
 
-
+# ADD-BY-LEETEN 09/30/2012-BEGIN
+add_subdirectory(SimpleNDWithNrrd)
+add_dependencies(SimpleNDWithNrrd SAT)
+# ADD-BY-LEETEN 09/30/2012-END
 
 

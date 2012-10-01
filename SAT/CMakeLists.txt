@@ -21,6 +21,10 @@ link_directories(
 set(HEADER_FILES
 		WaveletSAT.h
 		Base.h	# ADD-BY-LEETEN 09/29/2012
+		# ADD-BY-LEETEN 09/30/2012-BEGIN
+		IsotropicWaveletSAT.h	
+		SimpleND.h	
+		# ADD-BY-LEETEN 09/30/2012-END
 	)
 
 add_custom_target (
