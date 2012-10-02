@@ -1,10 +1,11 @@
 #pragma once
 
 #include "WaveletSAT.h"
+#include "IsotropicWaveletSAT.h"	// ADD-BY-LEETEN 10/01/2012
 
 template<class T>
 class CSimpleND:
-	public WaveletSAT::CBase<T>
+	public WaveletSAT::CIsotropicWaveletSAT<T>	// MOD-BY-LEETEN 10/01/2012-FROM: public WaveletSAT::CBase<T>
 {
 	size_t uNrOfBins;
 	T valueMin, valueMax;

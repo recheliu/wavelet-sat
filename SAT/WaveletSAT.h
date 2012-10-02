@@ -67,6 +67,11 @@ namespace WaveletSAT
 	{
 protected:	// ADD-BY-LEETEN 09/30/2012
 
+		// ADD-BY-LEETEN 10/01/2012-BEGIN
+		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
+		bool bIsFinalizedWithoutWavelet;
+		// ADD-BY-LEETEN 10/01/2012-END
+
 		//! The maximun number of wavelet levels per dim. 
 		/*!
 		m[0], ... m[d], ... m[D - 1]
@@ -150,6 +155,37 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 		*/
 		size_t UGetNrOfDims() const {	return vuDimLengths.size();	};
 		
+		// ADD-BY-LEETEN 10/01/2012-BEGIN
+		size_t
+		UConvetSubToIndex
+		(
+			const vector<size_t>& vuSub,
+			void* _Reserved = NULL
+		)
+		{
+			size_t uIndex = 0;
+			for(size_t d = 0, vuSubSize = 1; d < vuSub.size(); vuSubSize *= this->vuDimLengths[d], d++)
+				uIndex += vuSubSize * vuSub[d];
+			return uIndex;
+		}
+
+		void
+		_ConvetIndexToSub
+		(
+			size_t uIndex,
+			vector<size_t>& vuSub,
+			void* _Reserved = NULL
+		)
+		{
+			vuSub.clear();
+			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+			{
+				vuSub.push_back( uIndex % this->vuDimLengths[d] );
+				uIndex /= this->vuDimLengths[d];
+			}
+		}
+		// ADD-BY-LEETEN 10/01/2012-END
+
 		//! #Dimensions
 		/*!
 		B
@@ -202,7 +238,7 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 			void *_Reserved = NULL
 		)
 		{
-			vector<double> vdWavelets;
+			vector<long> vlWavelets;	// MOD-BY-LEETEN 10/01/2012-FROM:	vector<double> vdWavelets;
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -214,23 +250,40 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 					l < uDimMaxLevel; 
 					l++, p++, w >>= 1)
 				{
-					double dWavelet;
+					#if	0	// MOD-BY-LEETEN 10/01/2012-FROM:
+						double dWavelet;
+						
+						// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
+						size_t uPosInWavelet = uPos % w;
+						if( 0 == l )
+							dWavelet = (double)(w / 2 - uPosInWavelet);
+						else
+						{
+							if( uPosInWavelet < w / 2)
+								dWavelet = (double)uPosInWavelet;
+							else
+								dWavelet = (double)(w - uPosInWavelet);
+							dWavelet *= -sqrt((double)(1 << (l - 1) ));	
+						}
+						// DEL-BY-LEETEN 09/07/2012:	dWavelet /= sqrt((double)(uMaxWin/2));
+						
+						vdWavelets.push_back( dWavelet );
+					#else	// MOD-BY-LEETEN 10/01/2012-TO:
+					long lWavelet;
 					
 					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
 					size_t uPosInWavelet = uPos % w;
 					if( 0 == l )
-						dWavelet = (double)(w / 2 - uPosInWavelet);
+						lWavelet = (long)(w / 2 - uPosInWavelet);
 					else
 					{
 						if( uPosInWavelet < w / 2)
-							dWavelet = (double)uPosInWavelet;
+							lWavelet = (long)uPosInWavelet;
 						else
-							dWavelet = (double)(w - uPosInWavelet);
-						dWavelet *= -sqrt((double)(1 << (l - 1) ));	
+							lWavelet = (long)(w - uPosInWavelet);
 					}
-					// DEL-BY-LEETEN 09/07/2012:	dWavelet /= sqrt((double)(uMaxWin/2));
-					
-					vdWavelets.push_back( dWavelet );
+					vlWavelets.push_back( lWavelet );
+					#endif	// MOD-BY-LEETEN 10/01/2012-END
 				}
 			}
 			
@@ -243,9 +296,13 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 			// now find the combination of the coefficients of all dimensions
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				// MOD-BY-LEETEN 09/07/2012-FROM:	double dWavelet = dW;
-				double dWavelet = dWeight;
-				// MOD-BY-LEETEN 09/07/2012-END
+				#if	0	// MOD-BY-LEETEN 10/01/2012-FROM:
+					// MOD-BY-LEETEN 09/07/2012-FROM:	double dWavelet = dW;
+					double dWavelet = dWeight;
+					// MOD-BY-LEETEN 09/07/2012-END
+				#else		// MOD-BY-LEETEN 10/01/2012-TO:
+				long lWavelet = 1;
+				#endif		// MOD-BY-LEETEN 10/01/2012-END
 
 				// ADD-BY-LEETEN 09/14/2012-BEGIN
 				#if	WITH_VECTORS_FOR_COUNTED_COEFS
@@ -271,11 +328,15 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 						continue;
 					*/
 					
-					dWavelet *= vdWavelets[uBase + uLevel];
+					lWavelet *= vlWavelets[uBase + uLevel];	// MOD-BY-LEETEN 10/01/2012-FROM:	dWavelet *= vdWavelets[uBase + uLevel];
 					
 					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 					uCoefId += uCoef * uCoefBase;
 				}
+				// ADD-BY-LEETEN 10/01/2012-BEGIN
+				double dWavelet = dWeight * (double)lWavelet;
+				// ADD-BY-LEETEN 10/01/2012-END
+
 				// update the corresponding wavelet coeffcients
 				// MOD-BY-LEETEN 09/13/2012-FROM:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				if( uCoefId < uNrOfCoefsInFullArray ) 
@@ -429,6 +490,11 @@ public:
 			//! Total size in MB of all bin SATs.
 			SIZE_OF_FULL_ARRAYS,
 
+			// ADD-BY-LEETEN 10/01/2012-BEGIN
+			//! Indicate whether the function _Finalize() should weight the result by wavelet coefficients
+			FINALIZED_WITHOUT_WAVELET,
+			// ADD-BY-LEETEN 10/01/2012-END
+
 			NR_OF_ENUMS
 		};
 
@@ -449,7 +515,25 @@ public:
 		}
 		// ADD-BY-LEETEN 09/14/2012-END
 
-		
+		// ADD-BY-LEETEN 10/01/2012-BEGIN
+		virtual	// ADD-BY-LEETEN 09/29/2012
+		void
+		_SetBoolean(
+			enum EParameter eName,
+			bool bValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case FINALIZED_WITHOUT_WAVELET:
+				bIsFinalizedWithoutWavelet = bValue;
+				break;
+			}
+		}
+		// ADD-BY-LEETEN 09/14/2012-END
+		// ADD-BY-LEETEN 10/01/2012-END
+
 		// ADD-BY-LEETEN 09/07/2012-BEGIN
 		//! Finalize the computation of SAT
 		virtual	// ADD-BY-LEETEN 09/29/2012
@@ -464,13 +548,32 @@ public:
 				iWaveletDenomiator *= 1 << (vuDimLevels[d] - 1);
 			dWaveletDenomiator = sqrt((double)iWaveletDenomiator);
 
+			if( !bIsFinalizedWithoutWavelet )	// ADD-BY-LEETEN 10/01/2012
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{	// MOD-BY-LEETEN 09/13/2012-FROM:	#if !WITH_SPARSE_WAVELET_COEFS	// ADD-BY-LEETEN 09/12/2012
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
 					if( dCoef )
-						this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
+					// MOD-BY-LEETEN 10/01/2012-FROM:	this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
+					{
+						double dWavelet = 1;
+
+						vector<size_t> vuSub;
+						_ConvetIndexToSub(w, vuSub);
+
+						for(size_t d = 0; d < vuSub.size(); d++)
+						{
+							size_t uSub = vuSub[d];
+							if( uSub >= 1 )
+							{
+								size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
+								dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
+							}
+						}
+						this->vvdBinCoefs[b][w] *= dWavelet / dWaveletDenomiator;
+					}
+					// MOD-BY-LEETEN 10/01/2012-END
 				}
 
 				// ADD-BY-LEETEN 09/14/2012-BEGIN
@@ -491,6 +594,7 @@ public:
 				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
 				// ADD-BY-LEETEN 09/14/2012-END
 
+				if( !bIsFinalizedWithoutWavelet )	// ADD-BY-LEETEN 10/01/2012
 				// ADD-BY-LEETEN 09/12/2012-BEGIN
 				// DEL-BY-LEETEN 09/13:		#else	// #if !WITH_SPARSE_WAVELET_COEFS
 				for(map<size_t, double>::iterator 
@@ -500,7 +604,25 @@ public:
 				{
 					double dCoef = ipairCoef->second;
 					if( dCoef )
-						ipairCoef->second /= dWaveletDenomiator;
+					// MOD-BY-LEETEN 10/01/2012-FROM:	ipairCoef->second /= dWaveletDenomiator;
+					{
+						double dWavelet = 1;
+
+						vector<size_t> vuSub;
+						_ConvetIndexToSub(ipairCoef->first, vuSub);
+
+						for(size_t d = 0; d < vuSub.size(); d++)
+						{
+							size_t uSub = vuSub[d];
+							if( uSub >= 1 )
+							{
+								size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
+								dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
+							}
+						}
+						ipairCoef->second *= dWavelet / dWaveletDenomiator;
+					}
+					// MOD-BY-LEETEN 10/01/2012-END
 				}
 			}	// MOD-BY-LEETEN 09/13/2012-FROM:	#endif	// #if !WITH_SPARSE_WAVELET_COEFS	
 				// ADD-BY-LEETEN 09/12/2012-END
@@ -833,5 +955,12 @@ public:
 				vdSums.push_back(dCount);
 			}
 		}
+
+		// ADD-BY-LEETEN 10/01/2012-BEGIN
+		CBase():
+			bIsFinalizedWithoutWavelet(false)
+		{
+		}
+		// ADD-BY-LEETEN 10/01/2012-END
 	};
 }
