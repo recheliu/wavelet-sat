@@ -293,7 +293,7 @@ main(int argn, char* argv[])
 				#else		// MOD-BY-LEETEN 10/01/2012-TO:
 				for(size_t b = 0; b < uNrOfBins; b++)
 					if( fabs(vdH[b]) > dThreshold )
-						printf( "\t%d:%+.2f\n", b, vdH[b]);
+					  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); // MOD-BY-LEETEN 10/02/2012-FROM: printf( "\t%d:%+.2f\n", b, vdH[b]);
 				#endif		// MOD-BY-LEETEN 10/01/2012-END
 				printf("E:%f\n", dError);
 			}

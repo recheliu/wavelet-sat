@@ -29,7 +29,10 @@ public:
 		virtual	// ADD-BY-LEETEN 09/29/2012
 		void
 		_SetLong(
-			enum EParameter eName,
+			// MOD-BY-LEETEN 10/02/2012-FROM:			enum EParameter eName,
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			int eName,
+			// MOD-BY-LEETEN 10/02/2012-END
 			long lValue,
 			void* _Reserved = NULL
 		)
@@ -40,7 +43,10 @@ public:
 			default:
 				;
 			}
-			CBase::_SetLong(eName, lValue);
+			// MOD-BY-LEETEN 10/02/2012-FROM:			CBase::_SetLong(eName, lValue);
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			CBase<T>::_SetLong(eName, lValue);
+			// MOD-BY-LEETEN 10/02/2012-END
 			// ADD-BY-LEETEN 10/01/2012-END
 		}
 		
@@ -51,10 +57,16 @@ public:
 		(
 		)
 		{
-			CBase::_ShowStatistics();
+		  // MOD-BY-LEETEN 10/02/2012-FROM:			CBase::_ShowStatistics();
+		  // MOD-BY-LEETEN 10/02/2012-TO:
+		  CBase<T>::_ShowStatistics();
+		  // MOD-BY-LEETEN 10/02/2012-END
 
 			size_t uNrOfNonZeroCoefs = 0;
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			// MOD-BY-LEETEN 10/02/2012-FROM:			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+			// MOD-BY-LEETEN 10/02/2012-END
 			{
 				double dEnergy = 0.0;
 				for(size_t w = 0; w < this->vvdBinIsotropicCoefs[b].size(); w++)
@@ -80,15 +92,29 @@ public:
 			LOG_VAR(uNrOfNonZeroCoefs);
 
 			size_t uNrOfDataItems = 1;
-			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			// MOD-BY-LEETEN 10/02/2012-FROM:			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+			// MOD-BY-LEETEN 10/02/2012-END
 			{
+#if 0 			// MOD-BY-LEETEN 10/02/2012-FROM:
 				LOG_VAR(vuDimLengths[d]);
 				uNrOfDataItems *= this->vuDataDimLengths[d];	// MOD-BY-LEETEN 09/30/2012-FROM:	uNrOfDataItems *= this->vuDimLengths[d];
+#else			// MOD-BY-LEETEN 10/02/2012-FROM:
+				LOG_VAR(this->vuDimLengths[d]);
+				uNrOfDataItems *= this->vuDataDimLengths[d];
+#endif			// MOD-BY-LEETEN 10/02/2012-END
 			}
 			LOG_VAR(uNrOfDataItems);
-			LOG_VAR(UGetNrOfBins());
+			// MOD-BY-LEETEN 10/02/2012-FROM:			LOG_VAR(UGetNrOfBins());
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			LOG_VAR(this->UGetNrOfBins());
+			// MOD-BY-LEETEN 10/02/2012-END
 
-			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+			// MOD-BY-LEETEN 10/02/2012-FROM:			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			double dCR = (double)(uNrOfDataItems * this->UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+			// MOD-BY-LEETEN 10/02/2012-END
 			LOG_VAR(dCR);
 
 			double dOverhead = (double)uNrOfNonZeroCoefs / (double)uNrOfDataItems;
@@ -106,7 +132,10 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			CBase::_GetAllSums
+		  // MOD-BY-LEETEN 10/02/2012-FROM:		CBase::_GetAllSums
+		  // MOD-BY-LEETEN 10/02/2012-TO:
+		  CBase<T>::_GetAllSums
+		  // MOD-BY-LEETEN 10/02/2012-END
 			(
 				vuPos, 
 				vdSums
@@ -122,6 +151,7 @@ public:
 		)
 		{
 			// First, finish the computation of the (separable) DWT
+#if 0 		// MOD-BY-LEETEN 10/02/2012-FROM:
 			// ADD-BY-LEETEN 10/01/2012-BEGIN
 			// Do not apply wavelet coefficients
 			CBase::_SetBoolean(CBase::FINALIZED_WITHOUT_WAVELET, true);
@@ -129,6 +159,13 @@ public:
 			CBase::_Finalize
 			(
 			);
+#else		// MOD-BY-LEETEN 10/02/2012-TO:
+			// Do not apply wavelet coefficients
+			this->_SetBoolean(CBase<T>::FINALIZED_WITHOUT_WAVELET, true);
+			CBase<T>::_Finalize
+			(
+			);
+#endif		// MOD-BY-LEETEN 10/02/2012-END
 
 			/*	// ADD-BY-LEETEN 10/01/2012-BEGIN
 			for l = 1 ... log N
@@ -151,7 +188,10 @@ public:
 			vvdBinIsotropicCoefs.resize(this->UGetNrOfBins());
 			for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 			{
-				vvdBinIsotropicCoefs[b] = vvdBinCoefs[b];
+			  // MOD-BY-LEETEN 10/02/2012-FROM:				vvdBinIsotropicCoefs[b] = vvdBinCoefs[b];
+			  // MOD-BY-LEETEN 10/02/2012-TO:
+			  vvdBinIsotropicCoefs[b] = this->vvdBinCoefs[b];
+			  // MOD-BY-LEETEN 10/02/2012-END
 				
 				// update the hyperslice
 				for(size_t uNrOfSlices = 1; uNrOfSlices < this->vuDimLengths[0]/2; uNrOfSlices <<= 1)
@@ -189,6 +229,7 @@ public:
 
 							for(size_t s = 0; s < uNrOfSlices ; s++)
 							{
+#if 0 							// MOD-BY-LEETEN 10/02/2012-FROM:
 								vector<size_t> vuSrc1  = vuBase; vuSrc1[d] = s;
 								size_t uSrc1 = UConvetSubToIndex(vuSrc1);
 								double dSrc1 = vvdBinCoefs[b][uSrc1];
@@ -202,6 +243,21 @@ public:
 
 								vector<size_t> vuDst2  = vuBase; vuDst2[d] = s + 1;
 								size_t uDst2 = UConvetSubToIndex(vuDst2);
+#else							// MOD-BY-LEETEN 10/02/2012-TO:
+								vector<size_t> vuSrc1  = vuBase; vuSrc1[d] = s;
+								size_t uSrc1 = this->UConvetSubToIndex(vuSrc1);
+								double dSrc1 = this->vvdBinCoefs[b][uSrc1];
+
+								vector<size_t> vuSrc2  = vuBase; vuSrc2[d] = s + uNrOfSlices;
+								size_t uSrc2 = this->UConvetSubToIndex(vuSrc2);
+								double dSrc2 = this->vvdBinCoefs[b][uSrc2];
+
+								vector<size_t> vuDst1  = vuBase; vuDst1[d] = s;
+								size_t uDst1 = this->UConvetSubToIndex(vuDst1);
+
+								vector<size_t> vuDst2  = vuBase; vuDst2[d] = s + 1;
+								size_t uDst2 = this->UConvetSubToIndex(vuDst2);
+#endif							// MOD-BY-LEETEN 10/02/2012-END
 
 								// Dst1 = Src1 + Src2
 								vvdBinIsotropicCoefs[b][uDst1] = dSrc1 + dSrc2;

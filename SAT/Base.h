@@ -81,7 +81,10 @@ public:
 
 		void
 		_SetLong(
-			enum EParameter eName,
+			// MOD-BY-LEETEN 10/02/2012-FROM:			enum EParameter eName,
+			// MOD-BY-LEETEN 10/02/2012-TO:
+			int eName,
+			// MOD-BY-LEETEN 10/02/2012-END
 			long lValue,
 			void* _Reserved = NULL
 		)

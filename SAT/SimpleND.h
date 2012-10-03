@@ -5,7 +5,10 @@
 
 template<class T>
 class CSimpleND:
-	public WaveletSAT::CIsotropicWaveletSAT<T>	// MOD-BY-LEETEN 10/01/2012-FROM: public WaveletSAT::CBase<T>
+// MOD-BY-LEETEN 10/02/2012-FROM: 	public WaveletSAT::CIsotropicWaveletSAT<T>	// MOD-BY-LEETEN 10/01/2012-FROM: public WaveletSAT::CBase<T>
+	// MOD-BY-LEETEN 10/02/2012-FROM:
+	public WaveletSAT::CBase<T>
+	// MOD-BY-LEETEN 10/02/2012-END
 {
 	size_t uNrOfBins;
 	T valueMin, valueMax;
