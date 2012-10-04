@@ -4,113 +4,16 @@
 #include "libclock.h"
 #include "libopt.h"
 
-#if	0	// MOD-BY-LEETEN 09/30/2012-FROM:
-#include "WaveletSAT.h"
-
-// DEL-BY-LEETEN	09/09/2012:	#define PRINT_OUTPUT	1	// ADD-BY-LEETEN 09/07/2012
-using namespace WaveletSAT;
-
-template<class T>
-class CSimpleND:
-	public CBase<T>
-{
-	size_t uNrOfBins;
-	T valueMin, valueMax;
-public:
-	virtual 
-	void 
-	_MapValueToBins
-	(
-		const vector<size_t>& vuPos,
-		const T& value, 
-		// MOD-BY-LEETEN 09/07/2012-FROM:	vector<size_t>& vuBins,
-		// MOD-BY-LEETEN 09/09/2012-FROM:	vector<pair<size_t, double>>& vpBins,
-		vector< pair<size_t, double> >& vpBins,
-		// MOD-BY-LEETEN 09/09/2012-END
-		// MOD-BY-LEETEN 09/07/2012-END
-		void *_Reserved = NULL
-	)
-	{
-		T clampedValue = min(max(value, valueMin), valueMax);
-		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
-		uBin = min(uBin, uNrOfBins - 1);
-		#if	0	// MOD-BY-LEETEN 09/07/2012-FORM:
-			vuBins.clear();
-			vuBins.push_back(uBin);
-		#else		// MOD-BY-LEETEN 09/07/2012-TO:
-		vpBins.clear();
-		vpBins.push_back(pair<size_t, double>(uBin, 1.0));
-		#endif		// MOD-BY-LEETEN 09/07/2012-END
-	}
-	
-	#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
-		virtual
-		void
-		_MapValueToBinWeight
-		(
-			const vector<size_t>& vuPos,
-			const T& value, 
-			size_t uBin,
-			double& dW,
-			void *_Reserved = NULL
-		)
-		{
-			dW = 1.0;
-		}
-	#endif	// DEL-BY-LEETEN 09/07/2012-END
-
-	////////////////////////////////////////////////////////////
-	void
-	_SetHistogram
-	(
-		size_t uNrOfBins,
-		const T& valueMin, 
-		const T& valueMax
-	)
-	{
-		this->uNrOfBins = uNrOfBins;
-		this->valueMin = valueMin;
-		this->valueMax = valueMax;
-	}
-
-	void
-	_AddValue
-	(
-		const vector<size_t>& vuPos,
-		const T& value,
-		void *_Reserved = NULL
-	)
-	{
-		_Update(vuPos, value);
-	}
-};
-#else	// MOD-BY-LEETEN 09/30/2012-TO:
-
 #include "SimpleND.h"
 
-#endif	// MOD-BY-LEETEN 09/30/2012-END
-
 int
-// MOD-BY-LEETEN	09/09/2012-FROM:	main(int arhn, char* argv[])
 main(int argn, char* argv[])
-// DEL-BY-LEETEN	09/09/2012-END
 {
 	bool bIsPrintingTiming = true;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	CSimpleND<int> cSimpleND;
 
-	#if	0	// MOD-BY-LEETEN	09/09/2012-FROM:
-		size_t uDimLength = 128;
-		size_t uNrOfDims = 2;
-		// DEL-BY-LEETEN 09/07/2012:	size_t uNrOfValues = 1;
-		size_t uMaxLevel = 0;
-		size_t uWinSize = 1;
-		// ADD-By-LEETEN 09/07/2012-BEGIN
-		int iValueMax = 32;
-		size_t uNrOfBins = 8;	// iValueMax;
-		// ADD-By-LEETEN 09/07/2012-END
-	#else		// MOD-BY-LEETEN	09/09/2012-TO:
 	_OPTInit();			// initialize the option parser
 
 	enum {
@@ -180,7 +83,6 @@ main(int argn, char* argv[])
 	size_t uWinSize = 1;
 	size_t uNrOfBins = iNrOfBins;
 	// ADD-By-LEETEN 09/07/2012-END
-	#endif	// MOD-BY-LEETEN	09/09/2012-END
 
 	// ADD-BY-LEETEN 09/14/2012-BEGIN
 	cSimpleND._SetLong(CSimpleND<int>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
@@ -198,10 +100,6 @@ main(int argn, char* argv[])
 	// ADD-BY-LEETEN 09/14/2012-END
 
 	size_t uNrOfTestingValues = uDimLength;
-	#if	0	// DEL-BY-LEETEN 09/07/2012-BEGIN
-		int iValueMax = 32;
-		size_t uNrOfBins = 8;	// iValueMax;
-	#endif		// DEL-BY-LEETEN 09/07/2012-END
 
 	// Step 1: Setup up the data size
 	vector<size_t> vuDimLengths;
@@ -233,7 +131,6 @@ main(int argn, char* argv[])
 			uCoord /= vuDimLengths[d], d++)
 			vuPos.push_back(uCoord % vuDimLengths[d]);
 
-		// MOD-BY-LEETEN	09/09/2012-FROM:		int iValue = rand()%iValueMax;
 		int iValue = 0;
 		switch(iDataSampling)
 		{
@@ -273,21 +170,12 @@ main(int argn, char* argv[])
 			}
 			break;
 		}
-		// MOD-BY-LEETEN	09/09/2012-END
 
 		cSimpleND._AddValue(vuPos, iValue);
 
-		#if	0	// MOD-BY-LEETEN 09/07/2012-FROM:
-			vector<size_t> vuBins;
-			cSimpleND._MapValueToBins(vuPos, iValue, vuBins);
-			vuValueBins.push_back(vuBins[0]);
-		#else		// MOD-BY-LEETEN 09/07/2012-TO:
-		// MOD-BY-LEETEN 09/09/2012-FROM:		vector<pair<size_t, double>> vuBins;
 		vector< pair<size_t, double> > vuBins;
-		// MOD-BY-LEETEN 09/09/2012-END
 		cSimpleND._MapValueToBins(vuPos, iValue, vuBins);
 		vuValueBins.push_back(vuBins[0].first);
-		#endif		// MOD-BY-LEETEN 09/07/2012-END
 		//		printf("%d\n", iValue);
 	}
 
@@ -302,20 +190,7 @@ main(int argn, char* argv[])
 	// Now we can start to query SATs
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
-	#if	0	// MOD-BY-LEETEN	09/09/2012-FROM:
-		vector<double> vdBinEnergies;
-		cSimpleND._GetEnergy
-		(
-			vdBinEnergies
-		);
-
-		#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
-		for(size_t b = 0; b < vdBinEnergies.size(); b++)
-			printf("Bin (%d): %f\n", b, vdBinEnergies[b]);
-		#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
-	#else		// MOD-BY-LEETEN	09/09/2012-TO:
 	cSimpleND._ShowStatistics();
-	#endif		// MOD-BY-LEETEN	09/09/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	// ADD-BY-LEETEN	09/09/2012-BEGIN
@@ -325,9 +200,7 @@ main(int argn, char* argv[])
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	size_t uNrOfIHs = 1 << uNrOfDims;
-	// MOD-BY-LEETEN 09/09/2012-FROM:	vector<vector<size_t>> vvuOffsets;
 	vector< vector<size_t> > vvuOffsets;
-	// MOD-BY-LEETEN 09/09/2012-END
 	vvuOffsets.resize(uNrOfIHs);
 	for(size_t i = 0; i < uNrOfIHs; i++)
 	{
@@ -348,9 +221,8 @@ main(int argn, char* argv[])
 	{
 		vector<size_t> vuBase;
 		size_t uIndex = 0;
-		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )
 		printf("B(");
-		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		for(size_t 
 			d = 0, uDimLengthProduct = 1; 
 			d < uNrOfDims; 
@@ -360,22 +232,11 @@ main(int argn, char* argv[])
 			vuBase.push_back(uPos);
 			uIndex += uPos * uDimLengthProduct;
 
-			if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
-#if 0 // MOD-BY-LEETEN 09/09/2012-FROM:
-			  
-			printf("%3d,", uPos);	// MOD-BY-LEETEN	09/09/2012-FROM:	printf("%4d,", uPos);
-#else // MOD-BY-LEETEN 09/09/2012-TO:
+			if( iIsVerbose )
 			printf("%3d,", (int)uPos);
-#endif // MOD-BY-LEETEN 09/09/2012-END
-			// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		}
-		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
-		// MOD-BY-LEETEN 09/09/2012-FROM:		printf(")=%d,", vuValueBins[uIndex]);
-		  // MOD-BY-LEETEN 09/09/2012-FROM:		printf(")=%d,\n", vuValueBins[uIndex]);
+		if( iIsVerbose )
 		printf(")=%d,\n", (int)vuValueBins[uIndex]);
-		// MOD-BY-LEETEN 09/09/2012-END
-		// MOD-BY-LEETEN 09/09/2012-END
-		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 
 		vector<double> vdH;
 		vdH.resize(uNrOfBins);
@@ -408,22 +269,19 @@ main(int argn, char* argv[])
 		}
 
 		double dError = 0.0;
-		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )
 		printf("H:");
-		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 		for(size_t b = 0; b < uNrOfBins; b++)
 		{
-			if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+			if( iIsVerbose )
 			printf( "%+.2f,", vdH[b]);
-			// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 			if(b == vuValueBins[uIndex])
 				dError += pow(1.0 - vdH[b], 2.0);
 			else
 				dError += pow(vdH[b], 2.0);
 		}
-		if( iIsVerbose )	// MOD-BY-LEETEN	09/09/2012-FROM:	#if	PRINT_OUTPUT		// ADD-BY-LEETEN 09/07/2012
+		if( iIsVerbose )	
 		printf("E:%f\n", dError);
-		// DEL-BY-LEETEN	09/09/2012:	#endif	// #if	PRINT_OUTPUT	// ADD-BY-LEETEN 09/07/2012
 	}
 	LIBCLOCK_END(bIsPrintingTiming);
 	}	// ADD-BY-LEETEN	09/09/2012-END
