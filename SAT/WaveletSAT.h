@@ -225,13 +225,14 @@ protected:	// ADD-BY-LEETEN 09/30/2012
 					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
 					size_t uPosInWavelet = uPos % w;
 					if( 0 == l )
-						lWavelet = (long)(w / 2 - uPosInWavelet);
+						lWavelet = (long)w / 2 - (long)uPosInWavelet;	// MOD-BY-LEETEN 10/05/2012-FROM:	lWavelet = (long)(w / 2 - uPosInWavelet);
 					else
 					{
 						if( uPosInWavelet < w / 2)
 							lWavelet = (long)uPosInWavelet;
 						else
 							lWavelet = (long)(w - uPosInWavelet);
+						lWavelet *= -1;		// ADD-BY-LEETEN 10/05/2012
 					}
 					vlWavelets.push_back( lWavelet );
 					#endif	// MOD-BY-LEETEN 10/01/2012-END
@@ -435,6 +436,24 @@ public:
 		// ADD-BY-LEETEN 09/14/2012-END
 		// ADD-BY-LEETEN 10/01/2012-END
 
+		// ADD-BY-LEETEN 10/05/2012-BEGIN
+		//! Retunr the smallest value. 
+		/*!
+		This can be used to filter too small value caused by numerical error.
+		*/
+		double 
+		DGetThreshold
+		(
+			void *_Reserved = NULL
+		)
+		{
+			size_t uThreshold = 1;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				uThreshold *= this->vuDimLengths[d];
+			return 1.0 / sqrt((double)uThreshold);
+		}
+		// ADD-BY-LEETEN 10/05/2012-END
+
 		// ADD-BY-LEETEN 09/07/2012-BEGIN
 		//! Finalize the computation of SAT
 		virtual	// ADD-BY-LEETEN 09/29/2012
@@ -458,7 +477,7 @@ public:
 					if( dCoef )
 					// MOD-BY-LEETEN 10/01/2012-FROM:	this->vvdBinCoefs[b][w] /= dWaveletDenomiator;
 					{
-						double dWavelet = 1;
+						double dWavelet = +1.0;	// MOD-BY-LEETEN 10/05/2012-FROM:	double dWavelet = 1;
 
 						vector<size_t> vuSub;
 						_ConvetIndexToSub(w, vuSub);
@@ -469,7 +488,7 @@ public:
 							if( uSub >= 1 )
 							{
 								size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
-								dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
+								dWavelet *= sqrt((double)(1 << (uLevel - 1) ));		// MOD-BY-LEETEN 10/05/2012-FROM:	dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
 							}
 						}
 						this->vvdBinCoefs[b][w] *= dWavelet / dWaveletDenomiator;
@@ -506,7 +525,7 @@ public:
 					if( dCoef )
 					// MOD-BY-LEETEN 10/01/2012-FROM:	ipairCoef->second /= dWaveletDenomiator;
 					{
-						double dWavelet = 1;
+						double dWavelet = 1.0;	// MOD-BY-LEETEN 10/05/2012-FROM:	double dWavelet = 1;
 
 						vector<size_t> vuSub;
 						_ConvetIndexToSub(ipairCoef->first, vuSub);
@@ -517,7 +536,7 @@ public:
 							if( uSub >= 1 )
 							{
 								size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
-								dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
+								dWavelet *= sqrt((double)(1 << (uLevel - 1) ));	// MOD-BY-LEETEN 10/05/2012-FROM:	dWavelet *= -sqrt((double)(1 << (uLevel - 1) ));	
 							}
 						}
 						ipairCoef->second *= dWavelet / dWaveletDenomiator;
@@ -776,6 +795,7 @@ public:
 					}
 				}
 				dCount /= dWaveletDenomiator;	// ADD-BY-LEETEN 09/07/2012
+				
 				vdSums.push_back(dCount);
 			}
 		}

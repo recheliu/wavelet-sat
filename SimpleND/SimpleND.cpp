@@ -197,6 +197,7 @@ main(int argn, char* argv[])
 	if(iIsTestingQuery)
 	{
 	// ADD-BY-LEETEN	09/09/2012-END
+	double dThreshold = cSimpleND.DGetThreshold();	// ADD-BY-LEETEN 10/05/2012
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	size_t uNrOfIHs = 1 << uNrOfDims;
@@ -253,35 +254,60 @@ main(int argn, char* argv[])
 			cSimpleND._GetAllSums(vuPos, vdIH);
 
 			// ADD-BY-LEETEN 09/09/2012-BEGIN
-			if( iIsVerbose )
-				printf("\t%+d,", iSign);
+			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+				if( iIsVerbose )
+					printf("\t%+d,", iSign);
+			#endif		// DEL-BY-LEETEN 10/05/2012-END
 			// ADD-BY-LEETEN 09/09/2012-END
 			for(size_t b = 0; b < uNrOfBins; b++)
 			{	// ADD-BY-LEETEN 09/09/2012
 				vdH[b] += iSign * vdIH[b]; 
 			// ADD-BY-LEETEN 09/09/2012-BEGIN
-				if( iIsVerbose )	// ADD-BY-LEETEN 09/12/2012
-				printf( "%+.2f,", vdIH[b]);
+
+				#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+					if( iIsVerbose )	// ADD-BY-LEETEN 09/12/2012
+					printf( "%+.2f,", vdIH[b]);
+				#endif		// DEL-BY-LEETEN 10/05/2012-END
 			}
-			if( iIsVerbose )	
-				printf("\n");
+			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+				if( iIsVerbose )	
+					printf("\n");
+			#endif		// DEL-BY-LEETEN 10/05/2012-END
 			// ADD-BY-LEETEN 09/09/2012-END
 		}
 
 		double dError = 0.0;
-		if( iIsVerbose )
-		printf("H:");
+		#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+			if( iIsVerbose )
+			printf("H:");
+		#endif		// DEL-BY-LEETEN 10/05/2012-END
 		for(size_t b = 0; b < uNrOfBins; b++)
 		{
-			if( iIsVerbose )
-			printf( "%+.2f,", vdH[b]);
+			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+				if( iIsVerbose )
+				printf( "%+.2f,", vdH[b]);
+			#endif		// DEL-BY-LEETEN 10/05/2012-END
+
 			if(b == vuValueBins[uIndex])
 				dError += pow(1.0 - vdH[b], 2.0);
 			else
 				dError += pow(vdH[b], 2.0);
 		}
-		if( iIsVerbose )	
-		printf("E:%f\n", dError);
+		#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
+			if( iIsVerbose )	
+			printf("E:%f\n", dError);
+		#endif		// DEL-BY-LEETEN 10/05/2012-END
+
+		// ADD-BY-LEETEN 10/05/2012-BEGIN
+		if( iIsVerbose )
+		{
+			printf("H:");
+			for(size_t b = 0; b < uNrOfBins; b++)
+				if( fabs(vdH[b]) > dThreshold )
+				  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); // MOD-BY-LEETEN 10/02/2012-FROM: printf( "\t%d:%+.2f\n", b, vdH[b]);
+			printf("E:%f\n", dError);
+		}
+		// ADD-BY-LEETEN 10/05/2012-END
 	}
 	LIBCLOCK_END(bIsPrintingTiming);
 	}	// ADD-BY-LEETEN	09/09/2012-END

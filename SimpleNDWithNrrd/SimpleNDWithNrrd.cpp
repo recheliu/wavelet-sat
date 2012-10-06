@@ -197,13 +197,18 @@ main(int argn, char* argv[])
 	{
 		// ADD-BY-LEETEN 10/01/2012-BEGIN
 		// decide the threshld to filter numerical error
-		double dThreshold = 1.0;
-		for(size_t d = 0; d < uNrOfDims; d++)
-		{
-			size_t uDimLength = (size_t)nin->axis[d].size;
-			dThreshold *= sqrt((double)uDimLength);
-		}
-		dThreshold = 1.0 / dThreshold;
+
+		#if	0	// MOD-BY-LEETEN 10/05/2012-FROM:
+			double dThreshold = 1.0;
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				size_t uDimLength = (size_t)nin->axis[d].size;
+				dThreshold *= sqrt((double)uDimLength);
+			}
+			dThreshold = 1.0 / dThreshold;
+		#else		// MOD-BY-LEETEN 10/05/2012-TO:
+		double dThreshold = cSimpleND.DGetThreshold();
+		#endif		// MOD-BY-LEETEN 10/05/2012-END
 		// ADD-BY-LEETEN 10/01/2012-END
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
