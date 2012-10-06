@@ -1,6 +1,6 @@
 #include <math.h>
 #include <assert.h>
-#include <stdlib.h> // ADD-BY-LEETEN 09/09/2012
+#include <stdlib.h> 
 #include "libclock.h"
 #include "libopt.h"
 
@@ -192,24 +192,10 @@ main(int argn, char* argv[])
 	cSimpleND._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	// ADD-BY-LEETEN	09/09/2012-BEGIN
 	if(iIsTestingQuery)
 	{
-		// ADD-BY-LEETEN 10/01/2012-BEGIN
 		// decide the threshld to filter numerical error
-
-		#if	0	// MOD-BY-LEETEN 10/05/2012-FROM:
-			double dThreshold = 1.0;
-			for(size_t d = 0; d < uNrOfDims; d++)
-			{
-				size_t uDimLength = (size_t)nin->axis[d].size;
-				dThreshold *= sqrt((double)uDimLength);
-			}
-			dThreshold = 1.0 / dThreshold;
-		#else		// MOD-BY-LEETEN 10/05/2012-TO:
 		double dThreshold = cSimpleND.DGetThreshold();
-		#endif		// MOD-BY-LEETEN 10/05/2012-END
-		// ADD-BY-LEETEN 10/01/2012-END
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 
@@ -271,15 +257,6 @@ main(int argn, char* argv[])
 				for(size_t b = 0; b < uNrOfBins; b++)
 					vdH[b] += iSign * vdIH[b]; 
 
-				#if	0	// DEL-BY-LEETEN 09/30/2012-BEGIN
-					if( iIsVerbose )
-					{
-						printf("\t%+d,", iSign);
-						for(size_t b = 0; b < uNrOfBins; b++)
-							printf( "%+.2f,", vdIH[b]);
-						printf("\n");
-					}
-				#endif		// DEL-BY-LEETEN 09/30/2012-END
 			}
 
 			double dError = 0.0;
@@ -292,14 +269,9 @@ main(int argn, char* argv[])
 			if( iIsVerbose )
 			{
 				printf("H:");
-				#if	0	// MOD-BY-LEETEN 10/01/2012-FROM:
-					for(size_t b = 0; b < uNrOfBins; b++)
-						printf( "%+.2f,", vdH[b]);
-				#else		// MOD-BY-LEETEN 10/01/2012-TO:
 				for(size_t b = 0; b < uNrOfBins; b++)
 					if( fabs(vdH[b]) > dThreshold )
-					  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); // MOD-BY-LEETEN 10/02/2012-FROM: printf( "\t%d:%+.2f\n", b, vdH[b]);
-				#endif		// MOD-BY-LEETEN 10/01/2012-END
+					  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]);
 				printf("E:%f\n", dError);
 			}
 		}

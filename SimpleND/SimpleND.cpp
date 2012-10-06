@@ -1,6 +1,6 @@
 #include <math.h>
 #include <assert.h>
-#include <stdlib.h> // ADD-BY-LEETEN 09/09/2012
+#include <stdlib.h>
 #include "libclock.h"
 #include "libopt.h"
 
@@ -18,7 +18,7 @@ main(int argn, char* argv[])
 
 	enum {
 		DATA_SAMPLING_BLOCK,
-		DATA_SAMPLING_RANDOM_BLOCK,	// ADD-BY-LEETEN 09/14/2012
+		DATA_SAMPLING_RANDOM_BLOCK,	
 		DATA_SAMPLING_RANDOM,
 		DATA_SAMPLING_JUMP,
 		NR_OF_DATA_SAMPLING,
@@ -65,14 +65,12 @@ main(int argn, char* argv[])
 	_OPTAddBoolean(
 		"--is-verbose", &iIsVerbose, iIsVerbose);
 
-	// ADD-BY-LEETEN 09/14/2012-BEGIN
 	int iSizeOfFullArrays = 0;
 	_OPTAddIntegerVector(
 		"--size-of-full-arrays", 1,
 		&iSizeOfFullArrays, iSizeOfFullArrays);
 	_OPTAddComment("--size-of-full-arrays", 
 		"Size (in MB) of the full arrays from all bin SATs");
-	// ADD-BY-LEETEN 09/14/2012-END
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
@@ -82,9 +80,7 @@ main(int argn, char* argv[])
 	size_t uMaxLevel = iMaxLevel;
 	size_t uWinSize = 1;
 	size_t uNrOfBins = iNrOfBins;
-	// ADD-By-LEETEN 09/07/2012-END
 
-	// ADD-BY-LEETEN 09/14/2012-BEGIN
 	cSimpleND._SetLong(CSimpleND<int>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 
 	// create a lookup table to shuffule the value
@@ -97,13 +93,12 @@ main(int argn, char* argv[])
 		size_t uRand = rand() % i;
 		swap(viShuffleTable[i - 1], viShuffleTable[uRand]);
 	}
-	// ADD-BY-LEETEN 09/14/2012-END
 
 	size_t uNrOfTestingValues = uDimLength;
 
 	// Step 1: Setup up the data size
 	vector<size_t> vuDimLengths;
-	size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+	size_t uNrOfValues = 1;	
 	for(size_t d = 0; d < uNrOfDims; d++)
 	{
 		vuDimLengths.push_back(uDimLength);
@@ -138,7 +133,7 @@ main(int argn, char* argv[])
 			iValue = rand()%iValueMax;
 			break;
 
-		case DATA_SAMPLING_RANDOM_BLOCK:	// ADD-BY-LEETEN 09/14/2012
+		case DATA_SAMPLING_RANDOM_BLOCK:
 		case DATA_SAMPLING_BLOCK:
 			{
 			int iValueDimMax = (int)floor(pow((double)iValueMax, 1.0/(double)uNrOfDims));
@@ -148,14 +143,12 @@ main(int argn, char* argv[])
 				uPrevDimSize *= iValueDimMax, d++)
 				iValue += (int)uPrevDimSize * (int)floorf((float)iValueDimMax * (float)vuPos[d] / (float)vuDimLengths[d]);
 
-			// ADD-BY-LEETEN 09/14/2012-BEGIN
 			switch(iDataSampling)
 			{
 			case DATA_SAMPLING_RANDOM_BLOCK:
 				iValue = (int)viShuffleTable[iValue];
 				break;
 			}
-			// ADD-BY-LEETEN 09/14/2012-END
 			}
 			break;
 
@@ -179,10 +172,8 @@ main(int argn, char* argv[])
 		//		printf("%d\n", iValue);
 	}
 
-	// ADD-BY-LEETEN 09/07/2012-BEGIN
 	// Step 4: Finalize the SAT computation
 	cSimpleND._Finalize();
-	// ADD-BY-LEETEN 09/07/2012-END
 
 	LIBCLOCK_END(bIsPrintingTiming);
 
@@ -193,11 +184,9 @@ main(int argn, char* argv[])
 	cSimpleND._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	// ADD-BY-LEETEN	09/09/2012-BEGIN
 	if(iIsTestingQuery)
 	{
-	// ADD-BY-LEETEN	09/09/2012-END
-	double dThreshold = cSimpleND.DGetThreshold();	// ADD-BY-LEETEN 10/05/2012
+	double dThreshold = cSimpleND.DGetThreshold();	
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	size_t uNrOfIHs = 1 << uNrOfDims;
@@ -212,11 +201,9 @@ main(int argn, char* argv[])
 			d++, j /= 2)
 			vvuOffsets[i][d] = uWinSize * (j % 2);
 	}
-	// ADD-BY-LEETEN 09/07/2012-BEGIN
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	// ADD-BY-LEETEN 09/07/2012-END
 
 	for(size_t t = 0; t < uNrOfTestingValues; t++)
 	{
@@ -253,64 +240,32 @@ main(int argn, char* argv[])
 			vector<double> vdIH;
 			cSimpleND._GetAllSums(vuPos, vdIH);
 
-			// ADD-BY-LEETEN 09/09/2012-BEGIN
-			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-				if( iIsVerbose )
-					printf("\t%+d,", iSign);
-			#endif		// DEL-BY-LEETEN 10/05/2012-END
-			// ADD-BY-LEETEN 09/09/2012-END
 			for(size_t b = 0; b < uNrOfBins; b++)
-			{	// ADD-BY-LEETEN 09/09/2012
+			{	
 				vdH[b] += iSign * vdIH[b]; 
-			// ADD-BY-LEETEN 09/09/2012-BEGIN
-
-				#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-					if( iIsVerbose )	// ADD-BY-LEETEN 09/12/2012
-					printf( "%+.2f,", vdIH[b]);
-				#endif		// DEL-BY-LEETEN 10/05/2012-END
 			}
-			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-				if( iIsVerbose )	
-					printf("\n");
-			#endif		// DEL-BY-LEETEN 10/05/2012-END
-			// ADD-BY-LEETEN 09/09/2012-END
 		}
 
 		double dError = 0.0;
-		#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-			if( iIsVerbose )
-			printf("H:");
-		#endif		// DEL-BY-LEETEN 10/05/2012-END
 		for(size_t b = 0; b < uNrOfBins; b++)
 		{
-			#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-				if( iIsVerbose )
-				printf( "%+.2f,", vdH[b]);
-			#endif		// DEL-BY-LEETEN 10/05/2012-END
-
 			if(b == vuValueBins[uIndex])
 				dError += pow(1.0 - vdH[b], 2.0);
 			else
 				dError += pow(vdH[b], 2.0);
 		}
-		#if	0	// DEL-BY-LEETEN 10/05/2012-BEGIN
-			if( iIsVerbose )	
-			printf("E:%f\n", dError);
-		#endif		// DEL-BY-LEETEN 10/05/2012-END
 
-		// ADD-BY-LEETEN 10/05/2012-BEGIN
 		if( iIsVerbose )
 		{
 			printf("H:");
 			for(size_t b = 0; b < uNrOfBins; b++)
 				if( fabs(vdH[b]) > dThreshold )
-				  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); // MOD-BY-LEETEN 10/02/2012-FROM: printf( "\t%d:%+.2f\n", b, vdH[b]);
+				  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); 
 			printf("E:%f\n", dError);
 		}
-		// ADD-BY-LEETEN 10/05/2012-END
 	}
 	LIBCLOCK_END(bIsPrintingTiming);
-	}	// ADD-BY-LEETEN	09/09/2012-END
+	}	
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;
