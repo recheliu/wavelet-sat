@@ -194,7 +194,7 @@ public:
 			// for each bin, apply wavelet transform
 			vdSums.clear();
 
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			for(size_t b = 0; b < this->UGetNrOfBins(); b++) // MOD-BY-LEETEN 10/05/2012: for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				double dCount = 0.0;
 
@@ -380,7 +380,7 @@ public:
 							for(size_t s = 0; s < 2 * uNrOfSlices ; s++)
 							{
 								vector<size_t> vuSrc  = vuBase; vuSrc[d] = s;
-								size_t uSrc = UConvetSubToIndex(vuSrc);
+								size_t uSrc = this->UConvetSubToIndex(vuSrc); // MOD-BY-LEETEN 10/05/2012: size_t uSrc = UConvetSubToIndex(vuSrc);
 								vdSrc.push_back( vvdBinIsotropicCoefs[b][uSrc] );
 							}
 
@@ -394,7 +394,7 @@ public:
 							for(size_t s = 0; s < 2 * uNrOfSlices ; s++)
 							{
 								vector<size_t> vuDst  = vuBase; vuDst[d] = s;
-								size_t uDst = UConvetSubToIndex(vuDst);
+								size_t uDst = this->UConvetSubToIndex(vuDst); // MOD-BY-LEETEN 10/05/2012: size_t uDst = UConvetSubToIndex(vuDst);
 								vvdBinIsotropicCoefs[b][uDst] = vdDst[s];
 							}
 							#endif	// MOD-BY-LEETEN 10/05/2012-END
