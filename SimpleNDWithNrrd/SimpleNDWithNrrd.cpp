@@ -213,6 +213,7 @@ main(int argn, char* argv[])
 		}
 		LIBCLOCK_END(bIsPrintingTiming);
 
+
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		for(size_t t = 0; t < uNrOfTestingValues; t++)
 		{
@@ -232,13 +233,16 @@ main(int argn, char* argv[])
 				if( iIsVerbose )
 					printf("%3d,", (int)uPos);
 			}
-
 			vector< pair<size_t, double> > vuBins;
 			cSimpleND._MapValueToBins(vuBase, vdData[uIndex], vuBins);
-			
+
 			size_t uValueBin = vuBins[0].first;
 			if( iIsVerbose )
-				printf(")=%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
+				#if	0	// MOD-BY-LEETEN 10/06/2012-FROM:
+					printf(")=%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
+				#else		// MOD-BY-LEETEN 10/06/2012-TO:
+				printf(")=\t%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
+				#endif		// MOD-BY-LEETEN 10/06/2012-END
 
 			vector<double> vdH;
 			vdH.resize(uNrOfBins);
@@ -256,7 +260,6 @@ main(int argn, char* argv[])
 
 				for(size_t b = 0; b < uNrOfBins; b++)
 					vdH[b] += iSign * vdIH[b]; 
-
 			}
 
 			double dError = 0.0;
@@ -271,7 +274,11 @@ main(int argn, char* argv[])
 				printf("H:");
 				for(size_t b = 0; b < uNrOfBins; b++)
 					if( fabs(vdH[b]) > dThreshold )
+					#if	0	// MOD-BY-LEETEN 10/06/2012-FROM:
 					  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]);
+					#else		// MOD-BY-LEETEN 10/06/2012-TO:
+					  printf( "\t\t%d:%+.2f\n", (unsigned int)b, vdH[b]);
+					#endif		// MOD-BY-LEETEN 10/06/2012-END
 				printf("E:%f\n", dError);
 			}
 		}

@@ -224,7 +224,7 @@ main(int argn, char* argv[])
 			printf("%3d,", (int)uPos);
 		}
 		if( iIsVerbose )
-		printf(")=%d,\n", (int)vuValueBins[uIndex]);
+			printf(")=\t%d,\n", (int)vuValueBins[uIndex]);	// MOD-BY-LEETEN 10/06/2012-FROM:	printf(")=%d,\n", (int)vuValueBins[uIndex]);
 
 		vector<double> vdH;
 		vdH.resize(uNrOfBins);
@@ -260,7 +260,7 @@ main(int argn, char* argv[])
 			printf("H:");
 			for(size_t b = 0; b < uNrOfBins; b++)
 				if( fabs(vdH[b]) > dThreshold )
-				  printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); 
+					printf( "\t\t%d:%+.2f\n", (unsigned int)b, vdH[b]); // MOD-BY-LEETEN 10/06/2012-FROM:	printf( "\t%d:%+.2f\n", (unsigned int)b, vdH[b]); 
 			printf("E:%f\n", dError);
 		}
 	}

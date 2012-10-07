@@ -139,10 +139,15 @@ protected:
 			void* _Reserved = NULL
 		)
 		{
-			vuSub.clear();
+			// MOD-BY-LEETEN 10/06/2012-FROM:	vuSub.clear();
+			if( this->UGetNrOfDims() != vuSub.size() )
+				vuSub.resize(this->UGetNrOfDims());
+			// MOD-BY-LEETEN 10/06/2012-END
 			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 			{
-				vuSub.push_back( uIndex % this->vuDimLengths[d] );
+				// MOD-BY-LEETEN 10/06/2012-FROM:	vuSub.push_back( uIndex % this->vuDimLengths[d] );
+				vuSub[d] = uIndex % this->vuDimLengths[d];
+				// MOD-BY-LEETEN 10/06/2012-END
 				uIndex /= this->vuDimLengths[d];
 			}
 		}
@@ -171,7 +176,12 @@ protected:
 		W = sqrt(prod n[0], ... n[d], ... n[D])
 		*/
 		double dWaveletDenomiator;
-		
+
+		// ADD-BY-LEETEN 10/06/2012-BEGIN
+		//! The mininal value of the projected wavelet coefficients
+		double dWaveletThreshold;	
+		// ADD-BY-LEETEN 10/06/2012-END
+
 		//! Update the specified bin.
 		void 
 		_UpdateBin
@@ -401,10 +411,14 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 10/06/2012-FROM:
 			size_t uThreshold = 1;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				uThreshold *= this->vuDimLengths[d];
 			return 1.0 / sqrt((double)uThreshold);
+			#else		// MOD-BY-LEETEN 10/06/2012-TO:
+			return dWaveletThreshold;
+			#endif		// MOD-BY-LEETEN 10/06/2012-END
 		}
 
 		//! Finalize the computation of SAT
@@ -420,6 +434,8 @@ public:
 				iWaveletDenomiator *= 1 << (vuDimLevels[d] - 1);
 			dWaveletDenomiator = sqrt((double)iWaveletDenomiator);
 
+			vector<size_t> vuSub;	// ADD-BY-LEETEN 10/06/2012
+
 			if( !bIsFinalizedWithoutWavelet )	
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{	
@@ -429,8 +445,7 @@ public:
 					if( dCoef )
 					{
 						double dWavelet = +1.0;
-
-						vector<size_t> vuSub;
+						// DEL-BY-LEETEN 10/06/2012:	vector<size_t> vuSub;
 						_ConvetIndexToSub(w, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
@@ -473,7 +488,7 @@ public:
 					{
 						double dWavelet = 1.0;
 
-						vector<size_t> vuSub;
+						// DEL-BY-LEETEN 10/06/2012:	vector<size_t> vuSub;
 						_ConvetIndexToSub(ipairCoef->first, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
@@ -588,6 +603,12 @@ public:
 				}
 				this->vvuSubLevel2Coef.push_back(vuSubLevel2Coef);
 			}
+			// ADD-BY-LEETEN 10/06/2012-BEGIN
+			size_t uThreshold = 1;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				uThreshold *= this->vuDimLengths[d];
+			dWaveletThreshold = 1.0 / sqrt((double)uThreshold);
+			// ADD-BY-LEETEN 10/06/2012-END
 		}
 		
 		//! Allocate the space to store coefficients for all bins. 
@@ -663,11 +684,23 @@ public:
 		{
 			// for each bin, apply wavelet transform
 			vdSums.clear();
+
+			// ADD-BY-LEETEN 10/06/2012-BEGIN
+			size_t uNrOfWavelets = 1;
+			for(vector<size_t>::iterator 
+				ivuDimMaxLevels = vuDimMaxLevels.begin();
+				ivuDimMaxLevels != vuDimMaxLevels.end();
+				ivuDimMaxLevels ++)
+				uNrOfWavelets *= *ivuDimMaxLevels;
+
+			vector<double> vdWaveletBasis;
+			vdWaveletBasis.resize( uNrOfWavelets );
+			// ADD-BY-LEETEN 10/06/2012-END
+
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
-
-				vector<double> vdWaveletBasis;
+				// DEL-BY-LEETEN 10/06/2012:	vector<double> vdWaveletBasis;
 				for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 				{
 					size_t uPos = vuPos[d];
@@ -691,8 +724,7 @@ public:
 							
 						if( l >= 2 )
 							dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
-					
-						vdWaveletBasis.push_back( dWaveletBasis );
+						vdWaveletBasis[p] = dWaveletBasis;	// MOD-BY-LEETEN 10/06/2012-FROM:	vdWaveletBasis.push_back( dWaveletBasis );
 					}
 				}
 				// now find the combination of the coefficients of all dimensions 
@@ -721,7 +753,7 @@ public:
 							dWaveletCoef = ipairCoef->second;
 					}
 
-					if( 0.0 != dWaveletCoef )
+					if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( 0.0 != dWaveletCoef )
 					{
 						double dWavelet = 1.0;
 						for(size_t d = 0, uBase = 0;
