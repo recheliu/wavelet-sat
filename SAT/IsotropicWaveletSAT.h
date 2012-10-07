@@ -256,7 +256,11 @@ public:
 						double dWaveletCoef = this->vvdBinIsotropicCoefs[b][uIndex];
 
 						// now find the basis
+#if 0 // MOD-BY-LEETEN 10/06/2012-FROM:
 						if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( dWaveletCoef )
+#else // MOD-BY-LEETEN 10/06/2012-TO:
+						if( fabs(dWaveletCoef) >= this->dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( dWaveletCoef )
+#endif // MOD-BY-LEETEN 10/06/2012-END
 						{
 							// here assume that it is Harr transform
 							// decide the sign
@@ -310,10 +314,10 @@ public:
 
 			// ADD-BY-LEETEN 10/06/2012-BEGIN
 			vector<size_t> vuBase;
-			vuBase.resize(UGetNrOfDims());
+			vuBase.resize(this->UGetNrOfDims()); // MOD-BY-LEETEN 10/06/2012-FROM: .resize(UGetNrOfDims());
 
 			vector<size_t> vuSrc;
-			vuSrc.resize(UGetNrOfDims());
+			vuSrc.resize(this->UGetNrOfDims()); // MOD-BY-LEETEN 10/06/2012-FROM: vuSrc.resize(UGetNrOfDims());
 
 			vector<double> vdSrc;
 			vdSrc.resize(this->vuDimLengths[0]);
