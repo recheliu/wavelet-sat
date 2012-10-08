@@ -139,15 +139,11 @@ protected:
 			void* _Reserved = NULL
 		)
 		{
-			// MOD-BY-LEETEN 10/06/2012-FROM:	vuSub.clear();
 			if( this->UGetNrOfDims() != vuSub.size() )
 				vuSub.resize(this->UGetNrOfDims());
-			// MOD-BY-LEETEN 10/06/2012-END
 			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 			{
-				// MOD-BY-LEETEN 10/06/2012-FROM:	vuSub.push_back( uIndex % this->vuDimLengths[d] );
 				vuSub[d] = uIndex % this->vuDimLengths[d];
-				// MOD-BY-LEETEN 10/06/2012-END
 				uIndex /= this->vuDimLengths[d];
 			}
 		}
@@ -411,14 +407,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			#if	0	// MOD-BY-LEETEN 10/06/2012-FROM:
-			size_t uThreshold = 1;
-			for(size_t d = 0; d < UGetNrOfDims(); d++)
-				uThreshold *= this->vuDimLengths[d];
-			return 1.0 / sqrt((double)uThreshold);
-			#else		// MOD-BY-LEETEN 10/06/2012-TO:
 			return dWaveletThreshold;
-			#endif		// MOD-BY-LEETEN 10/06/2012-END
 		}
 
 		//! Finalize the computation of SAT
@@ -445,7 +434,6 @@ public:
 					if( dCoef )
 					{
 						double dWavelet = +1.0;
-						// DEL-BY-LEETEN 10/06/2012:	vector<size_t> vuSub;
 						_ConvetIndexToSub(w, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
@@ -488,7 +476,6 @@ public:
 					{
 						double dWavelet = 1.0;
 
-						// DEL-BY-LEETEN 10/06/2012:	vector<size_t> vuSub;
 						_ConvetIndexToSub(ipairCoef->first, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
@@ -700,7 +687,6 @@ public:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
-				// DEL-BY-LEETEN 10/06/2012:	vector<double> vdWaveletBasis;
 				for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 				{
 					size_t uPos = vuPos[d];
@@ -724,7 +710,7 @@ public:
 							
 						if( l >= 2 )
 							dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
-						vdWaveletBasis[p] = dWaveletBasis;	// MOD-BY-LEETEN 10/06/2012-FROM:	vdWaveletBasis.push_back( dWaveletBasis );
+						vdWaveletBasis[p] = dWaveletBasis;
 					}
 				}
 				// now find the combination of the coefficients of all dimensions 
