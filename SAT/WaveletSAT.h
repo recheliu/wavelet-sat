@@ -410,6 +410,51 @@ public:
 			return dWaveletThreshold;
 		}
 
+		// ADD-BY-LEETEN 10/08/2012-BEGIN
+		virtual 
+		double 
+		DGetBinCoef
+		(
+			size_t uBin,
+			size_t uCoefId,
+			void *_Reserved = NULL
+		)
+		{
+			double dCoef = 0.0;
+			if( uCoefId < this->uNrOfCoefsInFullArray )
+				dCoef = vvdBinCoefs[uBin][uCoefId];
+			else
+			{
+				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
+				if( this->vmapBinCoefs[uBin].end() != ipairCoef )
+					dCoef = ipairCoef->second;
+			}
+			return dCoef;
+		}
+
+		virtual 
+		void
+		_SetBinCoef
+		(
+			size_t uBin,
+			size_t uCoefId,
+			double dCoef, 
+			void *_Reserved = NULL
+		)
+		{
+			if( uCoefId < this->uNrOfCoefsInFullArray )
+				vvdBinCoefs[uBin][uCoefId] = dCoef;
+			else
+			{
+				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
+				if( this->vmapBinCoefs[uBin].end() != ipairCoef )
+					ipairCoef->second = dCoef;
+				else
+					this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dCoef));
+			}
+		}
+		// ADD-BY-LEETEN 10/08/2012-END
+
 		//! Finalize the computation of SAT
 		virtual	
 		void 
@@ -425,9 +470,29 @@ public:
 
 			vector<size_t> vuSub;	// ADD-BY-LEETEN 10/06/2012
 
-			if( !bIsFinalizedWithoutWavelet )	
+			// DEL-BY-LEETEN 10/08/2012:	if( !bIsFinalizedWithoutWavelet )	
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{	
+				// ADD-BY-LEETEN 10/08/2012-BEGIN
+				#if	WITH_VECTORS_FOR_COUNTED_COEFS
+				for(map<size_t, CWaveletTempCoef>::iterator 
+					ipairTempCoef = this->vmapBinTempCoefs[b].begin();
+					ipairTempCoef != this->vmapBinTempCoefs[b].end();
+					ipairTempCoef++)
+					this->vmapBinCoefs[b].insert(pair<size_t, double>(ipairTempCoef->first, ipairTempCoef->second.dCoef));
+				this->vmapBinTempCoefs[b].clear();
+
+				for(vector< pair<size_t, double> >::iterator 
+					ivdTempCoef = this->vvdBinTempCoefs[b].begin();
+					ivdTempCoef != this->vvdBinTempCoefs[b].end();
+					ivdTempCoef++)
+					this->vmapBinCoefs[b].insert(*ivdTempCoef);
+				this->vvdBinTempCoefs[b].clear();
+				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+
+				if( !bIsFinalizedWithoutWavelet )	
+				{
+				// ADD-BY-LEETEN 10/08/2012-END
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
 					double dCoef = this->vvdBinCoefs[b][w];
@@ -449,23 +514,25 @@ public:
 					}
 				}
 
-				#if	WITH_VECTORS_FOR_COUNTED_COEFS
-				for(map<size_t, CWaveletTempCoef>::iterator 
-					ipairTempCoef = this->vmapBinTempCoefs[b].begin();
-					ipairTempCoef != this->vmapBinTempCoefs[b].end();
-					ipairTempCoef++)
-					this->vmapBinCoefs[b].insert(pair<size_t, double>(ipairTempCoef->first, ipairTempCoef->second.dCoef));
-				this->vmapBinTempCoefs[b].clear();
+				#if	0	// DEL-BY-LEETEN 10/08/2012-BEGIN
+					#if	WITH_VECTORS_FOR_COUNTED_COEFS
+					for(map<size_t, CWaveletTempCoef>::iterator 
+						ipairTempCoef = this->vmapBinTempCoefs[b].begin();
+						ipairTempCoef != this->vmapBinTempCoefs[b].end();
+						ipairTempCoef++)
+						this->vmapBinCoefs[b].insert(pair<size_t, double>(ipairTempCoef->first, ipairTempCoef->second.dCoef));
+					this->vmapBinTempCoefs[b].clear();
 
-				for(vector< pair<size_t, double> >::iterator 
-					ivdTempCoef = this->vvdBinTempCoefs[b].begin();
-					ivdTempCoef != this->vvdBinTempCoefs[b].end();
-					ivdTempCoef++)
-					this->vmapBinCoefs[b].insert(*ivdTempCoef);
-				this->vvdBinTempCoefs[b].clear();
-				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+					for(vector< pair<size_t, double> >::iterator 
+						ivdTempCoef = this->vvdBinTempCoefs[b].begin();
+						ivdTempCoef != this->vvdBinTempCoefs[b].end();
+						ivdTempCoef++)
+						this->vmapBinCoefs[b].insert(*ivdTempCoef);
+					this->vvdBinTempCoefs[b].clear();
+					#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
 
-				if( !bIsFinalizedWithoutWavelet )
+					if( !bIsFinalizedWithoutWavelet )
+				#endif		// DEL-BY-LEETEN 10/08/2012-END
 				for(map<size_t, double>::iterator 
 					ipairCoef = this->vmapBinCoefs[b].begin();
 					ipairCoef != this->vmapBinCoefs[b].end();
@@ -490,6 +557,7 @@ public:
 						ipairCoef->second *= dWavelet / dWaveletDenomiator;
 					}
 				}
+				}	// ADD-BY-LEETEN 10/08/2012
 			}	
 		}
 
@@ -730,6 +798,7 @@ public:
 					}
 
 					double dWaveletCoef = 0.0;
+					#if	0	// MOD-BY-LEETEN 10/08/2012-FROM:
 					if( uCoefId < this->uNrOfCoefsInFullArray )
 						dWaveletCoef = vvdBinCoefs[b][uCoefId];
 					else
@@ -738,6 +807,9 @@ public:
 						if( this->vmapBinCoefs[b].end() != ipairCoef )
 							dWaveletCoef = ipairCoef->second;
 					}
+					#else		// MOD-BY-LEETEN 10/08/2012-TO:
+					dWaveletCoef = DGetBinCoef(b, uCoefId);
+					#endif		// MOD-BY-LEETEN 10/08/2012-END
 
 					if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( 0.0 != dWaveletCoef )
 					{

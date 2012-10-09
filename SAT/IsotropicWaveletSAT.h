@@ -22,7 +22,7 @@ namespace WaveletSAT
 	{
 	// ADD-BY-LEETEN 10/01/2012-BEGIN
 	protected:
-		vector< vector<double> > vvdBinIsotropicCoefs;
+		// DEL-BY-LEETEN 10/08/2012:	vector< vector<double> > vvdBinIsotropicCoefs;
 
 	// ADD-BY-LEETEN 10/05/2012-BEGIN
 	//! #Wavelet per level. 
@@ -69,57 +69,58 @@ public:
 			CBase<T>::_SetLong(eName, lValue);
 		}
 		
-		// ADD-BY-LEETEN 10/01/2012-BEGIN
-		virtual	
-		void
-		_ShowStatistics
-		(
-		)
-		{
-		  CBase<T>::_ShowStatistics();
-
-			size_t uNrOfNonZeroCoefs = 0;
-			for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+		#if	0	// DEL-BY-LEETEN 10/08/2012-BEGIN
+			// ADD-BY-LEETEN 10/01/2012-BEGIN
+			virtual	
+			void
+			_ShowStatistics
+			(
+			)
 			{
-				double dEnergy = 0.0;
-				for(size_t w = 0; w < this->vvdBinIsotropicCoefs[b].size(); w++)
+			  CBase<T>::_ShowStatistics();
+				size_t uNrOfNonZeroCoefs = 0;
+				for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 				{
-					double dCoef = this->vvdBinIsotropicCoefs[b][w];
-					dEnergy += pow(dCoef, 2.0);
-					if( dCoef )
-						uNrOfNonZeroCoefs++;
+					double dEnergy = 0.0;
+					for(size_t w = 0; w < this->vvdBinIsotropicCoefs[b].size(); w++)
+					{
+						double dCoef = this->vvdBinIsotropicCoefs[b][w];
+						dEnergy += pow(dCoef, 2.0);
+						if( dCoef )
+							uNrOfNonZeroCoefs++;
+					}
+					/*
+					for(map<size_t, double>::iterator
+						ipairCoef = vmapBinCoefs[b].begin();
+						ipairCoef != vmapBinCoefs[b].end();
+						ipairCoef++)
+					{
+						double dCoef = ipairCoef->second;
+						dEnergy += pow(dCoef, 2.0);
+						if( dCoef )
+							uNrOfNonZeroCoefs++;
+					}
+					*/
 				}
-				/*
-				for(map<size_t, double>::iterator
-					ipairCoef = vmapBinCoefs[b].begin();
-					ipairCoef != vmapBinCoefs[b].end();
-					ipairCoef++)
+				LOG_VAR(uNrOfNonZeroCoefs);
+
+				size_t uNrOfDataItems = 1;
+				for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 				{
-					double dCoef = ipairCoef->second;
-					dEnergy += pow(dCoef, 2.0);
-					if( dCoef )
-						uNrOfNonZeroCoefs++;
+					LOG_VAR(this->vuDimLengths[d]);
+					uNrOfDataItems *= this->vuDataDimLengths[d];
 				}
-				*/
+				LOG_VAR(uNrOfDataItems);
+				LOG_VAR(this->UGetNrOfBins());
+
+				double dCR = (double)(uNrOfDataItems * this->UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+				LOG_VAR(dCR);
+
+				double dOverhead = (double)uNrOfNonZeroCoefs / (double)uNrOfDataItems;
+				LOG_VAR(dOverhead);
 			}
-			LOG_VAR(uNrOfNonZeroCoefs);
-
-			size_t uNrOfDataItems = 1;
-			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
-			{
-				LOG_VAR(this->vuDimLengths[d]);
-				uNrOfDataItems *= this->vuDataDimLengths[d];
-			}
-			LOG_VAR(uNrOfDataItems);
-			LOG_VAR(this->UGetNrOfBins());
-
-			double dCR = (double)(uNrOfDataItems * this->UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
-			LOG_VAR(dCR);
-
-			double dOverhead = (double)uNrOfNonZeroCoefs / (double)uNrOfDataItems;
-			LOG_VAR(dOverhead);
-		}
-		// ADD-BY-LEETEN 10/01/2012-END
+			// ADD-BY-LEETEN 10/01/2012-END
+		#endif	// DEL-BY-LEETEN 10/08/2012-END
 
 		// ADD-BY-LEETEN 10/05/2012-BEGIN
 		virtual
@@ -174,7 +175,7 @@ public:
 
 				// get the scale coefficients
 				// Here we assume Harr transform
-				dCount += this->vvdBinIsotropicCoefs[b][0];
+				dCount += this->DGetBinCoef(b, 0);	// MOD-BY-LEETEN 10/08/2012-FROM:	dCount += this->vvdBinIsotropicCoefs[b][0];
 
 				// now get the wavelet coefficients
 				for(size_t 
@@ -200,7 +201,7 @@ public:
 							vuCoefPos[d] = vuWaveletToOffset[p + d] * ((size_t) 1 << l) + vuWaveletPos[d];
 
 						size_t uIndex = this->UConvetSubToIndex(vuCoefPos);
-						double dWaveletCoef = this->vvdBinIsotropicCoefs[b][uIndex];
+						double dWaveletCoef = this->DGetBinCoef(b, uIndex);	// MOD-BY-LEETEN 10/08/2012-FROM:	double dWaveletCoef = this->vvdBinIsotropicCoefs[b][uIndex];
 
 						// now find the basis
 						if( fabs(dWaveletCoef) >= this->dWaveletThreshold )
@@ -278,10 +279,10 @@ public:
 			}
 			*/	// ADD-BY-LEETEN 10/01/2012-BEGIN
 			// ADD-BY-LEETEN 10/01/2012-BEGIN
-			vvdBinIsotropicCoefs.resize(this->UGetNrOfBins());
+			// DEL-BY-LEETEN 10/08/2012:	vvdBinIsotropicCoefs.resize(this->UGetNrOfBins());
 			for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 			{
-			  vvdBinIsotropicCoefs[b] = this->vvdBinCoefs[b];
+				// DEL-BY-LEETEN 10/08/2012:	vvdBinIsotropicCoefs[b] = this->vvdBinCoefs[b];
 				
 				// update the hyperslice
 				for(size_t uNrOfSlices = 1; uNrOfSlices < this->vuDimLengths[0]/2; uNrOfSlices <<= 1)
@@ -321,22 +322,29 @@ public:
 								vuSrc = vuBase; 
 								vuSrc[d] = s;
 								size_t uSrc = this->UConvetSubToIndex(vuSrc); // MOD-BY-LEETEN 10/05/2012: size_t uSrc = UConvetSubToIndex(vuSrc);
-								vdSrc[s] = vvdBinIsotropicCoefs[b][uSrc];
+								vdSrc[s] = this->DGetBinCoef(b, uSrc);	// MOD-BY-LEETEN 10/08/2012-FROM:	vdSrc[s] = vvdBinIsotropicCoefs[b][uSrc];
 								vuSrcIndices[s] = uSrc;
 							}
 
 							for(size_t sp = 0, s = 0; s < uNrOfSlices ; s++)
 								for(size_t s2 = 0; s2 < 2; s2++, sp++)
-									vvdBinIsotropicCoefs[b][vuSrcIndices[sp]] = 
-									(	vdSrc[s] + 
-										((!s2)?(+1.0):(-1.0)) * vdSrc[s + uNrOfSlices])/2.0;
+									#if	0	// MOD-BY-LEETEN 10/08/2012-FROM:
+										vvdBinIsotropicCoefs[b][vuSrcIndices[sp]] = 
+										(	vdSrc[s] + 
+											((!s2)?(+1.0):(-1.0)) * vdSrc[s + uNrOfSlices])/2.0;
+									#else		// MOD-BY-LEETEN 10/08/2012-TO:
+									this->_SetBinCoef(
+										b, 
+										vuSrcIndices[sp],
+										(vdSrc[s] +((!s2)?(+1.0):(-1.0)) * vdSrc[s + uNrOfSlices])/2.0);
+									#endif		// MOD-BY-LEETEN 10/08/2012-END
 						} // for e
 					} // for d
 				} // for uNrOfSlices
 				
 				// ADD-BY-LEETEN 10/05/2012-BEGIN
 				// now apply wavelet
-				for(size_t e = 0; e < vvdBinIsotropicCoefs[b].size(); e++)
+				for(size_t e = 0; e < vvdBinCoefs[b].size(); e++)	// MOD-BY-LEETEN 10/08/2012-FROM:	for(size_t e = 0; e < vvdBinIsotropicCoefs[b].size(); e++)
 				{
 					this->_ConvetIndexToSub(e, vuSub);
 					size_t uMaxSub = 0;
@@ -348,8 +356,30 @@ public:
 						size_t uLevel = (size_t)ceil(log( (double)(uMaxSub + 1) ) / log(2.0) );
 						dWaveletWeight = pow( (double)(1 << (uLevel - 1)), (double)this->UGetNrOfDims()/2.0);
 					}
-					vvdBinIsotropicCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;
+					vvdBinCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;	// MOD-BY-LEETEN 10/08/2012-FROM:	vvdBinIsotropicCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;
 				} // for e
+
+				// ADD-BY-LEETEN 10/08/2012-BEGIN
+				for(map<size_t, double>::iterator
+					ipairCoef = vmapBinCoefs[b].begin();
+					ipairCoef != vmapBinCoefs[b].end();
+					ipairCoef++)
+				{
+					size_t e = ipairCoef->first;
+
+					this->_ConvetIndexToSub(e, vuSub);
+					size_t uMaxSub = 0;
+					for(size_t d = 0; d < vuSub.size(); d++)
+						uMaxSub = max(uMaxSub, vuSub[d]);
+					double dWaveletWeight = 1.0; 
+					if( uMaxSub )
+					{
+						size_t uLevel = (size_t)ceil(log( (double)(uMaxSub + 1) ) / log(2.0) );
+						dWaveletWeight = pow( (double)(1 << (uLevel - 1)), (double)this->UGetNrOfDims()/2.0);
+					}
+					ipairCoef->second *= dWaveletWeight / this->dWaveletDenomiator;
+				}
+				// ADD-BY-LEETEN 10/08/2012-END
 				// ADD-BY-LEETEN 10/05/2012-END
 			} // for b
 			// ADD-BY-LEETEN 10/01/2012-END
