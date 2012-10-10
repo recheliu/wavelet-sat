@@ -344,7 +344,11 @@ public:
 				
 				// ADD-BY-LEETEN 10/05/2012-BEGIN
 				// now apply wavelet
+#if 0 // MOD-BY-LEETEN 10/09/2012-FROM:
 				for(size_t e = 0; e < vvdBinCoefs[b].size(); e++)	// MOD-BY-LEETEN 10/08/2012-FROM:	for(size_t e = 0; e < vvdBinIsotropicCoefs[b].size(); e++)
+#else // MOD-BY-LEETEN 10/09/2012-TO:
+				for(size_t e = 0; e < this->vvdBinCoefs[b].size(); e++)	
+#endif // MOD-BY-LEETEN 10/09/2012-END
 				{
 					this->_ConvetIndexToSub(e, vuSub);
 					size_t uMaxSub = 0;
@@ -356,14 +360,25 @@ public:
 						size_t uLevel = (size_t)ceil(log( (double)(uMaxSub + 1) ) / log(2.0) );
 						dWaveletWeight = pow( (double)(1 << (uLevel - 1)), (double)this->UGetNrOfDims()/2.0);
 					}
+#if 0 // MOD-BY-LEETEN 10/09/2012-FROM:
 					vvdBinCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;	// MOD-BY-LEETEN 10/08/2012-FROM:	vvdBinIsotropicCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;
+#else // MOD-BY-LEETEN 10/09/2012-TO:
+					this->vvdBinCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;	
+#endif // MOD-BY-LEETEN 10/09/2012-END
 				} // for e
 
 				// ADD-BY-LEETEN 10/08/2012-BEGIN
+#if 0 // MOD-BY-LEETEN 10/09/2012-FROM:
 				for(map<size_t, double>::iterator
 					ipairCoef = vmapBinCoefs[b].begin();
 					ipairCoef != vmapBinCoefs[b].end();
 					ipairCoef++)
+#else // MOD-BY-LEETEN 10/09/2012-TO:
+				for(map<size_t, double>::iterator
+					ipairCoef = this->vmapBinCoefs[b].begin();
+					ipairCoef != this->vmapBinCoefs[b].end();
+					ipairCoef++)
+#endif // MOD-BY-LEETEN 10/09/2012-END
 				{
 					size_t e = ipairCoef->first;
 
