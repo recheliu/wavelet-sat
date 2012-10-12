@@ -4,6 +4,8 @@
 
 #define WITH_VECTORS_FOR_COUNTED_COEFS	1	// ADD-BY-LEETEN 09/14/2012
 
+#define	WITH_REMOVAL_OF_OUT_OF_BOUND_COEFS	1	// ADD-BY-LEETEN 10/12/2012
+
 #include <vector>
 using namespace std;
 #include <math.h>
@@ -121,6 +123,7 @@ public:
 			}
 			// ADD-BY-LEETEN 10/01/2012-END
 		#endif	// DEL-BY-LEETEN 10/08/2012-END
+
 
 		// ADD-BY-LEETEN 10/05/2012-BEGIN
 		virtual
@@ -341,7 +344,7 @@ public:
 						} // for e
 					} // for d
 				} // for uNrOfSlices
-				
+
 				// ADD-BY-LEETEN 10/05/2012-BEGIN
 				// now apply wavelet
 #if 0 // MOD-BY-LEETEN 10/09/2012-FROM:
@@ -359,6 +362,23 @@ public:
 					{
 						size_t uLevel = (size_t)ceil(log( (double)(uMaxSub + 1) ) / log(2.0) );
 						dWaveletWeight = pow( (double)(1 << (uLevel - 1)), (double)this->UGetNrOfDims()/2.0);
+
+						// ADD-BY-LEETEN 10/12/2012-BEGIN
+						#if	WITH_REMOVAL_OF_OUT_OF_BOUND_COEFS
+						// Decide whether this  wavelet coefficient in in the dat boundary
+						size_t uNrOfWavelets = (size_t)1 << (uLevel - 1); 
+						size_t uWaveletSize = this->vuDimLengths[0] / uNrOfWavelets;
+						for(size_t d = 0; d < vuSub.size(); d++)
+						{
+							size_t uSub = vuSub[d] % uNrOfWavelets;
+							if( uSub * uWaveletSize >= this->vuDataDimLengths[d] )
+							{
+								dWaveletWeight = 0.0;
+								break;
+							}
+						}
+						#endif	// #if	WITH_REMOVAL_OF_OUT_OF_BOUND_COEFS
+						// ADD-BY-LEETEN 10/12/2012-END
 					}
 #if 0 // MOD-BY-LEETEN 10/09/2012-FROM:
 					vvdBinCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;	// MOD-BY-LEETEN 10/08/2012-FROM:	vvdBinIsotropicCoefs[b][e] *= dWaveletWeight / this->dWaveletDenomiator;
@@ -391,6 +411,23 @@ public:
 					{
 						size_t uLevel = (size_t)ceil(log( (double)(uMaxSub + 1) ) / log(2.0) );
 						dWaveletWeight = pow( (double)(1 << (uLevel - 1)), (double)this->UGetNrOfDims()/2.0);
+
+						// ADD-BY-LEETEN 10/12/2012-BEGIN
+						#if	WITH_REMOVAL_OF_OUT_OF_BOUND_COEFS
+						// Decide whether this  wavelet coefficient in in the dat boundary
+						size_t uNrOfWavelets = (size_t)1 << (uLevel - 1); 
+						size_t uWaveletSize = this->vuDimLengths[0] / uNrOfWavelets;
+						for(size_t d = 0; d < vuSub.size(); d++)
+						{
+							size_t uSub = vuSub[d] % uNrOfWavelets;
+							if( uSub * uWaveletSize >= this->vuDataDimLengths[d] )
+							{
+								dWaveletWeight = 0.0;
+								break;
+							}
+						}
+						#endif	// #if	WITH_REMOVAL_OF_OUT_OF_BOUND_COEFS
+						// ADD-BY-LEETEN 10/12/2012-END
 					}
 					ipairCoef->second *= dWaveletWeight / this->dWaveletDenomiator;
 				}

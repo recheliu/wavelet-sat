@@ -1,6 +1,10 @@
 #pragma once
 
-#define WITH_VECTORS_FOR_COUNTED_COEFS	1	
+#define WITH_VECTORS_FOR_COUNTED_COEFS	1
+
+// ADD-BY-LEETEN 10/10/2012-BEGIN
+#define	WITH_BOUNDARY_AWARE_DWT		0
+// ADD-BY-LEETEN 10/10/2012-END
 
 #include <map>	
 #if defined (WIN32)
@@ -62,7 +66,7 @@ protected:
 		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
 		bool bIsFinalizedWithoutWavelet;
 
-		//! The maximun number of wavelet levels per dim. 
+		//! The maximun number of wavelet levels per dim, which are specified by the user.
 		/*!
 		m[0], ... m[d], ... m[D - 1]
 		*/
@@ -81,6 +85,11 @@ protected:
 		vector< map<size_t, double> > vmapBinCoefs;
 		//! #Coefs stored in full arrays
 		size_t uNrOfCoefsInFullArray;	
+
+		// ADD-BY-LEETEN 10/10/2012-BEGIN
+		//! The weight sum for each bin
+		vector<double> vdBinWeights;
+		// ADD-BY-LEETEN 10/10/2012-END
 
 		//! Total #coefs stored in full arrays from all bin SATs.
 		size_t uSizeOfFullArrays;
@@ -189,6 +198,8 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
+			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
+
 			vector<long> vlWavelets;
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
@@ -448,8 +459,16 @@ public:
 			{
 				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
 				if( this->vmapBinCoefs[uBin].end() != ipairCoef )
+				// ADD-BY-LEETEN 10/12/2012-BEGIN
+				{	
+					if( !dCoef )
+						this->vmapBinCoefs[uBin].erase(ipairCoef);
+					else
+				// ADD-BY-LEETEN 10/12/2012-END
 					ipairCoef->second = dCoef;
+				}	// ADD-BY-LEETEN 10/12/2012
 				else
+				if( dCoef )	// ADD-BY-LEETEN 10/10/2012
 					this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dCoef));
 			}
 		}
@@ -489,9 +508,96 @@ public:
 					this->vmapBinCoefs[b].insert(*ivdTempCoef);
 				this->vvdBinTempCoefs[b].clear();
 				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+			}	// ADD-BY-LEETEN 10/10/2012
 
+			// ADD-BY-LEETEN 10/10/2012-BEGIN
+			#if	WITH_BOUNDARY_AWARE_DWT
+			// consider the out-of-bound case
+			vector<long> vlWavelets;
+			// for each dimension, fetch the l[d] indices;
+			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uDimMaxLevel = vuDimMaxLevels[d];
+				size_t uPos = this->vuDataDimLengths[d] - 1;
+				size_t uMaxWin = 1 << vuDimLevels[d];
+				for(size_t 	
+					l = 0, w = uMaxWin;
+					l < uDimMaxLevel; 
+					l++, p++, w >>= 1)
+				{
+					long lWavelet;
+					
+					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
+					size_t uPosInWavelet = uPos % w;
+					if( 0 == l )
+						lWavelet = uPosInWavelet;
+					else
+					{
+						if( uPosInWavelet < w / 2)
+							lWavelet = (long)uPosInWavelet + 1;
+						else
+							lWavelet = (long)(w - 1 - uPosInWavelet);
+					}
+					vlWavelets.push_back( lWavelet );
+				}
+			}
+			
+			// now find the combination of the coefficients of all dimensions
+			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				long lWavelet = 1;
+
+				size_t uCoefId = 0;
+				for(size_t d = 0, uBase = 0, uCoefBase = 1;
+					d < UGetNrOfDims(); 
+					uBase += vuDimMaxLevels[d], uCoefBase *= vuCoefLengths[d], d++, p++)
+				{
+					size_t uLevel = vuCoefDim2Level[p];
+					/*
+					// skip the level if it is larger than the threshold 
+					if( uLevel >= vuDimMaxLevels[d] )
+						continue;
+					*/
+					
+					lWavelet *= vlWavelets[uBase + uLevel];
+					size_t uCoef = vvuSubLevel2Coef[d][(this->vuDataDimLengths[d] - 1) * vuDimLevels[d] + uLevel];
+					uCoefId += uCoef * uCoefBase;
+				}
+
+				// update the corresponding wavelet coeffcients
+				for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+				{
+					double dWeight = vdBinWeights[b];
+					double dWavelet = dWeight * (double)lWavelet;
+					double dOriginalCoef = this->DGetBinCoef(b, uCoefId);
+					this->_SetBinCoef(b, uCoefId, dOriginalCoef + dWavelet);
+				}
+			}
+
+			// update the DC component
+			size_t uVolSize = 1;
+			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+				uVolSize *= this->vuDimLengths[d];
+
+			for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+			{
+				double dWeight = vdBinWeights[b];
+				double dWavelet = dWeight * (double)uVolSize;
+				double dOriginalCoef = this->DGetBinCoef(b, 0);
+				this->_SetBinCoef(b, 0, dOriginalCoef - dWavelet);
+			}
+			#endif	// #if	WITH_BOUNDARY_AWARE_DWT	
+			// ADD-BY-LEETEN 10/10/2012-BEGIN
+
+			#if	0	// MOD-BY-LEETEN 10/10/2012-FROM:
 				if( !bIsFinalizedWithoutWavelet )	
 				{
+			#else		// MOD-BY-LEETEN 10/10/2012-TO:	
+			if( !bIsFinalizedWithoutWavelet )	
+			{
+				for(size_t b = 0; b < UGetNrOfBins(); b++)
+				{	
+			#endif		// MOD-BY-LEETEN 10/10/2012-END
 				// ADD-BY-LEETEN 10/08/2012-END
 				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 				{
@@ -633,6 +739,11 @@ public:
 				uMaxDimLength = max(uMaxDimLength, uDimLength);
 			}
 
+			// ADD-BY-LEETEN 10/10/2012-BEGIN
+			size_t uMaxDimLevel = (size_t)ceilf(logf((float)uMaxDimLength)/logf(2.0f));
+			uMaxDimLength = 1 << uMaxDimLevel;
+			// ADD-BY-LEETEN 10/10/2012-END
+
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
 				ivuDimLength != vuDimLengths.end();
@@ -678,6 +789,8 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			vdBinWeights.resize(uNrOfBins);	// ADD-BY-LEETEN 10/10/2012
+
 			this->vuDimMaxLevels.clear();
 			size_t uNrOfCoefs = 1;	// total # coefficients to store
 			this->uNrOfUpdatingCoefs = 1;
