@@ -865,8 +865,39 @@ public:
 			vdWaveletBasis.resize( uNrOfWavelets );
 			// ADD-BY-LEETEN 10/06/2012-END
 
+			// ADD-BY-LEETEN 10/12/2012-BEGIN
+			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
+			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uPos = vuPos[d];
+				size_t uDimMaxLevel = vuDimMaxLevels[d];
+				size_t uMaxWin = 1 << vuDimLevels[d];
+				for(size_t 	
+					l = 0, w = uMaxWin; 
+					l < uDimMaxLevel; 
+					l++, p++, w >>= 1)
+				{
+					// Decide the wavelet size based on the current level, and then the wavelet basis values based on the position within this wavelet
+					double dWaveletBasis = 0.0;
+					
+					// assume Haar wavelet for now
+					// Given the currenet level l and subscript uPos, compute the corresponding wavelet value
+					size_t uPosInWavelet = uPos % w;
+					if( uPosInWavelet < w / 2)
+						dWaveletBasis = 1.0;
+					else
+						dWaveletBasis = -1.0;
+						
+					if( l >= 2 )
+						dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
+					vdWaveletBasis[p] = dWaveletBasis;
+				}
+			}
+			// ADD-BY-LEETEN 10/12/2012-END
+
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
+				#if	0	// DEL-BY-LEETEN 10/12/2012-BEGIN
 				// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
 				for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 				{
@@ -894,6 +925,8 @@ public:
 						vdWaveletBasis[p] = dWaveletBasis;
 					}
 				}
+				#endif	// DEL-BY-LEETEN 10/12/2012-END
+
 				// now find the combination of the coefficients of all dimensions 
 				double dCount = 0.0;	// the combined wavelet basis value. Initially it is one
 				for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++, p+= UGetNrOfDims())
@@ -909,6 +942,7 @@ public:
 						size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 						uCoefId += uCoef * uCoefBase;
 					}
+
 
 					double dWaveletCoef = 0.0;
 					#if	0	// MOD-BY-LEETEN 10/08/2012-FROM:
