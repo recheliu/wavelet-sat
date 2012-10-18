@@ -2,6 +2,8 @@
 
 #include "WaveletSAT.h"
 #include "IsotropicWaveletSAT.h"
+#include "IntegralHistogram.h"	// ADD-BY-LEETEN 10/17/2012
+
 
 template<class T>
 class CSimpleND:

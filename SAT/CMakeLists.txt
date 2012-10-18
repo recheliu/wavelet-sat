@@ -5,7 +5,11 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 #The name of the project
-PROJECT(WaveletSATLib)
+# MOD-BY-LEETEN 10/17/2012-FROM:
+	# PROJECT(WaveletSATLib)
+# TO:
+PROJECT(SAT)
+# MOD-BY-LEETEN 10/17/2012-END
 
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
@@ -25,6 +29,7 @@ set(HEADER_FILES
 		IsotropicWaveletSAT.h	
 		SimpleND.h	
 		# ADD-BY-LEETEN 09/30/2012-END
+		IntegralHistogram.h			# ADD-BY-LEETEN 10/17/2012
 	)
 
 add_custom_target (

@@ -85,10 +85,14 @@ main(int argn, char* argv[])
 
 	// create a lookup table to shuffule the value
 	vector<int> viShuffleTable;
-	for(size_t i = 0; i < iValueMax; i++)
+	// MOD-BY-LEETEN 10/17/2012-FROM:	for(size_t i = 0; i < iValueMax; i++)
+	for(int i = 0; i < iValueMax; i++)
+	// MOD-BY-LEETEN 10/17/2012-END
 		viShuffleTable.push_back((int)i);
 
-	for(size_t i = iValueMax; i > 0; i--)
+	// MOD-BY-LEETEN 10/17/2012-FROM:	for(size_t i = iValueMax; i > 0; i--)
+	for(int i = iValueMax; i > 0; i--)
+	// MOD-BY-LEETEN 10/17/2012-END
 	{
 		size_t uRand = rand() % i;
 		swap(viShuffleTable[i - 1], viShuffleTable[uRand]);

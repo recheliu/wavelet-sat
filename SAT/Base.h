@@ -36,6 +36,7 @@ namespace SAT
 		size_t 
 		UGetNrOfDims
 		(
+			void *_Reserved = NULL	// ADD-BY-LEETEN 10/17/2012
 		) const = 0;
 		
 		//! #Dimensions
@@ -46,6 +47,7 @@ namespace SAT
 		size_t 
 		UGetNrOfBins
 		(
+			void *_Reserved = NULL	// ADD-BY-LEETEN 10/17/2012
 		) const = 0;
 
 protected:	

@@ -125,7 +125,16 @@ protected:
 		/*!
 		D
 		*/
-		size_t UGetNrOfDims() const {	return vuDimLengths.size();	};
+		// MOD-BY-LEETEN 10/17/2012-FROM:		size_t UGetNrOfDims() const {	return vuDimLengths.size();	};
+		size_t 
+		UGetNrOfDims
+		(
+			void *_Reserved = NULL
+		) const 
+		{	
+			return vuDimLengths.size();	
+		};
+		// MOD-BY-LEETEN 10/17/2012-END
 		
 		size_t
 		UConvetSubToIndex
@@ -161,7 +170,16 @@ protected:
 		/*!
 		B
 		*/
-		size_t UGetNrOfBins() const {	return vvdBinCoefs.size();	};
+		// MOD-BY-LEETEN 10/17/2012-FROM:	size_t UGetNrOfBins() const {	return vvdBinCoefs.size();	};
+		size_t 
+		UGetNrOfBins
+		(
+			void *_Reserved = NULL
+		) const 
+		{	
+			return vvdBinCoefs.size();	
+		};
+		// MOD-BY-LEETEN 10/17/2012-END
 
 		//! A lookup table to map the coefficient to its levels per dim.
 		/*! size: D x C: 
