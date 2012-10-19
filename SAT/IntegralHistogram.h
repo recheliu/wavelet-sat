@@ -30,6 +30,8 @@ namespace SAT
 		public CBase<T>
 	{
 protected:	
+		size_t uSizeOfFullArrays;	// ADD-BY-LEETEN 10/18/2012
+
 		size_t uDataLength;
 
 		vector<size_t> vuDimLengths;
@@ -147,6 +149,14 @@ public:
 			void* _Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 10/18/2012-BEGIN
+			switch(eName)
+			{
+			case SIZE_OF_FULL_ARRAYS:
+				uSizeOfFullArrays = (size_t)lValue * 1024 * 1024;
+				break;
+			}
+			// ADD-BY-LEETEN 10/18/2012-END
 		}
 
 		double 
@@ -242,6 +252,13 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 10/18/2012-BEGIN
+			if( uNrOfBins * uDataLength > uSizeOfFullArrays )
+			{
+				LOG_ERROR(cerr<<"Exceed the specified application-side memory capacity.");
+				exit(EXIT_FAILURE);
+			}
+			// ADD-BY-LEETEN 10/18/2012-END
 			this->vvdBinSATs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)
 				this->vvdBinSATs[b].resize(uDataLength);

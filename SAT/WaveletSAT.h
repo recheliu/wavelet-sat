@@ -2,6 +2,8 @@
 
 #define WITH_VECTORS_FOR_COUNTED_COEFS	1
 
+#define	USE_LOG_WAVELET_BASIS		1	// ADD-BY-LEETEN 10/18/2012
+
 // ADD-BY-LEETEN 10/10/2012-BEGIN
 #define	WITH_BOUNDARY_AWARE_DWT		0
 // ADD-BY-LEETEN 10/10/2012-END
@@ -218,6 +220,7 @@ protected:
 		{
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
 
+			#if	!USE_LOG_WAVELET_BASIS	// ADD-BY-LEETEN 10/18/2012
 			vector<long> vlWavelets;
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
@@ -271,12 +274,109 @@ protected:
 						continue;
 					*/
 					
+					// ADD-BY-LEETEN 10/18/2012-BEGIN
+					if( 0 == d )
+						lWavelet = vlWavelets[uBase + uLevel];
+					else
+					// ADD-BY-LEETEN 10/18/2012-END
 					lWavelet *= vlWavelets[uBase + uLevel];
+
+
+					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
+					uCoefId += uCoef * uCoefBase;
+
+					// ADD-BY-LEETEN 10/18/2012-BEGIN
+					if( !lWavelet )
+					{
+						p += UGetNrOfDims() - d;
+						break;
+					}
+					// ADD-BY-LEETEN 10/18/2012-END
+				}
+				// ADD-BY-LEETEN 10/18/2012-BEGIN
+				if( !lWavelet )
+					continue;
+				// ADD-BY-LEETEN 10/18/2012-END
+				double dWavelet = dWeight * (double)lWavelet;
+
+			// ADD-BY-LEETEN 10/18/2012-BEGIN
+			#else	// #if	!USE_LOG_WAVELET_BASIS	
+			vector<double> vdWaveletLogs;
+			vector<char> vbWaveletSigns;
+			// for each dimension, fetch the l[d] indices;
+			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uDimMaxLevel = vuDimMaxLevels[d];
+				size_t uPos = vuPos[d];
+				size_t uMaxWin = 1 << vuDimLevels[d];
+				for(size_t 	
+					l = 0, w = uMaxWin;
+					l < uDimMaxLevel; 
+					l++, p++, w >>= 1)
+				{
+					long lWavelet;
 					
+					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
+					size_t uPosInWavelet = uPos % w;
+					char bSign;
+					if( 0 == l )
+					{
+						lWavelet = (long)w / 2 - (long)uPosInWavelet;
+						bSign = (lWavelet)?+1:0;
+					}
+					else
+					{
+						if( uPosInWavelet < w / 2)
+							lWavelet = (long)uPosInWavelet;
+						else
+							lWavelet = (long)(w - uPosInWavelet);
+						bSign = (lWavelet)?-1:0;
+					}
+					double dLogWavelet = (lWavelet)?log((double)lWavelet):0.0;
+					vdWaveletLogs.push_back( dLogWavelet );
+					vbWaveletSigns.push_back( bSign );
+				}
+			}
+			
+			// now find the combination of the coefficients of all dimensions
+			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				double dWaveletLog = 0.0;
+				char bWaveletSign = 1;
+
+				#if	WITH_VECTORS_FOR_COUNTED_COEFS
+				size_t uMaxCountPerCoef = 1;	// max # coefficnet
+				#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+				size_t uCoefId = 0;
+				for(size_t d = 0, uBase = 0, uCoefBase = 1;
+					d < UGetNrOfDims(); 
+					uBase += vuDimMaxLevels[d], uCoefBase *= vuCoefLengths[d], d++, p++)
+				{
+					size_t uLevel = vuCoefDim2Level[p];
+					#if	WITH_VECTORS_FOR_COUNTED_COEFS
+					uMaxCountPerCoef *= (size_t)1 << (vuDimLevels[d] - uLevel);
+					#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+					
+					dWaveletLog += vdWaveletLogs[uBase + uLevel];
+					bWaveletSign *= vbWaveletSigns[uBase + uLevel];
+					if(!bWaveletSign)
+					{
+						p += UGetNrOfDims() - d;
+						break;
+					}
+
 					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 					uCoefId += uCoef * uCoefBase;
 				}
-				double dWavelet = dWeight * (double)lWavelet;
+				if( !bWaveletSign )
+					continue;
+
+				double dWavelet = 0.0;
+				dWavelet = dWeight * exp(dWaveletLog);
+				if( bWaveletSign < 0)
+					dWavelet = -dWavelet;
+			#endif	// #if	!USE_LOG_WAVELET_BASIS	
+			// ADD-BY-LEETEN 10/18/2012-END
 
 				// update the corresponding wavelet coeffcients
 				if( uCoefId < uNrOfCoefsInFullArray ) 

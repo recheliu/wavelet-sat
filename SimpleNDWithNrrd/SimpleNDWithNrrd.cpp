@@ -158,6 +158,12 @@ main(int argn, char* argv[])
 	}
 	cSimpleND._SetDimLengths(vuDimLengths);
 
+	// ADD-BY-LEETEN 10/18/2012-BEGIN
+	LOG_VAR(uNrOfBins);
+	for(size_t d = 0; d < uNrOfDims; d++)
+		LOG_VAR(vuDimLengths[d]);
+	// ADD-BY-LEETEN 10/18/2012-END
+
 	// Step 2: Allocate the needed #SATs
 	cSimpleND._SetHistogram(uNrOfBins, dValueMin, dValueMax);
 	vector<size_t> vuDimMaxLevels;
