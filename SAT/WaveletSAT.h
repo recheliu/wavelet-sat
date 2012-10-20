@@ -2,7 +2,11 @@
 
 #define WITH_VECTORS_FOR_COUNTED_COEFS	1
 
-#define	USE_LOG_WAVELET_BASIS		1	// ADD-BY-LEETEN 10/18/2012
+#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
+#define	WITH_LOG_WAVELET_BASIS		1	// ADD-BY-LEETEN 10/18/2012
+#else		// MOD-BY-LEETEN 10/19/2012-TO:
+#define	WITH_LOG_WAVELET_BASIS		0
+#endif		// MOD-BY-LEETEN 10/19/2012-END
 
 // ADD-BY-LEETEN 10/10/2012-BEGIN
 #define	WITH_BOUNDARY_AWARE_DWT		0
@@ -64,6 +68,10 @@ namespace WaveletSAT
 		:public SAT::CBase<T>	// ADD-BY-LEETEN 09/29/2012
 	{
 protected:	
+		// ADD-BY-LEETEN 10/19/2012-BEGIN
+		//! Total #coefficients
+		size_t uNrOfCoefs;
+		// ADD-BY-LEETEN 10/19/2012-END
 
 		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
 		bool bIsFinalizedWithoutWavelet;
@@ -99,6 +107,7 @@ protected:
 		#if	WITH_VECTORS_FOR_COUNTED_COEFS
 		vector< map<size_t, CWaveletTempCoef> > vmapBinTempCoefs;
 		vector< vector< pair<size_t, double> > > vvdBinTempCoefs; 
+		vector<size_t> vuMaxCounts;	// ADD-BY-LEETEN 10/19/2012
 		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 		
 		//! The dim length of the input data
@@ -220,8 +229,11 @@ protected:
 		{
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
 
-			#if	!USE_LOG_WAVELET_BASIS	// ADD-BY-LEETEN 10/18/2012
+			#if	!WITH_LOG_WAVELET_BASIS	// ADD-BY-LEETEN 10/18/2012
 			vector<long> vlWavelets;
+
+			vlWavelets.resize(UGetNrOfDims() * this->vuDimLevels[0]);	// ADD-BY-LEETEN 10/19/2012
+
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -234,7 +246,6 @@ protected:
 					l++, p++, w >>= 1)
 				{
 					long lWavelet;
-					
 					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
 					size_t uPosInWavelet = uPos % w;
 					if( 0 == l )
@@ -247,27 +258,45 @@ protected:
 							lWavelet = (long)(w - uPosInWavelet);
 						lWavelet *= -1;		
 					}
-					vlWavelets.push_back( lWavelet );
+					// MOD-BY-LEETEN 10/19/2012-FROM:	vlWavelets.push_back( lWavelet );
+					vlWavelets[p] = lWavelet;
+					// MOD-BY-LEETEN 10/19/2012-END
 				}
 			}
-			
+
 			// now find the combination of the coefficients of all dimensions
+			// ADD-BY-LEETEN 10/19/2012-BEGIN
+			vector<size_t> vuPosLevelProduct;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				vuPosLevelProduct.push_back(vuPos[d] * vuDimLevels[d]);
+			// ADD-BY-LEETEN 10/19/2012-END
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				long lWavelet = 1;
 
 				#if	WITH_VECTORS_FOR_COUNTED_COEFS
-				size_t uMaxCountPerCoef = 1;	// max # coefficnet
+				// MOD-BY-LEETEN 10/19/2012-FROM:	size_t uMaxCountPerCoef = 1;	// max # coefficnet
+				size_t uMaxCountPerCoef = this->vuMaxCounts[c];
+				// MOD-BY-LEETEN 10/19/2012-END
 				#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 				size_t uCoefId = 0;
+				#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
 				for(size_t d = 0, uBase = 0, uCoefBase = 1;
 					d < UGetNrOfDims(); 
 					uBase += vuDimMaxLevels[d], uCoefBase *= vuCoefLengths[d], d++, p++)
+				#else		// MOD-BY-LEETEN 10/19/2012-TO:
+				for(size_t d = 0, uBase = 0;
+					d < UGetNrOfDims(); 
+					uBase += vuDimMaxLevels[d], d++, p++)
+				#endif		// MOD-BY-LEETEN 10/19/2012-END
 				{
 					size_t uLevel = vuCoefDim2Level[p];
+					
+					#if	0	// DEL-BY-LEETEN 10/19/2012-BEGIN
 					#if	WITH_VECTORS_FOR_COUNTED_COEFS
 					uMaxCountPerCoef *= (size_t)1 << (vuDimLevels[d] - uLevel);
 					#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
+					#endif		// DEL-BY-LEETEN 10/19/2012-END
 					/*
 					// skip the level if it is larger than the threshold 
 					if( uLevel >= vuDimMaxLevels[d] )
@@ -281,9 +310,12 @@ protected:
 					// ADD-BY-LEETEN 10/18/2012-END
 					lWavelet *= vlWavelets[uBase + uLevel];
 
-
-					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
+					#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
+ 					size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 					uCoefId += uCoef * uCoefBase;
+					#else		// MOD-BY-LEETEN 10/19/2012-TO:
+					uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel];
+					#endif		// MOD-BY-LEETEN 10/19/2012-END
 
 					// ADD-BY-LEETEN 10/18/2012-BEGIN
 					if( !lWavelet )
@@ -300,9 +332,14 @@ protected:
 				double dWavelet = dWeight * (double)lWavelet;
 
 			// ADD-BY-LEETEN 10/18/2012-BEGIN
-			#else	// #if	!USE_LOG_WAVELET_BASIS	
+			#else	// #if	!WITH_LOG_WAVELET_BASIS	
 			vector<double> vdWaveletLogs;
 			vector<char> vbWaveletSigns;
+			// ADD-BY-LEETEN 10/19/2012-BEGIN
+			vdWaveletLogs.resize(UGetNrOfDims() * vuDimLevels[0]);
+			vbWaveletSigns.resize(UGetNrOfDims() * vuDimLevels[0]);
+			// ADD-BY-LEETEN 10/19/2012-END
+
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -333,8 +370,13 @@ protected:
 						bSign = (lWavelet)?-1:0;
 					}
 					double dLogWavelet = (lWavelet)?log((double)lWavelet):0.0;
+					#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
 					vdWaveletLogs.push_back( dLogWavelet );
 					vbWaveletSigns.push_back( bSign );
+					#else		// MOD-BY-LEETEN 10/19/2012-TO:
+					vdWaveletLogs[p] = dLogWavelet;
+					vbWaveletSigns[p] = bSign;
+					#endif		// MOD-BY-LEETEN 10/19/2012-END
 				}
 			}
 			
@@ -375,7 +417,7 @@ protected:
 				dWavelet = dWeight * exp(dWaveletLog);
 				if( bWaveletSign < 0)
 					dWavelet = -dWavelet;
-			#endif	// #if	!USE_LOG_WAVELET_BASIS	
+			#endif	// #if	!WITH_LOG_WAVELET_BASIS	
 			// ADD-BY-LEETEN 10/18/2012-END
 
 				// update the corresponding wavelet coeffcients
@@ -678,8 +720,12 @@ public:
 					*/
 					
 					lWavelet *= vlWavelets[uBase + uLevel];
+					#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
 					size_t uCoef = vvuSubLevel2Coef[d][(this->vuDataDimLengths[d] - 1) * vuDimLevels[d] + uLevel];
 					uCoefId += uCoef * uCoefBase;
+					#else		// MOD-BY-LEETEN 10/19/2012-TO:
+					uCoefId += vvuSubLevel2Coef[d][(this->vuDataDimLengths[d] - 1) * vuDimLevels[d] + uLevel];
+					#endif		// MOD-BY-LEETEN 10/19/2012-END
 				}
 
 				// update the corresponding wavelet coeffcients
@@ -861,7 +907,6 @@ public:
 			size_t uMaxDimLevel = (size_t)ceilf(logf((float)uMaxDimLength)/logf(2.0f));
 			uMaxDimLength = 1 << uMaxDimLevel;
 			// ADD-BY-LEETEN 10/10/2012-END
-
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
 				ivuDimLength != vuDimLengths.end();
@@ -910,10 +955,19 @@ public:
 			vdBinWeights.resize(uNrOfBins);	// ADD-BY-LEETEN 10/10/2012
 
 			this->vuDimMaxLevels.clear();
-			size_t uNrOfCoefs = 1;	// total # coefficients to store
+			// MOD-BY-LEETEN 10/19/2012-FROM:	size_t uNrOfCoefs = 1;	// total # coefficients to store
+			uNrOfCoefs = 1;
+			// MOD-BY-LEETEN 10/19/2012-END
+
 			this->uNrOfUpdatingCoefs = 1;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
+				// ADD-BY-LEETEN 10/19/2012-BEGIN
+				// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
+				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
+					this->vvuSubLevel2Coef[d][c] *= uNrOfCoefs;
+				// ADD-BY-LEETEN 10/19/2012-END
+
 				size_t uMaxLevel = vuDimMaxLevels[d];
 				size_t uCoefLength;	// total number of coefficient for this dimension
 				if( !uMaxLevel )
@@ -955,6 +1009,20 @@ public:
 				vmapBinTempCoefs.resize(uNrOfBins);
 				vvdBinTempCoefs.resize(uNrOfBins);
 			}
+			
+			// ADD-BY-LEETEN 10/19/2012-BEGIN
+			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				size_t uMaxCountPerCoef = 1;	// max # coefficnet
+				for(size_t d = 0; d < UGetNrOfDims(); d++, p++)
+				{
+					size_t uLevel = vuCoefDim2Level[p];
+					uMaxCountPerCoef *= (size_t)1 << (vuDimLevels[d] - uLevel);
+				}
+				vuMaxCounts.push_back(uMaxCountPerCoef);
+			}
+			// ADD-BY-LEETEN 10/19/2012-END
+
 			#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 		}
 		
@@ -983,6 +1051,12 @@ public:
 			vdWaveletBasis.resize( uNrOfWavelets );
 			// ADD-BY-LEETEN 10/06/2012-END
 
+			// ADD-BY-LEETEN 10/19/2012-BEGIN
+			vector<size_t> vuPosLevelProduct;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				vuPosLevelProduct.push_back(vuPos[d] * vuDimLevels[d]);
+			// ADD-BY-LEETEN 10/19/2012-END
+
 			// ADD-BY-LEETEN 10/12/2012-BEGIN
 			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
@@ -1000,7 +1074,7 @@ public:
 					
 					// assume Haar wavelet for now
 					// Given the currenet level l and subscript uPos, compute the corresponding wavelet value
-					size_t uPosInWavelet = uPos % w;
+					size_t uPosInWavelet = uPos % w;				
 					if( uPosInWavelet < w / 2)
 						dWaveletBasis = 1.0;
 					else
@@ -1050,15 +1124,23 @@ public:
 				for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++, p+= UGetNrOfDims())
 				{
 					size_t uCoefId = 0;
+					#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
 					for(size_t d = 0, uCoefBase = 1;
 						d < UGetNrOfDims(); 
 						uCoefBase *= vuCoefLengths[d], d++)
+					#else		// MOD-BY-LEETEN 10/19/2012-TO:
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+					#endif		// MOD-BY-LEETEN 10/19/2012-END
 					{
 						size_t uLevel = vuCoefDim2Level[p + d];
 
 						// update the index of the current coefficients
+						#if	0	// MOD-BY-LEETEN 10/19/2012-FROM:
 						size_t uCoef = vvuSubLevel2Coef[d][vuPos[d] * vuDimLevels[d] + uLevel];
 						uCoefId += uCoef * uCoefBase;
+						#else		// MOD-BY-LEETEN 10/19/2012-TO:
+						uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel];
+						#endif		// MOD-BY-LEETEN 10/19/2012-END
 					}
 
 
