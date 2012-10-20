@@ -12,6 +12,8 @@
 #define	WITH_BOUNDARY_AWARE_DWT		0
 // ADD-BY-LEETEN 10/10/2012-END
 
+#define	WITH_PRECOMPUTED_WAVELET_BASIS	0	// ADD-BY-LEETEN 10/20/2012
+
 #include <map>	
 #if defined (WIN32)
 	#include <psapi.h>	
@@ -131,6 +133,13 @@ protected:
 		C = prod l[d]
 		*/
 		size_t uNrOfUpdatingCoefs;
+
+		// ADD-BY-LEETEN 10/18/2012-BEGIN
+		#if	WITH_PRECOMPUTED_WAVELET_BASIS
+		//! The volume to store the wavelet basis for all updating coefficients.
+		vector<double>	vdWaveletBasisPerUpdatingCoefs;
+		#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
+		// ADD-BY-LEETEN 10/18/2012-END
 
 		//! #Dimensions
 		/*!
@@ -273,7 +282,7 @@ protected:
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				long lWavelet = 1;
-
+								
 				#if	WITH_VECTORS_FOR_COUNTED_COEFS
 				// MOD-BY-LEETEN 10/19/2012-FROM:	size_t uMaxCountPerCoef = 1;	// max # coefficnet
 				size_t uMaxCountPerCoef = this->vuMaxCounts[c];
@@ -905,7 +914,9 @@ public:
 
 			// ADD-BY-LEETEN 10/10/2012-BEGIN
 			size_t uMaxDimLevel = (size_t)ceilf(logf((float)uMaxDimLength)/logf(2.0f));
-			uMaxDimLength = 1 << uMaxDimLevel;
+			// MOD-BY-LEETEN 10/18/2012-FROM:	uMaxDimLength = 1 << uMaxDimLevel;
+			uMaxDimLength = (size_t)1 << uMaxDimLevel;
+			// MOD-BY-LEETEN 10/18/2012-END
 			// ADD-BY-LEETEN 10/10/2012-END
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
@@ -1003,6 +1014,30 @@ public:
 			for(size_t b = 0; b < uNrOfBins; b++)
 			vmapBinCoefs.resize(uNrOfBins);
 
+			// ADD-BY-LEETEN 10/18/2012-BEGIN
+			#if	WITH_PRECOMPUTED_WAVELET_BASIS
+			vector<double> vdWaveletBasis;
+			vdWaveletBasis.resize( this->UGetNrOfDims() * this->vuDimMaxLevels[0] );
+
+			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
+			for(size_t p = 0,	d = 0; d < this->UGetNrOfDims();	d++)
+				for(size_t	l = 0; l < this->vuDimMaxLevels[d];	l++, p++)
+					vdWaveletBasis[p] = ( l >= 2 )?sqrt( (double)(1 << (l - 1)) ):1.0;
+
+			vdWaveletBasisPerUpdatingCoefs.resize(uNrOfUpdatingCoefs);
+			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				double dWavelet = 1.0;
+				for(size_t d = 0, uBase = 0;
+					d < UGetNrOfDims(); 
+					uBase += this->vuDimMaxLevels[d], d++, p++)
+					// combine the wavelet basis value
+					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+				vdWaveletBasisPerUpdatingCoefs[c] = dWavelet;
+			}
+			#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
+			// ADD-BY-LEETEN 10/18/2012-END
+
 			#if	WITH_VECTORS_FOR_COUNTED_COEFS
 			for(size_t b = 0; b < uNrOfBins; b++)	
 			{
@@ -1022,7 +1057,6 @@ public:
 				vuMaxCounts.push_back(uMaxCountPerCoef);
 			}
 			// ADD-BY-LEETEN 10/19/2012-END
-
 			#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 		}
 		
@@ -1040,15 +1074,32 @@ public:
 			vdSums.clear();
 
 			// ADD-BY-LEETEN 10/06/2012-BEGIN
+			#if	0	// MOD-BY-LEETEN 10/18/2012-FROM:
 			size_t uNrOfWavelets = 1;
 			for(vector<size_t>::iterator 
 				ivuDimMaxLevels = vuDimMaxLevels.begin();
 				ivuDimMaxLevels != vuDimMaxLevels.end();
 				ivuDimMaxLevels ++)
 				uNrOfWavelets *= *ivuDimMaxLevels;
+			#else		// MOD-BY-LEETEN 10/18/2012-TO:
+			size_t uNrOfWavelets = 0;
+			for(vector<size_t>::iterator 
+				ivuDimMaxLevels = vuDimMaxLevels.begin();
+				ivuDimMaxLevels != vuDimMaxLevels.end();
+				ivuDimMaxLevels ++)
+				uNrOfWavelets += *ivuDimMaxLevels;
+			#endif		// MOD-BY-LEETEN 10/18/2012-END
 
+			#if	!WITH_PRECOMPUTED_WAVELET_BASIS	// ADD-BY-LEETEN 10/18/2012
 			vector<double> vdWaveletBasis;
 			vdWaveletBasis.resize( uNrOfWavelets );
+			// ADD-BY-LEETEN 10/18/2012-BEGIN
+			#else	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS
+			vector<char> vbWaveletSigns;
+			vbWaveletSigns.resize( uNrOfWavelets );
+			#endif	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS
+			// ADD-BY-LEETEN 10/18/2012-END
+
 			// ADD-BY-LEETEN 10/06/2012-END
 
 			// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -1069,6 +1120,7 @@ public:
 					l < uDimMaxLevel; 
 					l++, p++, w >>= 1)
 				{
+					#if	!WITH_PRECOMPUTED_WAVELET_BASIS	// ADD-BY-LEETEN 10/18/2012
 					// Decide the wavelet size based on the current level, and then the wavelet basis values based on the position within this wavelet
 					double dWaveletBasis = 0.0;
 					
@@ -1083,10 +1135,16 @@ public:
 					if( l >= 2 )
 						dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
 					vdWaveletBasis[p] = dWaveletBasis;
+					// ADD-BY-LEETEN 10/18/2012-BEGIN
+					#else	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS	
+					vbWaveletSigns[p] = ( uPos % w < w / 2 )?+1:-1;
+					#endif	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS	
+					// ADD-BY-LEETEN 10/18/2012-END
 				}
 			}
 			// ADD-BY-LEETEN 10/12/2012-END
-
+		
+			#if	0	// MOD-BY-LEETEN 10/18/2012-FROM:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				#if	0	// DEL-BY-LEETEN 10/12/2012-BEGIN
@@ -1176,6 +1234,54 @@ public:
 				
 				vdSums.push_back(dCount);
 			}
+			#else	// MOD-BY-LEETEN 10/18/2012-TO:
+			vdSums.resize(UGetNrOfBins());
+
+			// now find the combination of the coefficients of all dimensions 
+			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				size_t uCoefId = 0;
+				double dWavelet = 1.0;
+				#if	WITH_PRECOMPUTED_WAVELET_BASIS	
+				int iWaveletSign = 1;
+				#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS	
+
+				for(size_t d = 0, uBase = 0;
+					d < UGetNrOfDims(); 
+					uBase += vuDimMaxLevels[d], d++, p++)
+				{
+					// update the index of the current coefficients
+					uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + vuCoefDim2Level[p]];
+
+					// combine the wavelet basis value
+					#if	!WITH_PRECOMPUTED_WAVELET_BASIS	
+					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+					#else	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS	
+					if( vbWaveletSigns[uBase + vuCoefDim2Level[p]] < 0 )
+						iWaveletSign = -iWaveletSign;
+					#endif	// #if	!WITH_PRECOMPUTED_WAVELET_BASIS	
+				}
+				#if	WITH_PRECOMPUTED_WAVELET_BASIS	
+				dWavelet = vdWaveletBasisPerUpdatingCoefs[c];
+				if( iWaveletSign < 0 )
+					dWavelet = -dWavelet;
+				#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS	
+
+				for(size_t b = 0; b < UGetNrOfBins(); b++)
+				{
+					double dWaveletCoef = DGetBinCoef(b, uCoefId);
+
+					if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( 0.0 != dWaveletCoef )
+					{
+						// update the corresponding wavelet coeffcients
+						double dIncremental = dWaveletCoef * dWavelet;
+						vdSums[b] += dIncremental;
+					}
+				}
+			}
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+				vdSums[b] /= dWaveletDenomiator;
+			#endif	// MOD-BY-LEETEN 10/18/2012-END
 		}
 
 		CBase():
