@@ -20,7 +20,6 @@ link_directories (
 
 add_subdirectory(SAT)
 add_subdirectory(SimpleND)
-
 add_dependencies(SimpleND SAT)
 
 # ADD-BY-LEETEN 09/30/2012-BEGIN
@@ -28,4 +27,6 @@ add_subdirectory(SimpleNDWithNrrd)
 add_dependencies(SimpleNDWithNrrd SAT)
 # ADD-BY-LEETEN 09/30/2012-END
 
+
+add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 
