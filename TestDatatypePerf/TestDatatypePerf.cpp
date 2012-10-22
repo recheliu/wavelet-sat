@@ -2,6 +2,7 @@
 using namespace std;
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h> // ADD-BY-LEETEN 10/22/2012
 #include "libclock.h"
 #include "liblog.h"
 
