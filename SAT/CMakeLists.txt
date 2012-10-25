@@ -30,6 +30,7 @@ set(HEADER_FILES
 		SimpleND.h	
 		# ADD-BY-LEETEN 09/30/2012-END
 		IntegralHistogram.h			# ADD-BY-LEETEN 10/17/2012
+		IntegralHistogramSDWT		# ADD-BY-LEETEN 10/25/2012
 	)
 
 add_custom_target (

@@ -16,11 +16,15 @@ using namespace std;
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
 Then the user call _Update(vuPos, value) to update the value at the given location.
 */
-namespace WaveletSAT
+// MOD-BY-LEETEN 10/25/2012-FROM:	namespace WaveletSAT
+namespace SAT
+// MOD-BY-LEETEN 10/25/2012-END
 {
 	template<class T>
 	class CIsotropicWaveletSAT
-		:public CBase<T>	// ADD-BY-LEETEN 09/29/2012
+		// MOD-BY-LEETEN 10/25/2012-FROM:	:public CBase<T>	// ADD-BY-LEETEN 09/29/2012
+		:public CWaveletSAT<T>	// ADD-BY-LEETEN 09/29/2012
+		// MOD-BY-LEETEN 10/25/2012-END
 	{
 	// ADD-BY-LEETEN 10/01/2012-BEGIN
 	protected:

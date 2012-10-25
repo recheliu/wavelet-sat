@@ -45,7 +45,9 @@ using namespace std;
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
 Then the user call _Update(vuPos, value) to update the value at the given location.
 */
-namespace WaveletSAT
+// MOD-BY-LEETEN 10/25/2012-FROM:	namespace WaveletSAT
+namespace SAT
+// MOD-BY-LEETEN 10/25/2012-END
 {
   struct CWaveletTempCoef 
   {
@@ -77,8 +79,13 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	template<class T>
+	#if	0	// MOD-BY-LEETEN 10/25/2012-FROM:
 	class CBase
 		:public SAT::CBase<T>	// ADD-BY-LEETEN 09/29/2012
+	#else		// MOD-BY-LEETEN 10/25/2012-TO:
+	class CWaveletSAT
+		:public CBase<T>	// ADD-BY-LEETEN 09/29/2012
+	#endif		// MOD-BY-LEETEN 10/25/2012-END
 	{
 protected:	
 		// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -1461,7 +1468,9 @@ public:
 			#endif	// MOD-BY-LEETEN 10/18/2012-END
 		}
 
-		CBase():
+		// MOD-BY-LEETEN 10/25/2012-FROM:	CBase():
+		CWaveletSAT():
+		// MOD-BY-LEETEN 10/25/2012-END
 			bIsFinalizedWithoutWavelet(false)
 		{
 		}
