@@ -12,19 +12,26 @@ PROJECT(WaveletSAT)
 set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
 
 include_directories (
-	"SAT"
+	# MOD-BY-LEETEN 10/27/2012-FROM:	"SAT"
+	"WaveletSAT"
+	# MOD-BY-LEETEN 10/27/2012-END
 	"${MYLIB_DIR}/include" )
 
 link_directories (
 	"${MYLIB_DIR}/lib" )
 
 add_subdirectory(SAT)
+add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
-add_dependencies(SimpleND SAT)
+# MOD-BY-LEETEN 10/27/2012-FROM:	add_dependencies(SimpleND SAT)
+add_dependencies(SimpleND WaveletSAT)
+# MOD-BY-LEETEN 10/27/2012-END
 
 # ADD-BY-LEETEN 09/30/2012-BEGIN
 add_subdirectory(SimpleNDWithNrrd)
-add_dependencies(SimpleNDWithNrrd SAT)
+# MOD-BY-LEETEN 10/27/2012-FROM:	add_dependencies(SimpleNDWithNrrd SAT)
+add_dependencies(SimpleNDWithNrrd WaveletSAT)
+# MOD-BY-LEETEN 10/27/2012-END
 # ADD-BY-LEETEN 09/30/2012-END
 
 

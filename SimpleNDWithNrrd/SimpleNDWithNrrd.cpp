@@ -156,7 +156,9 @@ main(int argn, char* argv[])
 		vuDimLengths.push_back( uDimLength );
 		uNrOfValues *= uDimLength;
 	}
-	cSimpleND._SetDimLengths(vuDimLengths);
+	// MOD-BY-LEETEN 10/27/2012-FROM:	cSimpleND._SetDimLengths(vuDimLengths);
+	cSimpleND._Set(vuDimLengths, uNrOfBins);
+	// MOD-BY-LEETEN 10/27/2012-END
 
 	// ADD-BY-LEETEN 10/18/2012-BEGIN
 	LOG_VAR(uNrOfBins);
@@ -166,10 +168,14 @@ main(int argn, char* argv[])
 
 	// Step 2: Allocate the needed #SATs
 	cSimpleND._SetHistogram(uNrOfBins, dValueMin, dValueMax);
+	#if	0	// MOD-BY-LEETEN 10/27/2012-FROM:
 	vector<size_t> vuDimMaxLevels;
 	for(size_t d = 0; d < uNrOfDims; d++)
 		vuDimMaxLevels.push_back(uMaxLevel);
 	cSimpleND._AllocateBins(uNrOfBins, vuDimMaxLevels);
+	#else		// MOD-BY-LEETEN 10/27/2012-TO:
+	cSimpleND._Allocate();
+	#endif		// MOD-BY-LEETEN 10/27/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
