@@ -263,7 +263,11 @@ protected:
 					{
 						this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dWavelet));
 					#else	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
+#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
 					map<size_t, CTempCoef>::iterator ipairTempCoef = this->vmapBinTempCoefs[uBin].find(uCoefId);
+#else // MOD-BY-LEETEN 10/26/2012-TO:
+					typename map<size_t, CTempCoef>::iterator ipairTempCoef = this->vmapBinTempCoefs[uBin].find(uCoefId);
+#endif // MOD-BY-LEETEN 10/26/2012-END
 					if(this->vmapBinTempCoefs[uBin].end() == ipairTempCoef )
 					{
 						this->vmapBinTempCoefs[uBin].insert(pair<size_t, CTempCoef>(uCoefId, CTempCoef(1, dWavelet)));
@@ -409,7 +413,11 @@ public:
 			{	
 				// ADD-BY-LEETEN 10/08/2012-BEGIN
 				#if	WITH_VECTORS_FOR_COUNTED_COEFS
+#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
 				for(map<size_t, CTempCoef>::iterator 
+#else // MOD-BY-LEETEN 10/26/2012-TO:
+				for(typename map<size_t, CTempCoef>::iterator 
+#endif // MOD-BY-LEETEN 10/26/2012-END
 					ipairTempCoef = this->vmapBinTempCoefs[b].begin();
 					ipairTempCoef != this->vmapBinTempCoefs[b].end();
 					ipairTempCoef++)

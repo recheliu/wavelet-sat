@@ -20,7 +20,11 @@ namespace WaveletSAT
 		void* _Reserved = NULL
 	)
 	{
+#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
 		vector<T>::iterator ivSrcHalf = vSrc.begin();
+#else // MOD-BY-LEETEN 10/26/2012-TO:
+		typename vector<T>::iterator ivSrcHalf = vSrc.begin();
+#endif // MOD-BY-LEETEN 10/26/2012-END
 		for(size_t c = 0; c < uLength/2; c++, ivSrcHalf++)
 		{
 			T Src1 = vSrc[c * 2];
