@@ -53,8 +53,8 @@ if( WITH_NETCDF )
 			)
 	else()
 		target_link_libraries(${PROJECT_NAME}
-			szip
-			zlib
+			# DEL-BY-LEETEN 10/28/2012: szip
+			# DEL-BY-LEETEN 10/28/2012: zlib
 			hdf5
 			netcdf
 			)

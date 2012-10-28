@@ -137,7 +137,9 @@ public:
 					else
 					{
 						szNcDimName = (char*)calloc(8, 1);
-						sprintf(szNcDimName, "DIM%d", uDimDiff);
+						// MOD-BY-LEETEN 10/28/2012-FROM:						sprintf(szNcDimName, "DIM%d", uDimDiff);
+						sprintf(szNcDimName, "DIM%d", (unsigned int)uDimDiff);
+						// MOD-BY-LEETEN 10/28/2012-END
 					}
 				}
 
@@ -179,7 +181,9 @@ public:
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
 					const map<size_t, ST>& mapHist = vmapHists[i];
-					map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
+					// MOD-BY-LEETEN 10/28/2012-FROM:					map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
+					typename map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
+					// MOD-BY-LEETEN 10/28/2012-END
 					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
