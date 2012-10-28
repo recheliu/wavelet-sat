@@ -11,6 +11,14 @@ PROJECT(WaveletSAT)
 # ADD-BY-LEETEN 09/02/2011-BEGIN
 set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
 
+# ADD-BY-LEETEN 10/28/2012-BEGIN
+set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?")	
+set(NETCDF_DIR "/usr/local" CACHE PATH "The intalled path of NetCDF")	
+if( WITH_NETCDF )
+	add_definitions(-DWITH_NETCDF)
+endif()
+# ADD-BY-LEETEN 10/28/2012-END
+
 include_directories (
 	# MOD-BY-LEETEN 10/27/2012-FROM:	"SAT"
 	"WaveletSAT"

@@ -3,11 +3,18 @@
 #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
 #include "SATSepDWTEncoder.h"
-
+#include "SATFileEncoder.h"	// ADD-BY-LEETEN 10/28/2012
 
 template<class T>
 class CSimpleND:
-	public WaveletSAT::CWaveletSATEncoder<T>
+// ADD-BY-LEETEN 10/28/2012-BEGIN
+#if	WITH_NETCDF
+	public WaveletSAT::CSATFileEncoder<T, double>
+#else // #if	WITH_NETCDF
+// ADD-BY-LEETEN 10/28/2012-END
+public WaveletSAT::CWaveletSATEncoder<T>
+#endif	// #if	WITH_NETCDF	// ADD-BY-LEETEN 10/28/2012
+	// MOD-BY-LEETEN 10/28/2012-END
 {
 	size_t uNrOfBins;
 	T valueMin, valueMax;

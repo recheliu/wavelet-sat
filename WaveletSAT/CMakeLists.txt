@@ -34,7 +34,15 @@ set(HEADER_FILES
 		
 		SimpleND.h
 	)
-
+	
+# ADD-BY-LEETEN 10/28/2012-BEGIN
+if( WITH_NETCDF )
+	list(APPEND HEADER_FILES
+		SATFileEncoder.h	
+	)
+endif()
+# ADD-BY-LEETEN 10/28/2012-END
+			
 add_custom_target (
 	${PROJECT_NAME}
 	SOURCES

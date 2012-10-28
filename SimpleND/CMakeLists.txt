@@ -35,3 +35,26 @@ else()
 endif()
 # ADD-BY-LEETEN 09/09/2012-END
 # ADD-BY-LEETEN 09/09/2012-END
+
+# ADD-BY-LEETEN 10/28/2012-BEGIN
+if( WITH_NETCDF )
+	if( DEFINED WIN32 )
+		target_link_libraries(${PROJECT_NAME}
+			libszip.lib
+			zlib.lib
+			hdf5.lib
+			hdf5_cpp.lib
+			hdf5_hl.lib
+			hdf5_hl_cpp.lib
+			netcdf.lib
+			)
+	else()
+		target_link_libraries(${PROJECT_NAME}
+			szip
+			zlib
+			hdf5
+			netcdf
+			)
+	endif()
+endif()
+# ADD-BY-LEETEN 10/28/2012-END
