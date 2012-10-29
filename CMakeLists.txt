@@ -14,14 +14,17 @@ set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
 # ADD-BY-LEETEN 10/28/2012-BEGIN
 set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?")	
 set(NETCDF_DIR "/usr/local" CACHE PATH "The intalled path of NetCDF")	
+set(HDF5_DIR "/usr/local" CACHE PATH "The intalled path of HDF5") # ADD-BY-LEETEN 10/29/2012
 if( WITH_NETCDF )
 	add_definitions(-DWITH_NETCDF)
 	# ADD-BY-LEETEN 10/29/2012-BEGIN
 	include_directories(
 	  "${NETCDF_DIR}/include"
+	  "${HDF5_DIR}/include"
 	  )
 	link_directories(
 	  "${NETCDF_DIR}/lib"
+	  "${HDF5_DIR}/lib"
 	  )
 	# ADD-BY-LEETEN 10/29/2012-END
 endif()

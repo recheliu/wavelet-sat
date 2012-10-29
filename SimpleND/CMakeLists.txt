@@ -30,6 +30,7 @@ if( DEFINED WIN32 ) # ADD-BY-LEETEN 09/09/2012
 # ADD-BY-LEETEN 09/09/2012-BEGIN
 else()
   target_link_libraries(${PROJECT_NAME}
+	rt	# ADD-BY-LEETEN 10/29/2012 
     libopt
     )
 endif()

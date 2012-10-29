@@ -3,7 +3,9 @@
 #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
 #include "SATSepDWTEncoder.h"
+#if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include "SATFileEncoder.h"	// ADD-BY-LEETEN 10/28/2012
+#endif	// #if WITH_NETCDF	// ADD-BY-LEETEN 10/29/2012
 
 template<class T>
 class CSimpleND:

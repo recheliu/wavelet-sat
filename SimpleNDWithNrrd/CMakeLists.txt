@@ -34,6 +34,7 @@ if( DEFINED WIN32 )
 else()
   target_link_libraries(${PROJECT_NAME}
     libopt
+	rt	# ADD-BY-LEETEN 10/29/2012 
     ITKNrrdIO	
     z
     )

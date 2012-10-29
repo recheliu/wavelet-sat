@@ -4,6 +4,7 @@
 #include <vector>
 using namespace std;
 #include <math.h>
+#include <string.h> 	// ADD-BY-LEETEN 10/29/2012
 
 #include "liblog.h"
 
