@@ -178,9 +178,11 @@ public:
 			this->uNrOfUpdatingCoefs = 1;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
+				#if	0	// DEL-BY-LEETEN 10/29/2012-BEGIN
 				// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
 				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
 					this->vvuSubLevel2Coef[d][c] *= uNrOfCoefs;
+				#endif		// DEL-BY-LEETEN 10/29/2012-END
 
 				size_t uMaxLevel = vuDimMaxLevels[d];
 				size_t uCoefLength;	// total number of coefficient for this dimension
@@ -190,7 +192,7 @@ public:
 					uMaxLevel = min(uMaxLevel, vuDimLevels[d]);
 				this->uNrOfUpdatingCoefs *= uMaxLevel;
 				uCoefLength = (size_t)1 << (uMaxLevel - 1);
-				vuCoefLengths.push_back(uCoefLength);
+				vuCoefLengths[d] = uCoefLength;	// MOD-BY-LEETEN 10/29/2012-FROM:	vuCoefLengths.push_back(uCoefLength);
 				this->vuDimMaxLevels.push_back(uMaxLevel);
 				uNrOfCoefs *= uCoefLength;		// update the total number of coefficient to store for all dimension
 			}
@@ -318,7 +320,6 @@ public:
 			{
 				size_t uCoefLength = uMaxDimLength;	
 				this->vuCoefLengths.push_back(uCoefLength);
-				
 				size_t uDimLevel  = (size_t)ceilf(logf((float)uCoefLength)/logf(2.0f)) + 1;
 				this->vuDimLevels.push_back(uDimLevel);
 				vector<size_t> vuSubLevel2Coef;

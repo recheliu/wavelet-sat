@@ -29,10 +29,13 @@ set(HEADER_FILES
 
 		DWT.h	
 		SepDWTHeader.h
+		SepDWTData.h	# ADD-BY-LEETEN 10/29/2012
 		WaveletSATEncoder.h
 		SATSepDWTEncoder.h
 		
 		SimpleND.h
+
+		utils.h			# ADD-BY-LEETEN 10/29/2012
 	)
 	
 # ADD-BY-LEETEN 10/28/2012-BEGIN
