@@ -207,7 +207,7 @@ public:
 						for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 							vuCoefPos[d] = vuWaveletToOffset[p + d] * ((size_t) 1 << l) + vuWaveletPos[d];
 
-						size_t uIndex = this->UConvetSubToIndex(vuCoefPos);
+						size_t uIndex = this->UConvertSubToIndex(vuCoefPos);
 						double dWaveletCoef = this->DGetBinCoef(b, uIndex);	// MOD-BY-LEETEN 10/08/2012-FROM:	double dWaveletCoef = this->vvdBinIsotropicCoefs[b][uIndex];
 
 						// now find the basis
@@ -328,7 +328,7 @@ public:
 							{
 								vuSrc = vuBase; 
 								vuSrc[d] = s;
-								size_t uSrc = this->UConvetSubToIndex(vuSrc); // MOD-BY-LEETEN 10/05/2012: size_t uSrc = UConvetSubToIndex(vuSrc);
+								size_t uSrc = this->UConvertSubToIndex(vuSrc); // MOD-BY-LEETEN 10/05/2012: size_t uSrc = UConvertSubToIndex(vuSrc);
 								vdSrc[s] = this->DGetBinCoef(b, uSrc);	// MOD-BY-LEETEN 10/08/2012-FROM:	vdSrc[s] = vvdBinIsotropicCoefs[b][uSrc];
 								vuSrcIndices[s] = uSrc;
 							}
@@ -357,7 +357,7 @@ public:
 				for(size_t e = 0; e < this->vvdBinCoefs[b].size(); e++)	
 #endif // MOD-BY-LEETEN 10/09/2012-END
 				{
-					this->_ConvetIndexToSub(e, vuSub);
+					this->_ConvertIndexToSub(e, vuSub);
 					size_t uMaxSub = 0;
 					for(size_t d = 0; d < vuSub.size(); d++)
 						uMaxSub = max(uMaxSub, vuSub[d]);
@@ -406,7 +406,7 @@ public:
 				{
 					size_t e = ipairCoef->first;
 
-					this->_ConvetIndexToSub(e, vuSub);
+					this->_ConvertIndexToSub(e, vuSub);
 					size_t uMaxSub = 0;
 					for(size_t d = 0; d < vuSub.size(); d++)
 						uMaxSub = max(uMaxSub, vuSub[d]);

@@ -108,8 +108,8 @@ public:
 			vuSub.resize(uNrOfDims);
 			for(size_t i = 0; i < CSATEncoder<DT, ST>::uDataSize; i++)
 			{
-				_ConvetIndexToSub(i, vuSub, CSATEncoder<DT, ST>::vuDimLengths);
-				size_t uWaveletIndex = UConvetSubToIndex(vuSub, CWaveletSATEncoder<DT>::vuDimLengths);
+				_ConvertIndexToSub(i, vuSub, CSATEncoder<DT, ST>::vuDimLengths);
+				size_t uWaveletIndex = UConvertSubToIndex(vuSub, CWaveletSATEncoder<DT>::vuDimLengths);
 
 				for(size_t b = 0; b < uNrOfBins; b++)
 					CWaveletSATEncoder<DT>::vvdBinCoefs[b][uWaveletIndex] = CSATEncoder<DT, ST>::vvBinSATs[b][i];
@@ -143,8 +143,8 @@ public:
 
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
-					_ConvetIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
-					vuScanLineIndices[0] = UConvetSubToIndex(vuScanLineBase, CWaveletSATEncoder<DT>::vuDimLengths);
+					_ConvertIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
+					vuScanLineIndices[0] = UConvertSubToIndex(vuScanLineBase, CWaveletSATEncoder<DT>::vuDimLengths);
 
 					// store the element indices along the current scanline so it can be reused for all bins
 					for(size_t j = 1; j < uDimLength; j++)

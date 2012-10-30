@@ -581,7 +581,7 @@ public:
 						if( dCoef )
 						{
 							double dWavelet = +1.0;
-							_ConvetIndexToSub(w, vuSub, vuCoefLengths);
+							_ConvertIndexToSub(w, vuSub, vuCoefLengths);
 
 							for(size_t d = 0; d < vuSub.size(); d++)
 							{
@@ -606,7 +606,7 @@ public:
 						{
 							double dWavelet = 1.0;
 
-							_ConvetIndexToSub(ipairCoef->first, vuSub, vuCoefLengths);
+							_ConvertIndexToSub(ipairCoef->first, vuSub, vuCoefLengths);
 
 							for(size_t d = 0; d < vuSub.size(); d++)
 							{
@@ -745,7 +745,6 @@ public:
 			vcBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)	
 				vcBinCoefs[b]._Set(vuCoefLengths, uNrOfCoefsInFullArray);
-			
 			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 		}

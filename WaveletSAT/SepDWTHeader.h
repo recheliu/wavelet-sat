@@ -13,7 +13,7 @@ This table is used in the compression stage.
 #define	WITH_PRECOMPUTED_WAVELET_SUMS	0	
 
 //! Decide whether a table that immediately map each updating coefficients and its dimension to the corresponding 1D index in the wavelet table per dimension.
-#define WITH_COEF_DIM_2_WAVELET		0
+#define WITH_COEF_DIM_2_WAVELET		1
 // ADD-BY-LEETEN 10/21/2012-END
 
 #include <map>	

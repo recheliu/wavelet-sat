@@ -182,7 +182,7 @@ protected:
 		// MOD-BY-LEETEN 10/17/2012-END
 		
 		size_t
-		UConvetSubToIndex
+		UConvertSubToIndex
 		(
 			const vector<size_t>& vuSub,
 			void* _Reserved = NULL
@@ -195,7 +195,7 @@ protected:
 		}
 
 		void
-		_ConvetIndexToSub
+		_ConvertIndexToSub
 		(
 			size_t uIndex,
 			vector<size_t>& vuSub,
@@ -897,7 +897,7 @@ public:
 					if( dCoef )
 					{
 						double dWavelet = +1.0;
-						_ConvetIndexToSub(w, vuSub);
+						_ConvertIndexToSub(w, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
 						{
@@ -941,7 +941,7 @@ public:
 					{
 						double dWavelet = 1.0;
 
-						_ConvetIndexToSub(ipairCoef->first, vuSub);
+						_ConvertIndexToSub(ipairCoef->first, vuSub);
 
 						for(size_t d = 0; d < vuSub.size(); d++)
 						{

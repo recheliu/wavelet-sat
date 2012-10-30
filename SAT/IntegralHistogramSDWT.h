@@ -293,7 +293,7 @@ public:
 					}
 
 					// store the element indices along the current scanline so it can be reused for all bins
-					vuScanLineIndices[0] = this->UConvetSubToIndex(vuScanLineBase);
+					vuScanLineIndices[0] = this->UConvertSubToIndex(vuScanLineBase);
 					for(size_t j = 1; j < this->vuDimLengths[d]; j++)
 					{
 						vuScanLineIndices[j] = vuScanLineIndices[j - 1] + uBase;

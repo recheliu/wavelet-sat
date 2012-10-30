@@ -67,7 +67,7 @@ protected:
 		}
 
 		void
-		_ConvetIndexToSub
+		_ConvertIndexToSub
 		(
 			size_t uIndex,
 			vector<size_t>& vuSub,
@@ -84,7 +84,7 @@ protected:
 		};
 
 		size_t
-		UConvetSubToIndex
+		UConvertSubToIndex
 		(
 			const vector<size_t>& vuSub,
 			void* _Reserved = NULL
@@ -107,7 +107,7 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			size_t uIndex = this->UConvetSubToIndex(vuPos);
+			size_t uIndex = this->UConvertSubToIndex(vuPos);
 			this->vvdBinSATs[uBin][uIndex] += dWeight;
 		}
 
@@ -203,7 +203,7 @@ public:
 					for(size_t j = 0; j < this->vuDimLengths[d]; j++)
 					{
 						vuScanLineBase[d] = j;
-						vuScanLineIndices[j] = this->UConvetSubToIndex(vuScanLineBase);
+						vuScanLineIndices[j] = this->UConvertSubToIndex(vuScanLineBase);
 					}
 
 					for(size_t b = 0; b < UGetNrOfBins(); b++)
@@ -274,7 +274,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			size_t uIndex = this->UConvetSubToIndex(vuPos);
+			size_t uIndex = this->UConvertSubToIndex(vuPos);
 			vdSums.clear();
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums.push_back(this->vvdBinSATs[b][uIndex]);

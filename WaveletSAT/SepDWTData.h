@@ -12,8 +12,10 @@ This table is used in the compression stage.
 */
 #define	WITH_PRECOMPUTED_WAVELET_SUMS	0	
 
+#if	0	// DEL-BY-LEETEN 10/30/2012-BEGIN
 //! Decide whether a table that immediately map each updating coefficients and its dimension to the corresponding 1D index in the wavelet table per dimension.
-#define WITH_COEF_DIM_2_WAVELET		0
+#define WITH_COEF_DIM_2_WAVELET		1
+#endif		// DEL-BY-LEETEN 10/30/2012-END
 // ADD-BY-LEETEN 10/21/2012-END
 
 #include <map>	
@@ -57,6 +59,8 @@ protected:
 		vector<size_t> vuFullArrayDimLengths;
 		vector<ST> vFullArray;
 		map<size_t, ST> mapSparseArray;
+
+		bool bIsFullArrayOnly;	// ADD-BY-LEETEN 10/30/2012
 public:
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -69,6 +73,9 @@ public:
 			PARAMETER_END
 		};
 
+		/*
+		uMaxFullArraySize: in bytes
+		*/
 		void
 		_Set
 		(
@@ -78,6 +85,7 @@ public:
 		)
 		{
 			size_t uNrOfDims = vuDimLengths.size();
+			#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
 			size_t uMaxLevel = (size_t)floor((log((double)uMaxFullArraySize) / M_LN2) / (double)uNrOfDims);
 			size_t uFullArraySize = (size_t)1<<(uMaxLevel * uNrOfDims);
 			size_t uFullArrayDimLength = (size_t)1<<uMaxLevel;
@@ -88,7 +96,60 @@ public:
 			this->vuDimLengths.resize(uNrOfDims);
 			for(size_t d = 0; d < uNrOfDims; d++)
 				this->vuDimLengths[d] = vuDimLengths[d];
-	
+			#else		// MOD-BY-LEETEN 10/30/2012-TO:
+			vuDimLevels.resize(uNrOfDims);
+			size_t uLevelsProduct = 1;	// product of levels from all dim
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				size_t uNrOfDimLevels = (size_t)ceil((log((double)vuDimLengths[d]) / M_LN2)) + 1;
+				vuDimLevels[d] = uNrOfDimLevels;
+				uLevelsProduct *= uNrOfDimLevels;
+			}
+
+			vuFullArrayDimLengths.resize(uNrOfDims);
+			size_t uFullArraySize = 0;
+			if(uMaxFullArraySize)
+			{
+				vector<size_t> vuOptimalDimLevel;
+				vuOptimalDimLevel.resize(uNrOfDims);
+
+				size_t uDiff = uMaxFullArraySize;
+				for(size_t l = 0; l < uLevelsProduct; l++)
+				{
+					vector<size_t> vuLevel;
+					_ConvertIndexToSub(l, vuLevel, vuDimLevels);
+					size_t uSize = 1;	// sizeof(ST);
+					for(size_t d = 0; d < uNrOfDims; d++)
+						uSize *= (size_t)(1 << vuLevel[d]);
+
+					if( uSize <= uMaxFullArraySize )
+					{
+						size_t uNewDiff = uMaxFullArraySize - uSize;
+						if( uNewDiff < uDiff )
+						{
+							vuOptimalDimLevel = vuLevel;
+							uDiff = uNewDiff;
+						}
+					}
+				}
+
+				uFullArraySize = 1;
+				for(size_t d = 0; d < uNrOfDims; d++)
+				{
+					vuFullArrayDimLengths[d] = (size_t)(1 << vuOptimalDimLevel[d]);
+					uFullArraySize *= vuFullArrayDimLengths[d];
+				}
+			}
+
+			this->vuDimLengths.resize(uNrOfDims);
+			bIsFullArrayOnly = true;
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				this->vuDimLengths[d] = vuDimLengths[d];
+				if( this->vuFullArrayDimLengths[d] < this->vuDimLengths[d] )
+					bIsFullArrayOnly = false;
+			}
+			#endif	// MOD-BY-LEETEN 10/30/2012-END
 			vFullArray.resize(uFullArraySize);
 		}
 
@@ -100,6 +161,7 @@ public:
 		)
 		{
 			bool bIsInFullArray = true;
+			if( !bIsFullArrayOnly )	// ADD-BY-LEETEN 10/30/2012
 			for(size_t d = 0; d < vuPos.size(); d++)
 				if( vuPos[d] >= vuFullArrayDimLengths[d] )
 				{
@@ -147,15 +209,19 @@ public:
 			bool bIsInFullArray = BIsInFullArray(vuPos);
 			if(bIsInFullArray)
 			{
-				size_t uIndexInFullArray = UConvetSubToIndex(vuPos, vuFullArrayDimLengths);
+				size_t uIndexInFullArray = UConvertSubToIndex(vuPos, vuFullArrayDimLengths);
 				Value = vFullArray[uIndexInFullArray];
 			}
 			else
 			{
-				size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
-				map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
+				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				if(mapSparseArray.end() == ipair )
-					Value = 0;
+					// MOD-BY-LEETEN 10/30/2012-FROM:	Value = 0;
+					Value = ST(0);
+					// MOD-BY-LEETEN 10/30/2012-END
 				else
 					Value = ipair->second;
 			}
@@ -173,13 +239,15 @@ public:
 			bool bIsInFullArray = BIsInFullArray(vuPos);
 			if(bIsInFullArray)
 			{
-				size_t uIndexInFullArray = UConvetSubToIndex(vuPos, vuFullArrayDimLengths);
+				size_t uIndexInFullArray = UConvertSubToIndex(vuPos, vuFullArrayDimLengths);
 				vFullArray[uIndexInFullArray] = Value;
 			}
 			else
 			{
-				size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
-				map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
+				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
 				else
@@ -199,13 +267,15 @@ public:
 			bool bIsInFullArray = BIsInFullArray(vuPos);
 			if(bIsInFullArray)
 			{
-				size_t uIndexInFullArray = UConvetSubToIndex(vuPos, vuFullArrayDimLengths);
+				size_t uIndexInFullArray = UConvertSubToIndex(vuPos, vuFullArrayDimLengths);
 				vFullArray[uIndexInFullArray] += Value;
 			}
 			else
 			{
-				size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
-				map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
+				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
+				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
 				else
@@ -281,7 +351,9 @@ public:
 				if( dCoef )
 				{
 					ST Wavelet = (ST)+1.0;
-					_ConvetIndexToSub(f, vuSub, vuDimLengths);
+					// MOD-BY-LEETEN 10/30/2012-FROM:	_ConvertIndexToSub(f, vuSub, vuDimLengths);
+					_ConvertIndexToSub(f, vuSub, this->vuFullArrayDimLengths);
+					// MOD-BY-LEETEN 10/30/2012-END
 					for(size_t d = 0; d < vuSub.size(); d++)
 					{
 						size_t uSub = vuSub[d];
@@ -295,17 +367,21 @@ public:
 				}
 			}
 
-			for(map<size_t, double>::iterator 
+			// MOD-BY-LEETEN 10/30/2012-FROM:	for(map<size_t, double>::iterator 
+			for(map<size_t, ST>::iterator 
+			// MOD-BY-LEETEN 10/30/2012-END
 				ipairCoef = this->mapSparseArray.begin();
 				ipairCoef != this->mapSparseArray.end();
 				ipairCoef++)
 			{
-				double dCoef = ipairCoef->second;
+				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = ipairCoef->second;
+				ST dCoef = ipairCoef->second;
+				// MOD-BY-LEETEN 10/30/2012-END
 				if( dCoef )
 				{
 					ST Wavelet = 1.0;
 
-					_ConvetIndexToSub(ipairCoef->first, vuSub, vuDimLengths);
+					_ConvertIndexToSub(ipairCoef->first, vuSub, vuDimLengths);
 					for(size_t d = 0; d < vuSub.size(); d++)
 					{
 						size_t uSub = vuSub[d];
@@ -332,7 +408,9 @@ public:
 			uCount = 0;
 			for(size_t w = 0; w < this->vFullArray.size(); w++)
 			{
-				double dCoef = this->vFullArray[w];
+				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = this->vFullArray[w];
+				double dCoef = (double)this->vFullArray[w];
+				// MOD-BY-LEETEN 10/30/2012-END
 				if( fabs(dCoef) > Threshold )
 					uCount++;
 			}
@@ -342,7 +420,9 @@ public:
 				ipairCoef != this->mapSparseArray.end();
 				ipairCoef++)
 			{
-				double dCoef = ipairCoef->second;
+				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = ipairCoef->second;
+				double dCoef = (double)ipairCoef->second;
+				// MOD-BY-LEETEN 10/30/2012-END
 				if( fabs(dCoef) > Threshold )
 					uCount++;
 			}

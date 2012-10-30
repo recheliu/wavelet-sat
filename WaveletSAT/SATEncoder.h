@@ -48,7 +48,7 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
+			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 			this->vvBinSATs[uBin][uIndex] += weight;
 		}
 
@@ -87,8 +87,8 @@ public:
 
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
-					_ConvetIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
-					size_t uScanLineBase = UConvetSubToIndex(vuScanLineBase, vuDimLengths);
+					_ConvertIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
+					size_t uScanLineBase = UConvertSubToIndex(vuScanLineBase, vuDimLengths);
 					for(size_t 	b = 0;
 								b < UGetNrOfBins(); 
 								b++)
@@ -140,7 +140,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
+			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 			vdSums.clear();
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums.push_back(this->vvBinSATs[b][uIndex]);

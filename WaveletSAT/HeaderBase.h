@@ -10,8 +10,9 @@ Then the user call _Update(vuPos, value) to update the value at the given locati
 */
 namespace WaveletSAT
 {
+	#if	0	// DEL-BY-LEETEN 10/30/2012-BEGIN	
 	void
-	_ConvetIndexToSub
+	_ConvertIndexToSub
 	(
 		size_t uIndex,
 		vector<size_t>& vuSub,
@@ -30,7 +31,7 @@ namespace WaveletSAT
 	};
 
 	size_t
-	UConvetSubToIndex
+	UConvertSubToIndex
 	(
 		const vector<size_t>& vuSub,
 		const vector<size_t>& vuDimLengths,
@@ -43,7 +44,7 @@ namespace WaveletSAT
 			uIndex += vuSubSize * vuSub[d];
 		return uIndex;
 	}
-
+	#endif		// DEL-BY-LEETEN 10/30/2012-BEGIN
 	/* usage: 
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
