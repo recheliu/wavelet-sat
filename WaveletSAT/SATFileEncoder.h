@@ -71,7 +71,7 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			size_t uIndex = UConvetSubToIndex(vuPos, vuDimLengths);
+			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 			map<size_t, ST>& mapHist = vmapHists[uIndex];
 			map<size_t, double>::iterator imapHist = mapHist.find(uBin);
 			if(mapHist.end() == imapHist )
@@ -195,8 +195,8 @@ public:
 
 					for(size_t i = 0; i < uNrOfScanLines; i++)
 					{
-						_ConvetIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
-						size_t uScanLineBase = UConvetSubToIndex(vuScanLineBase, vuDimLengths);
+						_ConvertIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
+						size_t uScanLineBase = UConvertSubToIndex(vuScanLineBase, vuDimLengths);
 						for(size_t 	j = 1, uIndex = uScanLineBase; 
 								j < vuDimLengths[d]; 
 								j++, uIndex += uOffset)
