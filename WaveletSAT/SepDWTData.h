@@ -216,7 +216,9 @@ public:
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				// MOD-BY-LEETEN 10/30/2012-END
 				if(mapSparseArray.end() == ipair )
 					// MOD-BY-LEETEN 10/30/2012-FROM:	Value = 0;
@@ -246,7 +248,9 @@ public:
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
@@ -274,7 +278,9 @@ public:
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
 				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				// MOD-BY-LEETEN 10/30/2012-END
 				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
@@ -368,7 +374,9 @@ public:
 			}
 
 			// MOD-BY-LEETEN 10/30/2012-FROM:	for(map<size_t, double>::iterator 
-			for(map<size_t, ST>::iterator 
+			// MOD-BY-LEETEN 10/30/2012-FROM: for(map<size_t, ST>::iterator 
+			for(typename map<size_t, ST>::iterator 
+			// MOD-BY-LEETEN 10/30/2012-END
 			// MOD-BY-LEETEN 10/30/2012-END
 				ipairCoef = this->mapSparseArray.begin();
 				ipairCoef != this->mapSparseArray.end();
@@ -415,7 +423,9 @@ public:
 					uCount++;
 			}
 
-			for(map<size_t, ST>::iterator
+			// MOD-BY-LEETEN 10/30/2012-FROM: for(map<size_t, ST>::iterator
+			for(typename map<size_t, ST>::iterator
+			// MOD-BY-LEETEN 10/30/2012-END
 				ipairCoef = this->mapSparseArray.begin();
 				ipairCoef != this->mapSparseArray.end();
 				ipairCoef++)
