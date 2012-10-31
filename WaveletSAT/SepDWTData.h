@@ -114,22 +114,48 @@ public:
 				vuOptimalDimLevel.resize(uNrOfDims);
 
 				size_t uDiff = uMaxFullArraySize;
+				double dCurrentAspectRatio = -1.0; // ADD-BY-LEETEN 10/31/2012
 				for(size_t l = 0; l < uLevelsProduct; l++)
 				{
 					vector<size_t> vuLevel;
 					_ConvertIndexToSub(l, vuLevel, vuDimLevels);
 					size_t uSize = 1;	// sizeof(ST);
+
+					// ADD-BY-LEETEN 10/31/2012-BEGIN
+					double dMaxLength = -HUGE_VAL;
+					double dMinLength = +HUGE_VAL;
+					// ADD-BY-LEETEN 10/31/2012-END
+
 					for(size_t d = 0; d < uNrOfDims; d++)
-						uSize *= (size_t)(1 << vuLevel[d]);
+ 					// MO-BY-LEETEN 10/31/2012-FROM:	uSize *= (size_t)(1 << vuLevel[d]);
+					{
+					  size_t uLength = (size_t)(1 << vuLevel[d]);
+					  uSize *= uLength;
+					  dMaxLength = max(dMaxLength, (double)uLength);
+					  dMinLength = min(dMinLength, (double)uLength);
+					}
+					double dAspectRatio = dMaxLength / dMinLength;
+					// MOD-BY-LEETEN 10/31/2012-END
 
 					if( uSize <= uMaxFullArraySize )
 					{
 						size_t uNewDiff = uMaxFullArraySize - uSize;
+#if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
 						if( uNewDiff < uDiff )
 						{
 							vuOptimalDimLevel = vuLevel;
 							uDiff = uNewDiff;
 						}
+#else // MOD-BY-LEETEN 10/31/2012-TO:
+						if( uNewDiff <= uDiff )
+						  if( uNewDiff < uDiff ||
+						      (dCurrentAspectRatio < 0.0 || dAspectRatio <= dCurrentAspectRatio ) )
+						    {
+							vuOptimalDimLevel = vuLevel;
+							uDiff = uNewDiff;
+							dCurrentAspectRatio = dAspectRatio;
+						    }
+#endif // MOD-BY-LEETEN 10/31/2012-END
 					}
 				}
 
@@ -409,6 +435,7 @@ public:
 			}
 		}
 
+#if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
 		//! Add value to the location specified by the 1D index
 		void
 		_GetNrOfNonZeroCoefs
@@ -443,6 +470,37 @@ public:
 			}
 		}
 
+#else // MOD-BY-LEETEN 10/31/2012-TO:			
+		//! Add value to the location specified by the 1D index
+		void
+		_GetArraySize
+		(
+			size_t& uCountInFullArray,
+			size_t& uCountInSparseArray,
+			ST Threshold,
+			void* _Reserved = NULL
+		)
+		{
+			uCountInFullArray = 0;
+			for(size_t w = 0; w < this->vFullArray.size(); w++)
+			{
+				double dCoef = (double)this->vFullArray[w];
+				if( fabs(dCoef) > Threshold )
+					uCountInFullArray++;
+			}
+
+			uCountInSparseArray = 0;
+			for(typename map<size_t, ST>::iterator
+				ipairCoef = this->mapSparseArray.begin();
+				ipairCoef != this->mapSparseArray.end();
+				ipairCoef++)
+			{
+				double dCoef = (double)ipairCoef->second;
+				if( fabs(dCoef) > Threshold )
+					uCountInSparseArray++;
+			}
+		}
+#endif // MOD-BY-LEETEN 10/31/2012-END
 		CSepDWTData()
 		{
 		}

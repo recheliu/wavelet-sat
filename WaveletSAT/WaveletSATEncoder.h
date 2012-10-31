@@ -640,6 +640,10 @@ public:
 		{
 			size_t uNrOfNonZeroCoefs = 0;
 			#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+			// ADD-BY-LEETEN 10/31/2012-BEGIN
+			size_t uCountInFullArray = 0;
+			size_t uCountInSparseArray = 0;
+			// ADD-BY-LEETEN 10/31/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				double dEnergy = 0.0;
@@ -648,7 +652,9 @@ public:
 					double dCoef = this->vvdBinCoefs[b][w];
 					dEnergy += pow(dCoef, 2.0);
 					if( fabs(dCoef) > this->dWaveletThreshold )
-						uNrOfNonZeroCoefs++;
+					  // MOD-BY-LEETEN 10/31/2012-FROM:			uNrOfNonZeroCoefs++;
+					  uCountInFullArray++;
+					  // MOD-BY-LEETEN 10/31/2012-END
 				}
 				for(map<size_t, double>::iterator
 					ipairCoef = vmapBinCoefs[b].begin();
@@ -658,18 +664,41 @@ public:
 					double dCoef = ipairCoef->second;
 					dEnergy += pow(dCoef, 2.0);
 					if( fabs(dCoef) > this->dWaveletThreshold )
-						uNrOfNonZeroCoefs++;
+					  // MOD-BY-LEETEN 10/31/2012-FROM:	uNrOfNonZeroCoefs++;
+					  uCountInSparseArray++;
+					  // MOD-BY-LEETEN 10/31/2012-END
 				}
 				// printf("Energy[%d] = %f\n", b, dEnergy);
 			}
+			// ADD-BY-LEETEN 10/31/2012-BEGIN
+			LOG_VAR(uCountInFullArray);
+			LOG_VAR(uCountInSparseArray);
+			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
+			// ADD-BY-LEETEN 10/31/2012-END
+
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
 			#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+#if 0 // MOD-BY-LEETEN 10/31/2012-FROM:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
 				size_t uCount;
 				this->vcBinCoefs[b]._GetNrOfNonZeroCoefs(uCount, dWaveletThreshold);
 				uNrOfNonZeroCoefs += uCount;
 			}
+#else // MOD-BY-LEETEN 10/31/2012-TO:
+			size_t uCountInFullArray = 0;
+			size_t uCountInSparseArray = 0;
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			  {
+			    size_t uF, uS;
+			    this->vcBinCoefs[b]._GetArraySize(uF, uS, dWaveletThreshold);
+			    uCountInFullArray += uF;
+			    uCountInSparseArray += uS;
+			  }
+			LOG_VAR(uCountInFullArray);
+			LOG_VAR(uCountInSparseArray);
+			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
+#endif // MOD-BY-LEETEN 10/31/2012-END
 			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 

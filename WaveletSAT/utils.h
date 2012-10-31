@@ -82,7 +82,9 @@ namespace WaveletSAT
 		getrusage(who,&usage);
 		// ADD-BY-LEETEN 10/30/2012-BEGIN
 		if( bIsOutputToError )
+		  { // ADD-BY-LEETEN 10/31/2012
 			LOG_VAR_TO_ERROR(usage.ru_maxrss);
+		  } // ADD-BY-LEETEN 10/31/2012
 		else
 		// ADD-BY-LEETEN 10/30/2012-END
 		LOG_VAR(usage.ru_maxrss);
