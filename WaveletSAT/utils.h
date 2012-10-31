@@ -56,6 +56,7 @@ namespace WaveletSAT
 	void
 	_ShowMemoryUsage
 	(
+		bool bIsOutputToError = false,	// ADD-BY-LEETEN 10/30/2012
 		void* _Reserved = NULL
 	)
 	{
@@ -65,6 +66,13 @@ namespace WaveletSAT
 				GetCurrentProcess(),
 				&memCounter,
 				sizeof( memCounter ));
+		// ADD-BY-LEETEN 10/30/2012-BEGIN
+		if( bIsOutputToError )
+		{
+			LOG_VAR_TO_ERROR(memCounter.WorkingSetSize);
+		}
+		else
+		// ADD-BY-LEETEN 10/30/2012-END
 		LOG_VAR(memCounter.WorkingSetSize);
 
 		#else	// #if defined(WIN32)
@@ -72,6 +80,11 @@ namespace WaveletSAT
 		struct rusage usage; 
 		int ret; 
 		getrusage(who,&usage);
+		// ADD-BY-LEETEN 10/30/2012-BEGIN
+		if( bIsOutputToError )
+			LOG_VAR_TO_ERROR(usage.ru_maxrss);
+		else
+		// ADD-BY-LEETEN 10/30/2012-END
 		LOG_VAR(usage.ru_maxrss);
 
 		#endif	// #if defined(WIN32)

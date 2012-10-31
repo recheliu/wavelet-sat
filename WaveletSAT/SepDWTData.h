@@ -190,8 +190,13 @@ public:
 				const size_t uMaxCount = 100000;
 				if( 0 == uCount % uMaxCount )
 				{
+					#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
 					LOG_VAR(uCount);
 					_ShowMemoryUsage();
+					#else		// MOD-BY-LEETEN 10/30/2012-TO:
+					LOG_VAR_TO_ERROR(uCount);
+					_ShowMemoryUsage(true);
+					#endif		// MOD-BY-LEETEN 10/30/2012-END
 				}
 				uCount++;
 			}
