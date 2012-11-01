@@ -8,10 +8,12 @@
 #define	WITH_BOUNDARY_AWARE_DWT		0
 // ADD-BY-LEETEN 10/10/2012-END
 
+#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 // ADD-BY-LEETEN 10/29/2012-BEGIN
 //! Decide whether the coefficients are stored in the class CSepDWTData
 #define	WITH_SEP_DWT_DATA_CLASS		1
 // ADD-BY-LEETEN 10/29/2012-END
+#endif		// DEL-BY-LEETEN 10/31/2012-END
 
 #include <map>	
 #if	0	// DEL-BY-LEETEN 10/29/2012-BEGIN
@@ -89,7 +91,8 @@ protected:
 		//! #Coefs stored in full arrays
 		size_t uNrOfCoefsInFullArray;	
 
-		#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+		// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+		#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 
 		//! pool of the coefficents
 		/*!
@@ -101,11 +104,11 @@ protected:
 		vector< map<size_t, CTempCoef> > vmapBinTempCoefs;
 		vector< vector< pair<size_t, double> > > vvdBinTempCoefs; 
 		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
-
+		#endif	// DEL-BY-LEETEN 10/31/2012-END
 		// ADD-BY-LEETEN 10/29/2012-BEGIN
-		#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+		// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 		vector< CSepDWTData<double> > vcBinCoefs;
-		#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+		// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 		// ADD-BY-LEETEN 10/29/2012-END
 
 		//! Update the specified bin.
@@ -120,10 +123,10 @@ protected:
 		)
 		{
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#if	WITH_SEP_DWT_DATA_CLASS	
+			#if		!WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#if	WITH_SEP_DWT_DATA_CLASS	
 			vector<size_t> vuCoefPos;
 			vuCoefPos.resize(UGetNrOfDims());
-			#endif	// #if	WITH_SEP_DWT_DATA_CLASS	
+			#endif	// #if	!WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
@@ -173,9 +176,9 @@ protected:
 			{
 				long lWavelet = 1;
 							
-				#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#if	WITH_1D_DIVISION		// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				size_t uCoefId = 0;
-				#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#endif	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 
 				#if	!WITH_COEF_DIM_2_WAVELET	// ADD-BY-LEETEN 10/21/2012
 				for(size_t d = 0, uBase = 0;
@@ -210,13 +213,13 @@ protected:
 					#endif	// #if	!WITH_COEF_DIM_2_WAVELET	
 					// ADD-BY-LEETEN 10/21/2012-END
 
-					#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+					#if	WITH_1D_DIVISION		// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 					uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel];
 
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#else	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					vuCoefPos[d] = vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel];
-					#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#endif	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 
 					// ADD-BY-LEETEN 10/18/2012-BEGIN
@@ -261,9 +264,9 @@ protected:
 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#if	WITH_1D_DIVISION		// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				size_t uCoefId = 0;
-				#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#endif	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				size_t uWaveletSumId = 0;
 				#if	!WITH_COEF_DIM_2_WAVELET	// ADD-BY-LEETEN 10/21/2012-BEGIN
 				for(size_t d = 0, uBase = 0; d < UGetNrOfDims(); uBase += vuDimMaxLevels[d], d++, p++)
@@ -274,13 +277,13 @@ protected:
 				// ADD-BY-LEETEN 10/21/2012-END
 				{
 					size_t uLevel = vuCoefDim2Level[p];
-					#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012-BEGIN
+					#if	WITH_1D_DIVISION		// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012-BEGIN
 					uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel];
 					
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#else	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					vuCoefPos[d] = vvuSubLevel2Coef[d][vuPosLevelProduct[d] + uLevel]
-					#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#endif	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 
 					#if	!WITH_COEF_DIM_2_WAVELET	// ADD-BY-LEETEN 10/21/2012
@@ -296,7 +299,8 @@ protected:
 			#endif	// #if	!WITH_PRECOMPUTED_WAVELET_SUMS	
 			// ADD-BY-LEETEN 10/21/2012-END
 
-				#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 				// update the corresponding wavelet coeffcients
 				if( uCoefId < uNrOfCoefsInFullArray ) 
 				{
@@ -359,9 +363,14 @@ protected:
 					}
 				}
 				// ADD-BY-LEETEN 10/29/2012-BEGIN
-				#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+				#endif	// DEL-BY-LEETEN 10/31/2012-END
+				// ADD-BY-LEETEN 10/31/2012-BEGIN
+				#if	WITH_1D_DIVISION
+				this->vcBinCoefs[uBin]._AddAtIndex(uCoefId, dWavelet);
+				// ADD-BY-LEETEN 10/31/2012-END
+				#else	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 				this->vcBinCoefs[uBin]._AddAtPos(vuCoefPos, dWavelet);
-				#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+				#endif	// #if	WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 				// ADD-BY-LEETEN 10/29/2012-END
 			}
 		}
@@ -398,6 +407,7 @@ public:
 		{
 		}
 
+		#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 		#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 		// ADD-BY-LEETEN 10/08/2012-BEGIN
 		virtual 
@@ -452,7 +462,7 @@ public:
 		}
 		// ADD-BY-LEETEN 10/08/2012-END
 		#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
-
+		#endif	// DEL-BY-LEETEN 10/31/2012-END
 		//! Finalize the computation of SAT
 		virtual	
 		void 
@@ -465,6 +475,7 @@ public:
 
 			vector<size_t> vuSub;	// ADD-BY-LEETEN 10/06/2012
 
+			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 			#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{	
@@ -490,7 +501,7 @@ public:
 				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
 			}	// ADD-BY-LEETEN 10/10/2012
 			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
-
+			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/10/2012-BEGIN
 			#if	WITH_BOUNDARY_AWARE_DWT
 			// consider the out-of-bound case
@@ -574,7 +585,8 @@ public:
 				for(size_t b = 0; b < UGetNrOfBins(); b++)
 				{	
 				// ADD-BY-LEETEN 10/08/2012-END
-					#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+					// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+					#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 					for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
 					{
 						double dCoef = this->vvdBinCoefs[b][w];
@@ -620,11 +632,12 @@ public:
 							ipairCoef->second *= dWavelet / dWaveletDenomiator;
 						}
 					}
+					#endif	// DEL-BY-LEETEN 10/31/2012-END
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					this->vcBinCoefs[b]._Finalize(dWaveletDenomiator);
 
-					#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 				}	// ADD-BY-LEETEN 10/08/2012
 			}	
@@ -639,7 +652,8 @@ public:
 		)
 		{
 			size_t uNrOfNonZeroCoefs = 0;
-			#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 			// ADD-BY-LEETEN 10/31/2012-BEGIN
 			size_t uCountInFullArray = 0;
 			size_t uCountInSparseArray = 0;
@@ -675,9 +689,9 @@ public:
 			LOG_VAR(uCountInSparseArray);
 			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
 			// ADD-BY-LEETEN 10/31/2012-END
-
+			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 #if 0 // MOD-BY-LEETEN 10/31/2012-FROM:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			{
@@ -699,7 +713,7 @@ public:
 			LOG_VAR(uCountInSparseArray);
 			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
 #endif // MOD-BY-LEETEN 10/31/2012-END
-			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 
 			LOG_VAR(uNrOfNonZeroCoefs);
@@ -731,7 +745,8 @@ public:
 		)
 		{
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	
+			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 			// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
 			for(size_t uBase = 1, d = 0; d < UGetNrOfDims(); uBase *= vuCoefLengths[d], d++)
 				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
@@ -743,17 +758,27 @@ public:
 				uNrOfCoefs);
 
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			#endif	// DEL-BY-LEETEN 10/31/2012-END
+			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			uNrOfCoefsInFullArray = min(
 				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(T))), 
 				uNrOfCoefs);
-			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
+			// ADD-BY-LEETEN 10/31/2012-BEGIN
+			#if	WITH_1D_DIVISION
+			// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
+			for(size_t uBase = 1, d = 0; d < UGetNrOfDims(); uBase *= vuCoefLengths[d], d++)
+				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
+					this->vvuSubLevel2Coef[d][c] *= uBase;
+			#endif	// #if	WITH_1D_DIVISION
+			// ADD-BY-LEETEN 10/31/2012-END
 
 			LOG_VAR(uSizeOfFullArrays);
 			LOG_VAR(uNrOfCoefsInFullArray);
 
-			#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 			vvdBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)
 				vvdBinCoefs[b].resize(uNrOfCoefsInFullArray);
@@ -768,13 +793,13 @@ public:
 				vvdBinTempCoefs.resize(uNrOfBins);
 			}
 			#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
-
+			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			vcBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)	
 				vcBinCoefs[b]._Set(vuCoefLengths, uNrOfCoefsInFullArray);
-			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 		}
 		
@@ -789,10 +814,10 @@ public:
 		)
 		{
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			#if	WITH_SEP_DWT_DATA_CLASS	
+			#if !WITH_1D_DIVISION			// MOD-BY-LEETEN 10/31/2012-FROM:	#if	WITH_SEP_DWT_DATA_CLASS	
 			vector<size_t> vuCoefPos;
 			vuCoefPos.resize(UGetNrOfDims());
-			#endif	// #if	WITH_SEP_DWT_DATA_CLASS	
+			#endif	// #if !WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 
 			// for each bin, apply wavelet transform
@@ -865,9 +890,9 @@ public:
 			// now find the combination of the coefficients of all dimensions 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#if WITH_1D_DIVISION			// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				size_t uCoefId = 0;
-				#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+				#endif	// #if !WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				double dWavelet = 1.0;
 				#if	WITH_PRECOMPUTED_WAVELET_BASIS	
 				int iWaveletSign = 1;
@@ -882,13 +907,13 @@ public:
 				#endif	// #if	!WITH_COEF_DIM_2_WAVELET	
 				// ADD-BY-LEETEN 10/21/2012-END
 				{
-					#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012-BEGIN
+					#if WITH_1D_DIVISION		// MOD-BY-LEETEN 10/31/2012-FROM:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012-BEGIN
 					// update the index of the current coefficients
 					uCoefId += vvuSubLevel2Coef[d][vuPosLevelProduct[d] + vuCoefDim2Level[p]];
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#else	// #if WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					vuCoefPos[d] = vvuSubLevel2Coef[d][vuPosLevelProduct[d] + vuCoefDim2Level[p]];
-					#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#endif	// #if WITH_1D_DIVISION	// MOD-BY-LEETEN 10/31/2012-FROM:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 
 					// combine the wavelet basis value
@@ -919,13 +944,21 @@ public:
 
 				for(size_t b = 0; b < UGetNrOfBins(); b++)
 				{
-					#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+					// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
+					#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
 					double dWaveletCoef = DGetBinCoef(b, uCoefId);
+					#endif		// DEL-BY-LEETEN 10/31/2012-END
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					double dWaveletCoef;
+					// ADD-BY-LEETEN 10/31/2012-BEGIN
+					#if	WITH_1D_DIVISION	
+					this->vcBinCoefs[b]._GetAtIndex(uCoefId, dWaveletCoef);
+					#else	// #if	WITH_1D_DIVISION
+					// ADD-BY-LEETEN 10/31/2012-END
 					this->vcBinCoefs[b]._GetAtPos(vuCoefPos, dWaveletCoef);
-					#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#endif	// #if	WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
+					// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 
 					if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( 0.0 != dWaveletCoef )

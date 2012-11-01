@@ -18,6 +18,11 @@ This table is used in the compression stage.
 #endif		// DEL-BY-LEETEN 10/30/2012-END
 // ADD-BY-LEETEN 10/21/2012-END
 
+// ADD-BY-LEETEN 10/31/2012-BEGIN
+//! Whether the full array and sparse array are divided based on 1D index to the multi-dimensional subscripts
+#define WITH_1D_DIVISION		1
+// ADD-BY-LEETEN 10/31/2012-END
+
 #include <map>	
 
 #include <vector>
@@ -56,7 +61,9 @@ protected:
 		vector<size_t> vuDimLevels;
 
 		vector<size_t> vuDimLengths;
+		#if	!WITH_1D_DIVISION		// ADD-BY-LEETEN 10/31/2012
 		vector<size_t> vuFullArrayDimLengths;
+		#endif	// #if	!WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 		vector<ST> vFullArray;
 		map<size_t, ST> mapSparseArray;
 
@@ -97,6 +104,7 @@ public:
 			for(size_t d = 0; d < uNrOfDims; d++)
 				this->vuDimLengths[d] = vuDimLengths[d];
 			#else		// MOD-BY-LEETEN 10/30/2012-TO:
+			#if	!WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 			vuDimLevels.resize(uNrOfDims);
 			size_t uLevelsProduct = 1;	// product of levels from all dim
 			for(size_t d = 0; d < uNrOfDims; d++)
@@ -175,6 +183,27 @@ public:
 				if( this->vuFullArrayDimLengths[d] < this->vuDimLengths[d] )
 					bIsFullArrayOnly = false;
 			}
+			// ADD-BY-LEETEN 10/31/2012-BEGIN
+			#else	// #if	!WITH_1D_DIVISION	
+			vuDimLevels.resize(uNrOfDims);
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				size_t uNrOfDimLevels = (size_t)ceil((log((double)vuDimLengths[d]) / M_LN2)) + 1;
+				vuDimLevels[d] = uNrOfDimLevels;
+			}
+
+			this->vuDimLengths.resize(uNrOfDims);
+			size_t uDataSize = 1;
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				this->vuDimLengths[d] = vuDimLengths[d];
+				uDataSize *= vuDimLengths[d];
+			}
+			bIsFullArrayOnly = ( uDataSize < uMaxFullArraySize )?true:false;
+			size_t uFullArraySize = min(uDataSize, uMaxFullArraySize);
+			#endif	// #if	!WITH_1D_DIVISION	
+			// ADD-BY-LEETEN 10/31/2012-END
+
 			#endif	// MOD-BY-LEETEN 10/30/2012-END
 			vFullArray.resize(uFullArraySize);
 		}
@@ -228,6 +257,7 @@ public:
 			}
 		}
 
+		#if	!WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 		//! Get the value at a position
 		void
 		_GetAtPos
@@ -320,6 +350,8 @@ public:
 			}
 		}
 
+		// ADD-BY-LEETEN 10/31/2012-BEGIN
+		#else	// #if	!WITH_1D_DIVISION	
 		//! Get the value to the location specified by the 1D index
 		void
 		_GetAtIndex
@@ -334,7 +366,18 @@ public:
 			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
 			_GetAtPos(vuPos, Value);
 #else
-			Value = this->vFullArray[uIndex];
+			// MOD-BY-LEETEN 10/31/2012-FROM:	Value = this->vFullArray[uIndex];
+			if( uIndex < vFullArray.size() )
+				Value = vFullArray[uIndex];
+			else
+			{
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				if(mapSparseArray.end() == ipair )
+					Value = ST(0);
+				else
+					Value = ipair->second;
+			}
+			// MOD-BY-LEETEN 10/31/2012-END
 #endif
 		}
 
@@ -352,7 +395,18 @@ public:
 			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
 			_SetAtPos(vuPos, Value);
 #else
-			vFullArray[uIndex] = Value;
+			// MOD-BY-LEETEN 10/31/2012-FROM:	vFullArray[uIndex] = Value;
+			if( uIndex < vFullArray.size() )
+				vFullArray[uIndex] = Value;
+			else
+			{
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				if( mapSparseArray.end() == ipair )
+					_AddEntryToSparseArray(uIndex, Value);
+				else
+					ipair->second = Value;
+			}
+			// MOD-BY-LEETEN 10/31/2012-END
 #endif
 		}
 
@@ -370,9 +424,22 @@ public:
 			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
 			_AddAtPos(vuPos, Value);
 #else
-			this->vFullArray[uIndex] += Value;
+			// MOD-BY-LEETEN 10/31/2012-FROM:	this->vFullArray[uIndex] += Value;
+			if( uIndex < vFullArray.size() )
+				vFullArray[uIndex] += Value;
+			else
+			{
+				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
+				if( mapSparseArray.end() == ipair )
+					_AddEntryToSparseArray(uIndex, Value);
+				else
+					ipair->second += Value;
+			}
+			// MOD-BY-LEETEN 10/31/2012-END
 #endif
 		}
+		#endif	// #if	!WITH_1D_DIVISION	
+		// ADD-BY-LEETEN 10/31/2012-END
 
 		void
 		_Finalize
@@ -389,7 +456,13 @@ public:
 				{
 					ST Wavelet = (ST)+1.0;
 					// MOD-BY-LEETEN 10/30/2012-FROM:	_ConvertIndexToSub(f, vuSub, vuDimLengths);
+					#if !WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 					_ConvertIndexToSub(f, vuSub, this->vuFullArrayDimLengths);
+					// ADD-BY-LEETEN 10/31/2012-BEGIN
+					#else	// #if !WITH_1D_DIVISION	
+					_ConvertIndexToSub(f, vuSub, this->vuDimLengths);
+					#endif	// #if !WITH_1D_DIVISION	
+					// ADD-BY-LEETEN 10/31/2012-END
 					// MOD-BY-LEETEN 10/30/2012-END
 					for(size_t d = 0; d < vuSub.size(); d++)
 					{
