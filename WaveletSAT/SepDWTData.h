@@ -208,6 +208,7 @@ public:
 			vFullArray.resize(uFullArraySize);
 		}
 
+#if !WITH_1D_DIVISION	       // ADD-BY-LEETEN 10/31/2012
 		//! Given a position, decide whether it is within the full array
 		bool BIsInFullArray
 		(
@@ -227,6 +228,7 @@ public:
 			return bIsInFullArray;
 
 		}
+#endif // #if !WITH_1D_DIVISION	       // ADD-BY-LEETEN 10/31/2012
 
 		void
 		_AddEntryToSparseArray
