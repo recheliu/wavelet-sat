@@ -55,6 +55,8 @@ protected:
 		
 		char *pszNcDimNames[NC_MAX_DIMS];
 
+		int iDeflateLevel; // ADD-BY-LEETEN 11/09/2012
+
 		////////////////////////////////////////////////////////////////////
 		/*
 		The protected interface. 
@@ -87,9 +89,33 @@ public:
 		*/
 		enum EParameter
 		{
-			PARAMETER_BEGIN = 0x0300,
+		  // MOD-BY-LEETEN 11/09/2012-FROM:			PARAMETER_BEGIN = 0x0300,
+			PARAMETER_BEGIN = 0x0600,
+			
+			DEFLATE_LEVEL,
+			// MOD-BY-LEETEN 11/09/2012-END
 			PARAMETER_END
 		};
+
+		// ADD-BY-LEETEN 11/09/2012-BEGIN
+		virtual
+		void
+		_SetLong(
+			int eName,
+			long lValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case DEFLATE_LEVEL:
+				iDeflateLevel = (int)lValue;
+				break;
+			}
+			CHeaderBase::_SetLong(eName, lValue);
+			// CEncoderBase<DT, ST>::_SetLong(eName, lValue);
+		}
+		// ADD-BY-LEETEN 11/09/2012-END
 
 		//! Finalize the computation of SAT
 		/*!
@@ -111,7 +137,13 @@ public:
 			// Create the file.
 			ASSERT_NETCDF(nc_create(
     				szNetCdfPathFilename,
+#if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
     				NC_CLOBBER,
+// ADD-BY-LEETEN 11/09/2012-BEGIN
+#else // #if !WITH_NETCDF4
+				NC_CLOBBER | NC_NETCDF4,
+#endif // #if !WITH_NETCDF4
+// ADD-BY-LEETEN 11/09/2012-END
     				&iNcId));
 
 			// dimension
@@ -160,6 +192,17 @@ public:
 				   UGetNrOfDims() + 1,
 				   piNcDimIds,
 				   &iNcVarId));
+
+			// ADD-BY-LEETEN 11/09/2012-BEGIN
+#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   iNcVarId, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+#endif // #if WITH_NETCDF4
+			// ADD-BY-LEETEN 11/09/2012-END
 
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
@@ -234,7 +277,13 @@ public:
 			// now reopen the file in read-only mode
 			ASSERT_NETCDF(nc_open(
     				szNetCdfPathFilename,
+#if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
     				NC_NOWRITE,
+// ADD-BY-LEETEN 11/09/2012-BEGIN
+#else // #if !WITH_NETCDF4
+    				NC_NOWRITE | NC_NETCDF4,
+#endif // #if !WITH_NETCDF4
+// ADD-BY-LEETEN 11/09/2012-END
     				&iNcId));
 
 			ASSERT_NETCDF(
@@ -267,6 +316,14 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+		  // ADD-BY-LEETEN 11/09/2012-BEGIN
+		  FILE *fp;
+		  fp = fopen(szNetCdfPathFilename, "rb");
+		  fseek(fp, 0, SEEK_END);
+		  size_t uFileSize = ftell(fp);
+		  fclose(fp);
+		  LOG_VAR(uFileSize);
+		  // ADD-BY-LEETEN 11/09/2012-END
 		}
 
 		//! Return the sum of all bins at the given position

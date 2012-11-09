@@ -132,6 +132,15 @@ main(int argn, char* argv[])
 	_OPTAddComment("--size-of-full-arrays", 
 		"Size (in MB) of the full arrays from all bin SATs");
 
+	// ADD-BY-LEETEN 11/09/2012-BEGIN
+	int iNetCDFDeflateLevel = 0;
+	_OPTAddIntegerVector(
+		"--netcdf-deflate-level", 1,
+		&iNetCDFDeflateLevel, iNetCDFDeflateLevel);
+	_OPTAddComment("--netcdf-deflate-level",
+		"Deflate level for NetCDF file. The value is between 0 (store only) and 9 (maximal).");
+	// ADD-BY-LEETEN 11/09/2012-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
 	assert(szVolFilePath);
@@ -146,6 +155,9 @@ main(int argn, char* argv[])
 	size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
 
 	cSimpleND._SetLong(CSimpleND<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+	cSimpleND._SetLong(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);
+        #endif // #if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
 
 	// Step 1: Setup up the data size
 	vector<size_t> vuDimLengths;
