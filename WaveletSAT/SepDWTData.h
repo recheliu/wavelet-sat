@@ -13,8 +13,6 @@ This table is used in the compression stage.
 #define	WITH_PRECOMPUTED_WAVELET_SUMS	0	
 
 #if	0	// DEL-BY-LEETEN 10/30/2012-BEGIN
-//! Decide whether a table that immediately map each updating coefficients and its dimension to the corresponding 1D index in the wavelet table per dimension.
-#define WITH_COEF_DIM_2_WAVELET		1
 #endif		// DEL-BY-LEETEN 10/30/2012-END
 // ADD-BY-LEETEN 10/21/2012-END
 
@@ -93,16 +91,6 @@ public:
 		{
 			size_t uNrOfDims = vuDimLengths.size();
 			#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
-			size_t uMaxLevel = (size_t)floor((log((double)uMaxFullArraySize) / M_LN2) / (double)uNrOfDims);
-			size_t uFullArraySize = (size_t)1<<(uMaxLevel * uNrOfDims);
-			size_t uFullArrayDimLength = (size_t)1<<uMaxLevel;
-			vuFullArrayDimLengths.resize(uNrOfDims);
-			for(size_t d = 0; d < uNrOfDims; d++)
-				vuFullArrayDimLengths[d] = uFullArrayDimLength;
-
-			this->vuDimLengths.resize(uNrOfDims);
-			for(size_t d = 0; d < uNrOfDims; d++)
-				this->vuDimLengths[d] = vuDimLengths[d];
 			#else		// MOD-BY-LEETEN 10/30/2012-TO:
 			#if	!WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 			vuDimLevels.resize(uNrOfDims);
@@ -149,11 +137,6 @@ public:
 					{
 						size_t uNewDiff = uMaxFullArraySize - uSize;
 #if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
-						if( uNewDiff < uDiff )
-						{
-							vuOptimalDimLevel = vuLevel;
-							uDiff = uNewDiff;
-						}
 #else // MOD-BY-LEETEN 10/31/2012-TO:
 						if( uNewDiff <= uDiff )
 						  if( uNewDiff < uDiff ||
@@ -248,8 +231,6 @@ public:
 				if( 0 == uCount % uMaxCount )
 				{
 					#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
-					LOG_VAR(uCount);
-					_ShowMemoryUsage();
 					#else		// MOD-BY-LEETEN 10/30/2012-TO:
 					LOG_VAR_TO_ERROR(uCount);
 					_ShowMemoryUsage(true);
@@ -278,15 +259,9 @@ public:
 			else
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
-				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
 				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-END
-				// MOD-BY-LEETEN 10/30/2012-END
 				if(mapSparseArray.end() == ipair )
-					// MOD-BY-LEETEN 10/30/2012-FROM:	Value = 0;
 					Value = ST(0);
-					// MOD-BY-LEETEN 10/30/2012-END
 				else
 					Value = ipair->second;
 			}
@@ -310,11 +285,7 @@ public:
 			else
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
-				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
 				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-END
-				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
 				else
@@ -340,11 +311,7 @@ public:
 			else
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
-				// MOD-BY-LEETEN 10/30/2012-FROM:	map<size_t, double>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-FROM: map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
 				typename map<size_t, ST>::iterator ipair = mapSparseArray.find(uIndex);
-				// MOD-BY-LEETEN 10/30/2012-END
-				// MOD-BY-LEETEN 10/30/2012-END
 				if( mapSparseArray.end() == ipair )
 					_AddEntryToSparseArray(uIndex, Value);
 				else
@@ -363,11 +330,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-#if	0 // TMP-MOD
-			vector<size_t> vuPos;
-			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
-			_GetAtPos(vuPos, Value);
-#else
 			// MOD-BY-LEETEN 10/31/2012-FROM:	Value = this->vFullArray[uIndex];
 			if( uIndex < vFullArray.size() )
 				Value = vFullArray[uIndex];
@@ -380,7 +342,6 @@ public:
 					Value = ipair->second;
 			}
 			// MOD-BY-LEETEN 10/31/2012-END
-#endif
 		}
 
 		//! Set value to the location specified by the 1D index
@@ -392,11 +353,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-#if	0	// TMP-MOD
-			vector<size_t> vuPos;
-			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
-			_SetAtPos(vuPos, Value);
-#else
 			// MOD-BY-LEETEN 10/31/2012-FROM:	vFullArray[uIndex] = Value;
 			if( uIndex < vFullArray.size() )
 				vFullArray[uIndex] = Value;
@@ -409,7 +365,6 @@ public:
 					ipair->second = Value;
 			}
 			// MOD-BY-LEETEN 10/31/2012-END
-#endif
 		}
 
 		//! Add value to the location specified by the 1D index
@@ -421,11 +376,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-#if	0 // TMP-MOD
-			vector<size_t> vuPos;
-			_ConvertIndexToSub(uIndex, vuPos, vuDimLengths);
-			_AddAtPos(vuPos, Value);
-#else
 			// MOD-BY-LEETEN 10/31/2012-FROM:	this->vFullArray[uIndex] += Value;
 			if( uIndex < vFullArray.size() )
 				vFullArray[uIndex] += Value;
@@ -438,7 +388,6 @@ public:
 					ipair->second += Value;
 			}
 			// MOD-BY-LEETEN 10/31/2012-END
-#endif
 		}
 		#endif	// #if	!WITH_1D_DIVISION	
 		// ADD-BY-LEETEN 10/31/2012-END
@@ -457,7 +406,6 @@ public:
 				if( dCoef )
 				{
 					ST Wavelet = (ST)+1.0;
-					// MOD-BY-LEETEN 10/30/2012-FROM:	_ConvertIndexToSub(f, vuSub, vuDimLengths);
 					#if !WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 					_ConvertIndexToSub(f, vuSub, this->vuFullArrayDimLengths);
 					// ADD-BY-LEETEN 10/31/2012-BEGIN
@@ -465,7 +413,6 @@ public:
 					_ConvertIndexToSub(f, vuSub, this->vuDimLengths);
 					#endif	// #if !WITH_1D_DIVISION	
 					// ADD-BY-LEETEN 10/31/2012-END
-					// MOD-BY-LEETEN 10/30/2012-END
 					for(size_t d = 0; d < vuSub.size(); d++)
 					{
 						size_t uSub = vuSub[d];
@@ -479,18 +426,12 @@ public:
 				}
 			}
 
-			// MOD-BY-LEETEN 10/30/2012-FROM:	for(map<size_t, double>::iterator 
-			// MOD-BY-LEETEN 10/30/2012-FROM: for(map<size_t, ST>::iterator 
 			for(typename map<size_t, ST>::iterator 
-			// MOD-BY-LEETEN 10/30/2012-END
-			// MOD-BY-LEETEN 10/30/2012-END
 				ipairCoef = this->mapSparseArray.begin();
 				ipairCoef != this->mapSparseArray.end();
 				ipairCoef++)
 			{
-				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = ipairCoef->second;
 				ST dCoef = ipairCoef->second;
-				// MOD-BY-LEETEN 10/30/2012-END
 				if( dCoef )
 				{
 					ST Wavelet = 1.0;
@@ -511,40 +452,6 @@ public:
 		}
 
 #if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
-		//! Add value to the location specified by the 1D index
-		void
-		_GetNrOfNonZeroCoefs
-		(
-			size_t& uCount,
-			ST Threshold,
-			void* _Reserved = NULL
-		)
-		{
-			uCount = 0;
-			for(size_t w = 0; w < this->vFullArray.size(); w++)
-			{
-				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = this->vFullArray[w];
-				double dCoef = (double)this->vFullArray[w];
-				// MOD-BY-LEETEN 10/30/2012-END
-				if( fabs(dCoef) > Threshold )
-					uCount++;
-			}
-
-			// MOD-BY-LEETEN 10/30/2012-FROM: for(map<size_t, ST>::iterator
-			for(typename map<size_t, ST>::iterator
-			// MOD-BY-LEETEN 10/30/2012-END
-				ipairCoef = this->mapSparseArray.begin();
-				ipairCoef != this->mapSparseArray.end();
-				ipairCoef++)
-			{
-				// MOD-BY-LEETEN 10/30/2012-FROM:	double dCoef = ipairCoef->second;
-				double dCoef = (double)ipairCoef->second;
-				// MOD-BY-LEETEN 10/30/2012-END
-				if( fabs(dCoef) > Threshold )
-					uCount++;
-			}
-		}
-
 #else // MOD-BY-LEETEN 10/31/2012-TO:			
 		//! Add value to the location specified by the 1D index
 		void

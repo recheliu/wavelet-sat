@@ -179,9 +179,6 @@ public:
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				#if	0	// DEL-BY-LEETEN 10/29/2012-BEGIN
-				// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
-				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
-					this->vvuSubLevel2Coef[d][c] *= uNrOfCoefs;
 				#endif		// DEL-BY-LEETEN 10/29/2012-END
 
 				size_t uMaxLevel = vuDimMaxLevels[d];

@@ -9,21 +9,10 @@
 // ADD-BY-LEETEN 10/10/2012-END
 
 #if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-// ADD-BY-LEETEN 10/29/2012-BEGIN
-//! Decide whether the coefficients are stored in the class CSepDWTData
-#define	WITH_SEP_DWT_DATA_CLASS		1
-// ADD-BY-LEETEN 10/29/2012-END
 #endif		// DEL-BY-LEETEN 10/31/2012-END
 
 #include <map>	
 #if	0	// DEL-BY-LEETEN 10/29/2012-BEGIN
-#if defined (WIN32)
-	#include <psapi.h>	
-	#pragma comment (lib, "psapi.lib")
-#else	// #if defined (WIN32)
-	#include <sys/time.h>
-	#include <sys/resource.h>
-#endif	// #if defined (WIN32)
 #endif		// DEL-BY-LEETEN 10/29/2012-END
 
 #include <vector>
@@ -91,24 +80,10 @@ protected:
 		//! #Coefs stored in full arrays
 		size_t uNrOfCoefsInFullArray;	
 
-		// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 		#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-
-		//! pool of the coefficents
-		/*!
-		*/
-		vector< vector<double> > vvdBinCoefs;
-		vector< map<size_t, double> > vmapBinCoefs;
-
-		#if	WITH_VECTORS_FOR_COUNTED_COEFS
-		vector< map<size_t, CTempCoef> > vmapBinTempCoefs;
-		vector< vector< pair<size_t, double> > > vvdBinTempCoefs; 
-		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 		#endif	// DEL-BY-LEETEN 10/31/2012-END
 		// ADD-BY-LEETEN 10/29/2012-BEGIN
-		// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 		vector< CSepDWTData<double> > vcBinCoefs;
-		// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 		// ADD-BY-LEETEN 10/29/2012-END
 
 		//! Update the specified bin.
@@ -299,70 +274,7 @@ protected:
 			#endif	// #if	!WITH_PRECOMPUTED_WAVELET_SUMS	
 			// ADD-BY-LEETEN 10/21/2012-END
 
-				// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 				#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-				// update the corresponding wavelet coeffcients
-				if( uCoefId < uNrOfCoefsInFullArray ) 
-				{
-					vvdBinCoefs[uBin][uCoefId] += dWavelet;
-				}
-				else 
-				{
-					#if	!WITH_VECTORS_FOR_COUNTED_COEFS	
-					map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
-					if(this->vmapBinCoefs[uBin].end() == ipairCoef )
-					{
-						this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dWavelet));
-					#else	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
-#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
-					map<size_t, CTempCoef>::iterator ipairTempCoef = this->vmapBinTempCoefs[uBin].find(uCoefId);
-#else // MOD-BY-LEETEN 10/26/2012-TO:
-					typename map<size_t, CTempCoef>::iterator ipairTempCoef = this->vmapBinTempCoefs[uBin].find(uCoefId);
-#endif // MOD-BY-LEETEN 10/26/2012-END
-					if(this->vmapBinTempCoefs[uBin].end() == ipairTempCoef )
-					{
-						this->vmapBinTempCoefs[uBin].insert(pair<size_t, CTempCoef>(uCoefId, CTempCoef(1, dWavelet)));
-					#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
-
-						static size_t uCount;
-						static size_t uMaxCount = 100000;
-						if( 0 == uCount % uMaxCount )
-						{
-							LOG_VAR(uCount);
-							#if defined(WIN32)
-							PROCESS_MEMORY_COUNTERS memCounter;
-							BOOL result = GetProcessMemoryInfo(
-									GetCurrentProcess(),
-									&memCounter,
-									sizeof( memCounter ));
-							LOG_VAR(memCounter.WorkingSetSize);
-							#else	// #if defined(WIN32)
-							int who = RUSAGE_SELF; 
-							struct rusage usage; 
-							int ret; 
-							getrusage(who,&usage);
-							LOG_VAR(usage.ru_maxrss);
-							#endif	// #if defined(WIN32)
-						}
-						uCount++;
-					}
-					else
-					{
-						#if	!WITH_VECTORS_FOR_COUNTED_COEFS	
-						ipairCoef->second += dWavelet;
-						#else	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
-						ipairTempCoef->second.uCount++;
-						ipairTempCoef->second.dCoef += dWavelet;
-
-						if( this->vuMaxCounts[c] == ipairTempCoef->second.uCount )
-						{
-							this->vvdBinTempCoefs[uBin].push_back(pair<size_t, double>(uCoefId, ipairTempCoef->second.dCoef));
-							this->vmapBinTempCoefs[uBin].erase(ipairTempCoef);
-						}
-						#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
-					}
-				}
-				// ADD-BY-LEETEN 10/29/2012-BEGIN
 				#endif	// DEL-BY-LEETEN 10/31/2012-END
 				// ADD-BY-LEETEN 10/31/2012-BEGIN
 				#if	WITH_1D_DIVISION
@@ -408,60 +320,6 @@ public:
 		}
 
 		#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-		#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
-		// ADD-BY-LEETEN 10/08/2012-BEGIN
-		virtual 
-		double 
-		DGetBinCoef
-		(
-			size_t uBin,
-			size_t uCoefId,
-			void *_Reserved = NULL
-		)
-		{
-			double dCoef = 0.0;
-			if( uCoefId < this->uNrOfCoefsInFullArray )
-				dCoef = vvdBinCoefs[uBin][uCoefId];
-			else
-			{
-				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
-				if( this->vmapBinCoefs[uBin].end() != ipairCoef )
-					dCoef = ipairCoef->second;
-			}
-			return dCoef;
-		}
-
-		virtual 
-		void
-		_SetBinCoef
-		(
-			size_t uBin,
-			size_t uCoefId,
-			double dCoef, 
-			void *_Reserved = NULL
-		)
-		{
-			if( uCoefId < this->uNrOfCoefsInFullArray )
-				vvdBinCoefs[uBin][uCoefId] = dCoef;
-			else
-			{
-				map<size_t, double>::iterator ipairCoef = this->vmapBinCoefs[uBin].find(uCoefId);
-				if( this->vmapBinCoefs[uBin].end() != ipairCoef )
-				// ADD-BY-LEETEN 10/12/2012-BEGIN
-				{	
-					if( !dCoef )
-						this->vmapBinCoefs[uBin].erase(ipairCoef);
-					else
-				// ADD-BY-LEETEN 10/12/2012-END
-					ipairCoef->second = dCoef;
-				}	// ADD-BY-LEETEN 10/12/2012
-				else
-				if( dCoef )	// ADD-BY-LEETEN 10/10/2012
-					this->vmapBinCoefs[uBin].insert(pair<size_t, double>(uCoefId, dCoef));
-			}
-		}
-		// ADD-BY-LEETEN 10/08/2012-END
-		#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 		#endif	// DEL-BY-LEETEN 10/31/2012-END
 		//! Finalize the computation of SAT
 		virtual	
@@ -476,31 +334,6 @@ public:
 			vector<size_t> vuSub;	// ADD-BY-LEETEN 10/06/2012
 
 			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-			#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
-			{	
-				// ADD-BY-LEETEN 10/08/2012-BEGIN
-				#if	WITH_VECTORS_FOR_COUNTED_COEFS
-#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
-				for(map<size_t, CTempCoef>::iterator 
-#else // MOD-BY-LEETEN 10/26/2012-TO:
-				for(typename map<size_t, CTempCoef>::iterator 
-#endif // MOD-BY-LEETEN 10/26/2012-END
-					ipairTempCoef = this->vmapBinTempCoefs[b].begin();
-					ipairTempCoef != this->vmapBinTempCoefs[b].end();
-					ipairTempCoef++)
-					this->vmapBinCoefs[b].insert(pair<size_t, double>(ipairTempCoef->first, ipairTempCoef->second.dCoef));
-				this->vmapBinTempCoefs[b].clear();
-
-				for(vector< pair<size_t, double> >::iterator 
-					ivdTempCoef = this->vvdBinTempCoefs[b].begin();
-					ivdTempCoef != this->vvdBinTempCoefs[b].end();
-					ivdTempCoef++)
-					this->vmapBinCoefs[b].insert(*ivdTempCoef);
-				this->vvdBinTempCoefs[b].clear();
-				#endif	// #if	!WITH_VECTORS_FOR_COUNTED_COEFS
-			}	// ADD-BY-LEETEN 10/10/2012
-			#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/10/2012-BEGIN
 			#if	WITH_BOUNDARY_AWARE_DWT
@@ -585,59 +418,11 @@ public:
 				for(size_t b = 0; b < UGetNrOfBins(); b++)
 				{	
 				// ADD-BY-LEETEN 10/08/2012-END
-					// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 					#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-					for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
-					{
-						double dCoef = this->vvdBinCoefs[b][w];
-						if( dCoef )
-						{
-							double dWavelet = +1.0;
-							_ConvertIndexToSub(w, vuSub, vuCoefLengths);
-
-							for(size_t d = 0; d < vuSub.size(); d++)
-							{
-								size_t uSub = vuSub[d];
-								if( uSub >= 1 )
-								{
-									size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
-									dWavelet *= sqrt((double)(1 << (uLevel - 1) ));
-								}
-							}
-							this->vvdBinCoefs[b][w] *= dWavelet / dWaveletDenomiator;
-						}
-					}
-
-					for(map<size_t, double>::iterator 
-						ipairCoef = this->vmapBinCoefs[b].begin();
-						ipairCoef != this->vmapBinCoefs[b].end();
-						ipairCoef++)
-					{
-						double dCoef = ipairCoef->second;
-						if( dCoef )
-						{
-							double dWavelet = 1.0;
-
-							_ConvertIndexToSub(ipairCoef->first, vuSub, vuCoefLengths);
-
-							for(size_t d = 0; d < vuSub.size(); d++)
-							{
-								size_t uSub = vuSub[d];
-								if( uSub >= 1 )
-								{
-									size_t uLevel = (size_t)ceil(log( (double)(uSub + 1) ) / log(2.0) );
-									dWavelet *= sqrt((double)(1 << (uLevel - 1) ));	
-								}
-							}
-							ipairCoef->second *= dWavelet / dWaveletDenomiator;
-						}
-					}
 					#endif	// DEL-BY-LEETEN 10/31/2012-END
 					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					this->vcBinCoefs[b]._Finalize(dWaveletDenomiator);
 
-					// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 				}	// ADD-BY-LEETEN 10/08/2012
 			}	
@@ -652,53 +437,10 @@ public:
 		)
 		{
 			size_t uNrOfNonZeroCoefs = 0;
-			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-			// ADD-BY-LEETEN 10/31/2012-BEGIN
-			size_t uCountInFullArray = 0;
-			size_t uCountInSparseArray = 0;
-			// ADD-BY-LEETEN 10/31/2012-END
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
-			{
-				double dEnergy = 0.0;
-				for(size_t w = 0; w < this->vvdBinCoefs[b].size(); w++)
-				{
-					double dCoef = this->vvdBinCoefs[b][w];
-					dEnergy += pow(dCoef, 2.0);
-					if( fabs(dCoef) > this->dWaveletThreshold )
-					  // MOD-BY-LEETEN 10/31/2012-FROM:			uNrOfNonZeroCoefs++;
-					  uCountInFullArray++;
-					  // MOD-BY-LEETEN 10/31/2012-END
-				}
-				for(map<size_t, double>::iterator
-					ipairCoef = vmapBinCoefs[b].begin();
-					ipairCoef != vmapBinCoefs[b].end();
-					ipairCoef++)
-				{
-					double dCoef = ipairCoef->second;
-					dEnergy += pow(dCoef, 2.0);
-					if( fabs(dCoef) > this->dWaveletThreshold )
-					  // MOD-BY-LEETEN 10/31/2012-FROM:	uNrOfNonZeroCoefs++;
-					  uCountInSparseArray++;
-					  // MOD-BY-LEETEN 10/31/2012-END
-				}
-				// printf("Energy[%d] = %f\n", b, dEnergy);
-			}
-			// ADD-BY-LEETEN 10/31/2012-BEGIN
-			LOG_VAR(uCountInFullArray);
-			LOG_VAR(uCountInSparseArray);
-			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
-			// ADD-BY-LEETEN 10/31/2012-END
 			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 #if 0 // MOD-BY-LEETEN 10/31/2012-FROM:
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
-			{
-				size_t uCount;
-				this->vcBinCoefs[b]._GetNrOfNonZeroCoefs(uCount, dWaveletThreshold);
-				uNrOfNonZeroCoefs += uCount;
-			}
 #else // MOD-BY-LEETEN 10/31/2012-TO:
 			size_t uCountInFullArray = 0;
 			size_t uCountInSparseArray = 0;
@@ -713,7 +455,6 @@ public:
 			LOG_VAR(uCountInSparseArray);
 			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
 #endif // MOD-BY-LEETEN 10/31/2012-END
-			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 
 			LOG_VAR(uNrOfNonZeroCoefs);
@@ -745,25 +486,11 @@ public:
 		)
 		{
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	
 			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-			// multiplied by the #coefficients s.t. later the indices can be computed without the extra multiplications
-			for(size_t uBase = 1, d = 0; d < UGetNrOfDims(); uBase *= vuCoefLengths[d], d++)
-				for(size_t c = 0; c < this->vvuSubLevel2Coef[d].size(); c++)
-					this->vvuSubLevel2Coef[d][c] *= uBase;
-			// ADD-BY-LEETEN 10/29/2012-END
-
-			uNrOfCoefsInFullArray = min(
-				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(this->vvdBinCoefs[0][0]))), 
-				uNrOfCoefs);
-
-			// ADD-BY-LEETEN 10/29/2012-BEGIN
 			#endif	// DEL-BY-LEETEN 10/31/2012-END
-			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			uNrOfCoefsInFullArray = min(
 				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(T))), 
 				uNrOfCoefs);
-			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 			// ADD-BY-LEETEN 10/31/2012-BEGIN
 			#if	WITH_1D_DIVISION
@@ -777,29 +504,12 @@ public:
 			LOG_VAR(uSizeOfFullArrays);
 			LOG_VAR(uNrOfCoefsInFullArray);
 
-			// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 			#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-			vvdBinCoefs.resize(uNrOfBins);
-			for(size_t b = 0; b < uNrOfBins; b++)
-				vvdBinCoefs[b].resize(uNrOfCoefsInFullArray);
-
-			for(size_t b = 0; b < uNrOfBins; b++)
-				vmapBinCoefs.resize(uNrOfBins);
-
-			#if	WITH_VECTORS_FOR_COUNTED_COEFS
-			for(size_t b = 0; b < uNrOfBins; b++)	
-			{
-				vmapBinTempCoefs.resize(uNrOfBins);
-				vvdBinTempCoefs.resize(uNrOfBins);
-			}
-			#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
 			#endif	// DEL-BY-LEETEN 10/31/2012-END
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			vcBinCoefs.resize(uNrOfBins);
 			for(size_t b = 0; b < uNrOfBins; b++)	
 				vcBinCoefs[b]._Set(vuCoefLengths, uNrOfCoefsInFullArray);
-			// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 			// ADD-BY-LEETEN 10/29/2012-END
 		}
 		
@@ -944,20 +654,7 @@ public:
 
 				for(size_t b = 0; b < UGetNrOfBins(); b++)
 				{
-					// DEL-BY-LEETEN 10/31/2012:	#if	!WITH_SEP_DWT_DATA_CLASS	// ADD-BY-LEETEN 10/29/2012
 					#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-					double dWaveletCoef = DGetBinCoef(b, uCoefId);
-					#endif		// DEL-BY-LEETEN 10/31/2012-END
-					// ADD-BY-LEETEN 10/29/2012-BEGIN
-					// DEL-BY-LEETEN 10/31/2012:	#else	// #if	!WITH_SEP_DWT_DATA_CLASS	
-					double dWaveletCoef;
-					// ADD-BY-LEETEN 10/31/2012-BEGIN
-					#if	WITH_1D_DIVISION	
-					this->vcBinCoefs[b]._GetAtIndex(uCoefId, dWaveletCoef);
-					#else	// #if	WITH_1D_DIVISION
-					// ADD-BY-LEETEN 10/31/2012-END
-					this->vcBinCoefs[b]._GetAtPos(vuCoefPos, dWaveletCoef);
-					#endif	// #if	WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 					// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
 					// ADD-BY-LEETEN 10/29/2012-END
 

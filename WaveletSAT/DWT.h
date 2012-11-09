@@ -21,7 +21,6 @@ namespace WaveletSAT
 	)
 	{
 #if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
-		vector<T>::iterator ivSrcHalf = vSrc.begin();
 #else // MOD-BY-LEETEN 10/26/2012-TO:
 		typename vector<T>::iterator ivSrcHalf = vSrc.begin();
 #endif // MOD-BY-LEETEN 10/26/2012-END
