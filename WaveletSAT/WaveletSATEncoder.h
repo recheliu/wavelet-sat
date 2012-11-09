@@ -655,7 +655,17 @@ public:
 				for(size_t b = 0; b < UGetNrOfBins(); b++)
 				{
 					#if	0	// DEL-BY-LEETEN 10/31/2012-BEGIN
-					// DEL-BY-LEETEN 10/31/2012:	#endif	// #if	!WITH_SEP_DWT_DATA_CLASS	
+					#endif		// DEL-BY-LEETEN 10/31/2012-END
+
+					// ADD-BY-LEETEN 10/29/2012-BEGIN
+					double dWaveletCoef;
+					// ADD-BY-LEETEN 10/31/2012-BEGIN
+					#if	WITH_1D_DIVISION	
+					this->vcBinCoefs[b]._GetAtIndex(uCoefId, dWaveletCoef);
+					#else	// #if	WITH_1D_DIVISION
+					// ADD-BY-LEETEN 10/31/2012-END
+					this->vcBinCoefs[b]._GetAtPos(vuCoefPos, dWaveletCoef);
+					#endif	// #if	WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 					// ADD-BY-LEETEN 10/29/2012-END
 
 					if( fabs(dWaveletCoef) >= dWaveletThreshold )	// MOD-BY-LEETEN 10/06/2012-FROM:	if( 0.0 != dWaveletCoef )

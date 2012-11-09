@@ -135,6 +135,7 @@ public:
 			*/
 
 			// Create the file.
+			#if	0	// MOD-BY-LEETEN 11/09/2012-FROM:
 			ASSERT_NETCDF(nc_create(
     				szNetCdfPathFilename,
 #if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
@@ -145,7 +146,19 @@ public:
 #endif // #if !WITH_NETCDF4
 // ADD-BY-LEETEN 11/09/2012-END
     				&iNcId));
-
+			#else		// MOD-BY-LEETEN 11/09/2012-TO:
+			#if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szNetCdfPathFilename,
+    				NC_CLOBBER,
+    				&iNcId));
+			#else	// #if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szNetCdfPathFilename,
+				NC_CLOBBER | NC_NETCDF4,
+    				&iNcId));
+			#endif	// #if !WITH_NETCDF4 
+			#endif		// MOD-BY-LEETEN 11/09/2012-END
 			// dimension
 			int piDimLengths[NC_MAX_DIMS];
 			static char* pszDefaultDimNames[] = {"X", "Y", "Z"};
@@ -275,6 +288,7 @@ public:
 
 			/////////////////////////////////////////////
 			// now reopen the file in read-only mode
+			#if	0	// MOD-BY-LEETEN 11/09/2012-FROM:
 			ASSERT_NETCDF(nc_open(
     				szNetCdfPathFilename,
 #if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
@@ -285,7 +299,19 @@ public:
 #endif // #if !WITH_NETCDF4
 // ADD-BY-LEETEN 11/09/2012-END
     				&iNcId));
-
+			#else		// MOD-BY-LEETEN 11/09/2012-TO:
+			#if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_open(
+    				szNetCdfPathFilename,
+    				NC_NOWRITE,
+    				&iNcId));
+			#else	// #if !WITH_NETCDF4
+			ASSERT_NETCDF(nc_open(
+    				szNetCdfPathFilename,
+    				NC_NOWRITE | NC_NETCDF4,
+    				&iNcId));
+			#endif // #if !WITH_NETCDF4
+			#endif		// MOD-BY-LEETEN 11/09/2012-END
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
 		}
