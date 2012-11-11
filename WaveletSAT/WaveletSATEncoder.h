@@ -404,7 +404,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			_ShowMemoryUsage();	// ADD-BY-LEETEN 10/29/2012
+			// DEL-BY-LEETEN 11/11/2012:	_ShowMemoryUsage();	// ADD-BY-LEETEN 10/29/2012
 
 			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
 			vector<size_t> vuSub;	// ADD-BY-LEETEN 10/06/2012
@@ -523,12 +523,18 @@ public:
 
 					dWavelet = sqrt(dWavelet);
 
+					#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
 					this->vcCoefPools[c]._Weight( dWavelet / dWaveletDenomiator);
+					#else		// MOD-BY-LEETEN 11/11/2012-TO:
+					this->vcCoefPools[c]._Finalize( dWavelet / dWaveletDenomiator);
+					#endif		// MOD-BY-LEETEN 11/11/2012-END
 					// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
 				}
 			}	
 			#endif	// #if	!WITH_COEF_POOL
 			// ADD-BY-LEETEN 11/11/2012-END
+
+			_ShowMemoryUsage();	// ADD-BY-LEETEN 11/11/2012
 		}
 
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -705,9 +711,15 @@ public:
 						bIsSparse = true;
 				}
 
+				// ADD-BY-LEETEN 11/11/2012-BEGIN
+				if( !uNrOfCoefsInFullArray )
+				  bIsSparse = true;
+				// ADD-BY-LEETEN 11/11/2012-END
+
 				this->vcCoefPools[c]._Set(
 					this->UGetNrOfBins(),
 					vuPoolDimLengths,
+					this->vuMaxCounts[c],	// ADD-BY-LEETEN 11/11/2012
 					bIsSparse);
 			}
 			#endif	// #if	!WITH_COEF_POOL	

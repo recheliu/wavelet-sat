@@ -1,5 +1,7 @@
 #pragma once
 
+#define WITH_SPARSE_AS_VECTOR	0	// ADD-BY-LEETEN 11/11/2012
+
 #include <map>	
 #include <vector>
 using namespace std;
@@ -41,6 +43,19 @@ namespace WaveletSAT
 		vector< vector<ST> > vvFull;
 
 		vector< map<IT, ST> > vmapSparse;
+		
+		// ADD-BY-LEETEN 11/11/2012-BEGIN
+		//! Max # that each coefficient is updated
+		size_t uMaxCount;
+
+		#if	WITH_SPARSE_AS_VECTOR
+		//! Record how many time each coefficient has been updated
+		vector<size_t> vuCounts;
+
+		//! 
+		vector< vector< pair<IT, ST> > > vvpairSparse;
+		#endif	// #if	WITH_SPARSE_AS_VECTOR
+		// ADD-BY-LEETEN 11/11/2012-END
 	public:
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -67,6 +82,7 @@ namespace WaveletSAT
 		(
 			const size_t uNrOfBins,
 			const vector<size_t>& vuLengths,
+			size_t uMaxCount,	// ADD-BY-LEETEN 11/11/2012
 			bool bIsSparse,
 			void* _Reserved = NULL
 		)
@@ -87,7 +103,18 @@ namespace WaveletSAT
 					vvFull[b].resize(this->uSize);
 			}
 			else
+			{	// ADD-BY-LEETEN 11/11/2012
 				this->vmapSparse.resize(this->uSize);
+
+			// ADD-BY-LEETEN 11/11/2012-BEGIN
+				#if	WITH_SPARSE_AS_VECTOR
+				this->vvpairSparse.resize(this->uSize);
+				this->vuCounts.resize(this->uSize);
+				#endif	// #if	WITH_SPARSE_AS_VECTOR
+			}
+			// ADD-BY-LEETEN 11/11/2012-END
+
+			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
 
 		void
@@ -119,6 +146,7 @@ namespace WaveletSAT
 			}
 			else
 			{
+				#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
 				for(typename vector< map<IT, ST> >::iterator 
 					ivmapSparse = this->vmapSparse.begin();
 					ivmapSparse != this->vmapSparse.end();
@@ -132,6 +160,23 @@ namespace WaveletSAT
 						if( (ST)fabs(pair->second) >= Threshold )
 							uCountInSparseArray++;
 				}
+				// ADD-BY-LEETEN 11/11/2012-BEGIN
+				#else	// #if	!WITH_SPARSE_AS_VECTOR	
+				for(typename vector< vector< pair<IT, ST> > >::iterator 
+					ivvpairSparse = this->vvpairSparse.begin();
+					ivvpairSparse != this->vvpairSparse.end();
+					ivvpairSparse++)
+				{
+					vector< pair<IT, ST> >& vpairSparse = *ivvpairSparse;
+					for(typename vector< pair<IT, ST> >::iterator 
+						pair = vpairSparse.begin();
+						pair != vpairSparse.end();
+						pair++)
+						if( (ST)fabs(pair->second) >= Threshold )
+							uCountInSparseArray++;
+				}
+				#endif	// #if	!WITH_SPARSE_AS_VECTOR	
+				// ADD-BY-LEETEN 11/11/2012-END
 			}
 		}
 
@@ -192,6 +237,7 @@ namespace WaveletSAT
 			}
 		}
 
+		#if	0	// DEL-BY-LEETEN 11/11/2012-BEGIN
 		//! Set value to the location specified by the 1D index
 		void
 		_SetAt
@@ -224,6 +270,7 @@ namespace WaveletSAT
 					ipair->second = Value;
 			}
 		}
+		#endif	// DEL-BY-LEETEN 11/11/2012-END
 
 		//! Add value to the location specified by the 1D index
 		void
@@ -255,11 +302,37 @@ namespace WaveletSAT
 					);
 					else
 						ipair->second += Value;
+
+				// ADD-BY-LEETEN 11/11/2012-BEGIN
+				#if	WITH_SPARSE_AS_VECTOR		
+				vuCounts[uIndex]++;
+				#endif	// #if	WITH_SPARSE_AS_VECTOR	
+				// ADD-BY-LEETEN 11/11/2012-END
 			}
+
+			// ADD-BY-LEETEN 11/11/2012-BEGIN
+			#if	WITH_SPARSE_AS_VECTOR	
+			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
+			{
+				const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
+				vvpairSparse[uIndex].clear();
+				for(typename map<IT, ST>::const_iterator 
+					ipair = vmapBinSparse.begin();
+					ipair != vmapBinSparse.end();
+					ipair++)
+					vvpairSparse[uIndex].push_back(pair<IT, ST>(ipair->first, ipair->second));
+
+				/// now clear this map
+				this->vmapSparse[uIndex].clear();
+			}	
+			#endif	// #if	WITH_SPARSE_AS_VECTOR	
+			// ADD-BY-LEETEN 11/11/2012-END
 		}
 
 		void
-		_Weight
+		// MOD-BY-LEETEN 11/11/2012-FROM:	_Weight
+		_Finalize
+		// MOD-BY-LEETEN 11/11/2012-END
 		(
 			ST WaveletWeight,
 			void* _Reserved = NULL
@@ -286,6 +359,7 @@ namespace WaveletSAT
 			}
 			else
 			{
+				#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
 				for(typename vector< map<IT, ST> >::iterator 
 					ivmapSparse = this->vmapSparse.begin();
 					ivmapSparse != this->vmapSparse.end();
@@ -293,11 +367,48 @@ namespace WaveletSAT
 				{
 					map<IT, ST>& vmapBinSparse = *ivmapSparse;
 					for(typename map<IT, ST>::iterator 
-						pair = vmapBinSparse.begin();
+									pair = vmapBinSparse.begin();
 						pair != vmapBinSparse.end();
 						pair++)
 						pair->second *= WaveletWeight;
 				}
+				// ADD-BY-LEETEN 11/11/2012-BEGIN
+				#else	// #if	!WITH_SPARSE_AS_VECTOR	
+				// check each element to make sure that no element is left in the map
+				for(size_t e = 0; e < this->vmapSparse.size(); e++)
+				{
+					const map<IT, ST>& vmapBinSparse = this->vmapSparse[e];
+					vvpairSparse[e].clear();
+					for(typename map<IT, ST>::const_iterator 
+						ipair = vmapBinSparse.begin();
+						ipair != vmapBinSparse.end();
+						ipair++)
+					{
+						vvpairSparse[e].push_back(pair<IT, ST>(ipair->first, ipair->second));
+					}
+
+					/// now clear this map
+					this->vmapSparse[e].clear();
+				}
+
+				// clear the vector to hold the sparse array and the counts
+				this->vmapSparse.clear();
+				this->vuCounts.clear();
+
+				for(typename vector< vector< pair<IT, ST> > >::iterator 
+					ivvpairSparse = this->vvpairSparse.begin();
+					ivvpairSparse != this->vvpairSparse.end();
+					ivvpairSparse++)
+				{
+					vector< pair<IT, ST> >& vpairSparse = *ivvpairSparse;
+					for(typename vector< pair<IT, ST> >::iterator 
+						pair = vpairSparse.begin();
+						pair != vpairSparse.end();
+						pair++)
+						pair->second *= WaveletWeight;
+				}
+				#endif	// #if	!WITH_SPARSE_AS_VECTOR	
+				// ADD-BY-LEETEN 11/11/2012-END
 			}
 		}
 
@@ -312,6 +423,7 @@ namespace WaveletSAT
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 
 			// sparse
+			#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
 			const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
 			vpairCoefs.clear();
 			for(typename map<IT, ST>::const_iterator 
@@ -319,6 +431,17 @@ namespace WaveletSAT
 				ipair != vmapBinSparse.end();
 				ipair++)
 				vpairCoefs.push_back(pair<size_t, ST>((size_t)ipair->first, ipair->second));
+
+			// ADD-BY-LEETEN 11/11/2012-BEGIN
+			#else	// #if	!WITH_SPARSE_AS_VECTOR	
+			const vector< pair<IT, ST> >& vpairSparse = this->vvpairSparse[uIndex];
+			for(typename vector< pair<IT, ST>>::const_iterator 
+					ipair = vpairSparse.begin();
+				ipair != vpairSparse.end();
+				ipair++)
+				vpairCoefs.push_back(pair<size_t, ST>((size_t)ipair->first, ipair->second));
+			#endif	// #if	!WITH_SPARSE_AS_VECTOR	
+			// ADD-BY-LEETEN 11/11/2012-END
 		}
 
 		CSepDWTPool()

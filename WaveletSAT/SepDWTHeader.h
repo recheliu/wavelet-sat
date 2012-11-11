@@ -247,7 +247,11 @@ public:
 				for(size_t d = 0; d < UGetNrOfDims(); d++, p++)
 				{
 					size_t uLevel = vuCoefDim2Level[p];
+					#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
 					uMaxCountPerCoef *= (size_t)1 << (vuDimLevels[d] - uLevel);
+					#else		// MOD-BY-LEETEN 11/11/2012-TO:
+					uMaxCountPerCoef *= (size_t)1 << (( 0 == uLevel )?(vuDimLevels[d] - 1 - uLevel):(vuDimLevels[d] - uLevel));
+					#endif		// MOD-BY-LEETEN 11/11/2012-END
 				}
 				vuMaxCounts.push_back(uMaxCountPerCoef);
 			}
