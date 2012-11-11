@@ -283,6 +283,16 @@ namespace WaveletSAT
 		)
 		{
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
+			// ADD-By-LEETEN 11/11/2012-BEGIN
+			#if	WITH_SPARSE_AS_VECTOR		
+			if( bIsSparse )
+				vuCounts[uIndex]++;
+			#endif	// #if	WITH_SPARSE_AS_VECTOR	
+
+			if( Value )
+			{
+			// ADD-By-LEETEN 11/11/2012-END
+
 			if( !bIsSparse )
 			{
 				// full
@@ -303,25 +313,32 @@ namespace WaveletSAT
 					else
 						ipair->second += Value;
 
+				#if	0	// DEL-BY-LEETEN 11/11/2012-BEGIN
 				// ADD-BY-LEETEN 11/11/2012-BEGIN
 				#if	WITH_SPARSE_AS_VECTOR		
 				vuCounts[uIndex]++;
 				#endif	// #if	WITH_SPARSE_AS_VECTOR	
 				// ADD-BY-LEETEN 11/11/2012-END
+				#endif		// DEL-BY-LEETEN 11/11/2012-END
 			}
+			}	// ADD-By-LEETEN 11/11/2012
 
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#if	WITH_SPARSE_AS_VECTOR	
 			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
 			{
 				const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
+				#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
 				vvpairSparse[uIndex].clear();
 				for(typename map<IT, ST>::const_iterator 
 					ipair = vmapBinSparse.begin();
 					ipair != vmapBinSparse.end();
 					ipair++)
 					vvpairSparse[uIndex].push_back(pair<IT, ST>(ipair->first, ipair->second));
-
+				#else		// MOD-BY-LEETEN 11/11/2012-TO:
+				vvpairSparse[uIndex].resize(vmapBinSparse.size());
+				copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[uIndex].begin());
+				#endif		// MOD-BY-LEETEN 11/11/2012-END
 				/// now clear this map
 				this->vmapSparse[uIndex].clear();
 			}	
@@ -377,7 +394,14 @@ namespace WaveletSAT
 				// check each element to make sure that no element is left in the map
 				for(size_t e = 0; e < this->vmapSparse.size(); e++)
 				{
+					// ADD-By-LEETEN 11/11/2012-BEGIN
+					// if the vector of pair is not empty, it means that the coefficients has been moved to here
+					if(!vvpairSparse[e].empty())
+						continue;
+					// ADD-By-LEETEN 11/11/2012-END
+
 					const map<IT, ST>& vmapBinSparse = this->vmapSparse[e];
+					#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
 					vvpairSparse[e].clear();
 					for(typename map<IT, ST>::const_iterator 
 						ipair = vmapBinSparse.begin();
@@ -386,6 +410,10 @@ namespace WaveletSAT
 					{
 						vvpairSparse[e].push_back(pair<IT, ST>(ipair->first, ipair->second));
 					}
+					#else		// MOD-BY-LEETEN 11/11/2012-TO:
+					vvpairSparse[e].resize(vmapBinSparse.size());
+					copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[e].begin());
+					#endif		// MOD-BY-LEETEN 11/11/2012-END
 
 					/// now clear this map
 					this->vmapSparse[e].clear();
@@ -435,7 +463,11 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_SPARSE_AS_VECTOR	
 			const vector< pair<IT, ST> >& vpairSparse = this->vvpairSparse[uIndex];
+			#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
 			for(typename vector< pair<IT, ST>>::const_iterator 
+			#else		// MOD-BY-LEETEN 11/11/2012-TO:
+			for(typename vector< pair<IT, ST> >::const_iterator 
+			#endif		// MOD-BY-LEETEN 11/11/2012-END
 					ipair = vpairSparse.begin();
 				ipair != vpairSparse.end();
 				ipair++)

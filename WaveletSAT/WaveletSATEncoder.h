@@ -352,8 +352,11 @@ protected:
 					lWavelet *= vlWavelets[uBase + uLevel];
 					vuPoolSubs[d] = vuSubs[uBase + uLevel];
 				}
+				#if	0	// DEL-BY-LEETEN 11/11/2012-BEGIN	// Do not skip empty coefficient s.t. the count can be correctly updated				
 				if( !lWavelet )
 					continue;
+				#endif		// DEL-BY-LEETEN 11/11/2012-END
+
 				double dWavelet = dWeight * (double)lWavelet;
 				
 				this->vcCoefPools[c]._AddAt(uBin, vuPoolSubs, dWavelet);
