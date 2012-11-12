@@ -1,6 +1,10 @@
 #pragma once
 
+#if	0	// MOD-BY-LEETEN 11/12/2012-FROM:
 #define WITH_SPARSE_AS_VECTOR	0	// ADD-BY-LEETEN 11/11/2012
+#else		// MOD-BY-LEETEN 11/12/2012-TO:
+#define WITH_SPARSE_AS_VECTOR	1	// ADD-BY-LEETEN 11/11/2012
+#endif		// MOD-BY-LEETEN 11/12/2012-END
 
 #include <map>	
 #include <vector>
@@ -450,6 +454,21 @@ namespace WaveletSAT
 		{
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 
+			// ADD-BY-LEETEN 11/12/2012-BEGIN
+			vpairCoefs.clear();
+			if( !bIsSparse )
+			{
+				for(size_t b = 0; b < this->vvFull.size(); b++)
+				{
+					ST Coef = vvFull[b][uIndex];
+					if( Coef )
+						vpairCoefs.push_back(pair<size_t, ST>(b, Coef));
+				}
+			}
+			else
+			{
+			// ADD-BY-LEETEN 11/12/2012-END
+
 			// sparse
 			#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
 			const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
@@ -468,12 +487,13 @@ namespace WaveletSAT
 			#else		// MOD-BY-LEETEN 11/11/2012-TO:
 			for(typename vector< pair<IT, ST> >::const_iterator 
 			#endif		// MOD-BY-LEETEN 11/11/2012-END
-					ipair = vpairSparse.begin();
+							ipair = vpairSparse.begin();
 				ipair != vpairSparse.end();
 				ipair++)
 				vpairCoefs.push_back(pair<size_t, ST>((size_t)ipair->first, ipair->second));
 			#endif	// #if	!WITH_SPARSE_AS_VECTOR	
 			// ADD-BY-LEETEN 11/11/2012-END
+			}	// ADD-BY-LEETEN 11/12/2012
 		}
 
 		CSepDWTPool()
