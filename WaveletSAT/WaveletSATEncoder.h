@@ -415,6 +415,8 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			
+			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 			// DEL-BY-LEETEN 11/11/2012:	_ShowMemoryUsage();	// ADD-BY-LEETEN 10/29/2012
 
 			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
@@ -545,7 +547,10 @@ public:
 			#endif	// #if	!WITH_COEF_POOL
 			// ADD-BY-LEETEN 11/11/2012-END
 
-			_ShowMemoryUsage();	// ADD-BY-LEETEN 11/11/2012
+			// MOD-BY-LEETEN 11/14/2012-FROM:			_ShowMemoryUsage();	// ADD-BY-LEETEN 11/11/2012
+			// TO:
+			_ShowMemoryUsage(false);
+			// MOD-BY-LEETEN 11/14/2012-END
 		}
 
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -742,6 +747,8 @@ public:
 			}
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
+
+			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 		}
 		
 		//! Return the sum of all bins at the given position
