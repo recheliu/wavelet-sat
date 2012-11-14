@@ -154,6 +154,9 @@ main(int argn, char* argv[])
 	size_t uNrOfBins = (size_t)iNrOfBins;
 	size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
 
+
+	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
+
 	cSimpleND._SetLong(CSimpleND<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
 	cSimpleND._SetLong(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);

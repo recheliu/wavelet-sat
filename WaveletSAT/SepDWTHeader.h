@@ -78,6 +78,14 @@ protected:
 		*/
 		vector<size_t> vuDimMaxLevels;
 		
+		// ADD-BY-LEETEN 11/14/2012-BEGIN
+		//! The total number of wavelet basis from all dimensions.
+		/*!
+		m[0] + m[d] + ... m[D - 1]
+		*/
+		size_t uNrOfWaveletsFromAllDims;
+		// ADD-BY-LEETEN 11/14/2012-END
+
 		//! #levels per dim
 		/*!
 		l[0] = log2(n[0]) + 1, ... l[d] = log2(n[d]) + 1, ... l[D - 1] = log2(n[D - 1]) + 1
@@ -176,6 +184,7 @@ public:
 			this->vuDimMaxLevels.clear();
 			uNrOfCoefs = 1;
 			this->uNrOfUpdatingCoefs = 1;
+			this->uNrOfWaveletsFromAllDims = 0;	// ADD-BY-LEETEN 11/14/2012
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				#if	0	// DEL-BY-LEETEN 10/29/2012-BEGIN
@@ -192,6 +201,8 @@ public:
 				vuCoefLengths[d] = uCoefLength;	// MOD-BY-LEETEN 10/29/2012-FROM:	vuCoefLengths.push_back(uCoefLength);
 				this->vuDimMaxLevels.push_back(uMaxLevel);
 				uNrOfCoefs *= uCoefLength;		// update the total number of coefficient to store for all dimension
+
+				uNrOfWaveletsFromAllDims += uMaxLevel;	// ADD-BY-LEETEN 11/14/2012
 			}
 
 			this->vuCoefDim2Level.resize(uNrOfUpdatingCoefs * UGetNrOfDims());
@@ -302,6 +313,7 @@ public:
 			this->vuCoefLengths.clear();
 			this->vuDimLevels.clear();
 
+			#if	0	// DEL-BY-LEETEN 11/14/2012-BEGIN
 			size_t uMaxDimLength = 0;
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
@@ -314,15 +326,25 @@ public:
 
 			size_t uMaxDimLevel = (size_t)ceilf(logf((float)uMaxDimLength)/logf(2.0f));
 			uMaxDimLength = (size_t)1 << uMaxDimLevel;
+			#endif	// DEL-BY-LEETEN 11/14/2012-END
+
 			for(vector<size_t>::const_iterator 
 				ivuDimLength = vuDimLengths.begin();
 				ivuDimLength != vuDimLengths.end();
 				ivuDimLength++)
 			{
+				#if	0	// MOD-BY-LEETEN 11/14/2012-FROM:
 				size_t uCoefLength = uMaxDimLength;	
 				this->vuCoefLengths.push_back(uCoefLength);
 				size_t uDimLevel  = (size_t)ceilf(logf((float)uCoefLength)/logf(2.0f)) + 1;
 				this->vuDimLevels.push_back(uDimLevel);
+				#else		// MOD-BY-LEETEN 11/14/2012-TO:
+				size_t uDimLength = *ivuDimLength;
+				size_t uDimLevel  = (size_t)ceil(log((double)uDimLength)/M_LN2) + 1;
+				this->vuDimLevels.push_back(uDimLevel);
+				size_t uCoefLength = 1 << (uDimLevel - 1);
+				this->vuCoefLengths.push_back(uCoefLength);
+				#endif		// MOD-BY-LEETEN 11/14/2012-END
 				vector<size_t> vuSubLevel2Coef;
 				vuSubLevel2Coef.resize(uCoefLength * uDimLevel);
 				for(size_t p = 0, i = 0; i < uCoefLength; i++)

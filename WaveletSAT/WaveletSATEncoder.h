@@ -305,11 +305,19 @@ protected:
 			// now find the combination of the coefficients of all dimensions
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
 
+			#if	0	// MOD-BY-LEETEN 11/14/2012-FROM:
 			vector<long> vlWavelets;
 			vlWavelets.resize(UGetNrOfDims() * this->vuDimLevels[0]);
 
 			vector<size_t> vuSubs;	// the subscripts of different level
 			vuSubs.resize(UGetNrOfDims() * this->vuDimLevels[0]);
+			#else		// MOD-BY-LEETEN 11/14/2012-TO:
+			vector<long> vlWavelets;
+			vlWavelets.resize(uNrOfWaveletsFromAllDims);
+
+			vector<size_t> vuSubs;	// the subscripts of different level
+			vuSubs.resize(uNrOfWaveletsFromAllDims);
+			#endif		// MOD-BY-LEETEN 11/14/2012-END
 
 			// for each dimension, fetch the l[d] indices;
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
@@ -583,6 +591,7 @@ public:
 
 			LOG_VAR(uNrOfNonZeroCoefs);
 
+			#if	0	// MOD-BY-LEETEN 11/14/2012-FROM:
 			size_t uNrOfDataItems = 1;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -591,6 +600,9 @@ public:
 			}
 			LOG_VAR(uNrOfDataItems);
 			LOG_VAR(UGetNrOfBins());
+			#else		// MOD-BY-LEETEN 11/14/2012-TO:
+			size_t uNrOfDataItems = this->uDataSize;
+			#endif		// MOD-BY-LEETEN 11/14/2012-END
 
 			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
 			LOG_VAR(dCR);
@@ -645,15 +657,18 @@ public:
 
 			////////////////////////////////////////
 			size_t uNrOfDims = this->UGetNrOfDims();
-			vuDimLevels.resize(uNrOfDims);
+			// DEL-BY-LEETEN 11/14/2012:	vuDimLevels.resize(uNrOfDims);
 			size_t uLevelsProduct = 1;	// product of levels from all dim
 			for(size_t d = 0; d < uNrOfDims; d++)
 			{
 				size_t uNrOfDimLevels = (size_t)ceil((log((double)vuDimLengths[d]) / M_LN2)) + 1;
+				#if	0	// MOD-BY-LEETEN 11/14/2012-FROM:
 				vuDimLevels[d] = uNrOfDimLevels;
 				uLevelsProduct *= uNrOfDimLevels;
+				#else		// MOD-BY-LEETEN 11/14/2012-TO:
+				uLevelsProduct *= vuDimLevels[d];
+				#endif		// MOD-BY-LEETEN 11/14/2012-END
 			}
-
 			vector<size_t> vuOptimalDimLevel;
 			vuOptimalDimLevel.resize(uNrOfDims);
 			
@@ -898,6 +913,7 @@ public:
 			vector<size_t> vuEmpty;	// this empty vector is used to speed up the access of elements
 
 			vdSums.resize(UGetNrOfBins());
+			#if	0	// MOD-BY-LEETEN 11/14/2012-FROM:
 			size_t uNrOfWavelets = 0;
 			for(vector<size_t>::iterator 
 				ivuDimMaxLevels = vuDimMaxLevels.begin();
@@ -910,6 +926,13 @@ public:
 
 			vector<size_t> vuSubs;
 			vuSubs.resize( uNrOfWavelets );
+			#else	// MOD-BY-LEETEN 11/14/2012-TO:
+			vector<double> vdWaveletBasis;
+			vdWaveletBasis.resize( this->uNrOfWaveletsFromAllDims );
+
+			vector<size_t> vuSubs;
+			vuSubs.resize( this->uNrOfWaveletsFromAllDims );
+			#endif	// MOD-BY-LEETEN 11/14/2012-END
 
 			vector<size_t> vuPoolSubs;
 			vuPoolSubs.resize( UGetNrOfDims() );
