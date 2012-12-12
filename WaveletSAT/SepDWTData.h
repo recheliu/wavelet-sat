@@ -12,8 +12,6 @@ This table is used in the compression stage.
 */
 #define	WITH_PRECOMPUTED_WAVELET_SUMS	0	
 
-#if	0	// DEL-BY-LEETEN 10/30/2012-BEGIN
-#endif		// DEL-BY-LEETEN 10/30/2012-END
 // ADD-BY-LEETEN 10/21/2012-END
 
 // ADD-BY-LEETEN 10/31/2012-BEGIN
@@ -90,8 +88,6 @@ public:
 		)
 		{
 			size_t uNrOfDims = vuDimLengths.size();
-			#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
-			#else		// MOD-BY-LEETEN 10/30/2012-TO:
 			#if	!WITH_1D_DIVISION	// ADD-BY-LEETEN 10/31/2012
 			vuDimLevels.resize(uNrOfDims);
 			size_t uLevelsProduct = 1;	// product of levels from all dim
@@ -123,7 +119,6 @@ public:
 					// ADD-BY-LEETEN 10/31/2012-END
 
 					for(size_t d = 0; d < uNrOfDims; d++)
- 					// MO-BY-LEETEN 10/31/2012-FROM:	uSize *= (size_t)(1 << vuLevel[d]);
 					{
 					  size_t uLength = (size_t)(1 << vuLevel[d]);
 					  uSize *= uLength;
@@ -131,13 +126,10 @@ public:
 					  dMinLength = min(dMinLength, (double)uLength);
 					}
 					double dAspectRatio = dMaxLength / dMinLength;
-					// MOD-BY-LEETEN 10/31/2012-END
 
 					if( uSize <= uMaxFullArraySize )
 					{
 						size_t uNewDiff = uMaxFullArraySize - uSize;
-#if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
-#else // MOD-BY-LEETEN 10/31/2012-TO:
 						if( uNewDiff <= uDiff )
 						  if( uNewDiff < uDiff ||
 						      (dCurrentAspectRatio < 0.0 || dAspectRatio <= dCurrentAspectRatio ) )
@@ -146,7 +138,6 @@ public:
 							uDiff = uNewDiff;
 							dCurrentAspectRatio = dAspectRatio;
 						    }
-#endif // MOD-BY-LEETEN 10/31/2012-END
 					}
 				}
 
@@ -187,7 +178,6 @@ public:
 			#endif	// #if	!WITH_1D_DIVISION	
 			// ADD-BY-LEETEN 10/31/2012-END
 
-			#endif	// MOD-BY-LEETEN 10/30/2012-END
 			vFullArray.resize(uFullArraySize);
 		}
 
@@ -230,11 +220,8 @@ public:
 				const size_t uMaxCount = 100000;
 				if( 0 == uCount % uMaxCount )
 				{
-					#if	0	// MOD-BY-LEETEN 10/30/2012-FROM:
-					#else		// MOD-BY-LEETEN 10/30/2012-TO:
 					LOG_VAR_TO_ERROR(uCount);
 					_ShowMemoryUsage(true);
-					#endif		// MOD-BY-LEETEN 10/30/2012-END
 				}
 				uCount++;
 			}
@@ -330,7 +317,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-			// MOD-BY-LEETEN 10/31/2012-FROM:	Value = this->vFullArray[uIndex];
 			if( uIndex < vFullArray.size() )
 				Value = vFullArray[uIndex];
 			else
@@ -341,7 +327,6 @@ public:
 				else
 					Value = ipair->second;
 			}
-			// MOD-BY-LEETEN 10/31/2012-END
 		}
 
 		//! Set value to the location specified by the 1D index
@@ -353,7 +338,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-			// MOD-BY-LEETEN 10/31/2012-FROM:	vFullArray[uIndex] = Value;
 			if( uIndex < vFullArray.size() )
 				vFullArray[uIndex] = Value;
 			else
@@ -364,7 +348,6 @@ public:
 				else
 					ipair->second = Value;
 			}
-			// MOD-BY-LEETEN 10/31/2012-END
 		}
 
 		//! Add value to the location specified by the 1D index
@@ -376,7 +359,6 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-			// MOD-BY-LEETEN 10/31/2012-FROM:	this->vFullArray[uIndex] += Value;
 			if( uIndex < vFullArray.size() )
 				vFullArray[uIndex] += Value;
 			else
@@ -387,7 +369,6 @@ public:
 				else
 					ipair->second += Value;
 			}
-			// MOD-BY-LEETEN 10/31/2012-END
 		}
 		#endif	// #if	!WITH_1D_DIVISION	
 		// ADD-BY-LEETEN 10/31/2012-END
@@ -451,8 +432,6 @@ public:
 			}
 		}
 
-#if 0 // MOD-BY-LEETEN 10/31/2012-FROM:			
-#else // MOD-BY-LEETEN 10/31/2012-TO:			
 		//! Add value to the location specified by the 1D index
 		void
 		_GetArraySize
@@ -482,7 +461,7 @@ public:
 					uCountInSparseArray++;
 			}
 		}
-#endif // MOD-BY-LEETEN 10/31/2012-END
+
 		CSepDWTData()
 		{
 		}

@@ -64,10 +64,7 @@ protected:
 		{
 			vector< pair<size_t, ST> > vpBins;
 			_MapValueToBins(vuPos, value, vpBins);
-#if 0 // MOD-BY-LEETEN 10/26/2012-FROM:
-#else // MOD-BY-LEETEN 10/26/2012-TO:
 			for(typename vector< pair<size_t, ST> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
-#endif // MOD-BY-LEETEN 10/26/2012-END
 				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
 		}
 

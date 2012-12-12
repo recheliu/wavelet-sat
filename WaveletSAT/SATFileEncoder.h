@@ -89,11 +89,10 @@ public:
 		*/
 		enum EParameter
 		{
-		  // MOD-BY-LEETEN 11/09/2012-FROM:			PARAMETER_BEGIN = 0x0300,
 			PARAMETER_BEGIN = 0x0600,
 			
 			DEFLATE_LEVEL,
-			// MOD-BY-LEETEN 11/09/2012-END
+
 			PARAMETER_END
 		};
 
@@ -135,18 +134,6 @@ public:
 			*/
 
 			// Create the file.
-			#if	0	// MOD-BY-LEETEN 11/09/2012-FROM:
-			ASSERT_NETCDF(nc_create(
-    				szNetCdfPathFilename,
-#if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
-    				NC_CLOBBER,
-// ADD-BY-LEETEN 11/09/2012-BEGIN
-#else // #if !WITH_NETCDF4
-				NC_CLOBBER | NC_NETCDF4,
-#endif // #if !WITH_NETCDF4
-// ADD-BY-LEETEN 11/09/2012-END
-    				&iNcId));
-			#else		// MOD-BY-LEETEN 11/09/2012-TO:
 			#if !WITH_NETCDF4 
 			ASSERT_NETCDF(nc_create(
     				szNetCdfPathFilename,
@@ -158,7 +145,7 @@ public:
 				NC_CLOBBER | NC_NETCDF4,
     				&iNcId));
 			#endif	// #if !WITH_NETCDF4 
-			#endif		// MOD-BY-LEETEN 11/09/2012-END
+
 			// dimension
 			int piDimLengths[NC_MAX_DIMS];
 			static char* pszDefaultDimNames[] = {"X", "Y", "Z"};
@@ -182,9 +169,7 @@ public:
 					else
 					{
 						szNcDimName = (char*)calloc(8, 1);
-						// MOD-BY-LEETEN 10/28/2012-FROM:						sprintf(szNcDimName, "DIM%d", uDimDiff);
 						sprintf(szNcDimName, "DIM%d", (unsigned int)uDimDiff);
-						// MOD-BY-LEETEN 10/28/2012-END
 					}
 				}
 
@@ -237,9 +222,7 @@ public:
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
 					const map<size_t, ST>& mapHist = vmapHists[i];
-					// MOD-BY-LEETEN 10/28/2012-FROM:					map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
 					typename map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
-					// MOD-BY-LEETEN 10/28/2012-END
 					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
@@ -288,18 +271,6 @@ public:
 
 			/////////////////////////////////////////////
 			// now reopen the file in read-only mode
-			#if	0	// MOD-BY-LEETEN 11/09/2012-FROM:
-			ASSERT_NETCDF(nc_open(
-    				szNetCdfPathFilename,
-#if !WITH_NETCDF4 // ADD-BY-LEETEN 11/09/2012
-    				NC_NOWRITE,
-// ADD-BY-LEETEN 11/09/2012-BEGIN
-#else // #if !WITH_NETCDF4
-    				NC_NOWRITE | NC_NETCDF4,
-#endif // #if !WITH_NETCDF4
-// ADD-BY-LEETEN 11/09/2012-END
-    				&iNcId));
-			#else		// MOD-BY-LEETEN 11/09/2012-TO:
 			#if !WITH_NETCDF4 
 			ASSERT_NETCDF(nc_open(
     				szNetCdfPathFilename,
@@ -311,7 +282,6 @@ public:
     				NC_NOWRITE | NC_NETCDF4,
     				&iNcId));
 			#endif // #if !WITH_NETCDF4
-			#endif		// MOD-BY-LEETEN 11/09/2012-END
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
 		}

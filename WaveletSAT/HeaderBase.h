@@ -12,8 +12,6 @@ Then the user call _Update(vuPos, value) to update the value at the given locati
 */
 namespace WaveletSAT
 {
-	#if	0	// DEL-BY-LEETEN 10/30/2012-BEGIN	
-	#endif		// DEL-BY-LEETEN 10/30/2012-BEGIN
 	/* usage: 
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/

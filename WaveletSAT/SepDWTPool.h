@@ -4,11 +4,7 @@
 #define WITH_POINTER_TO_MAP	1
 // ADD-BY-LEETEN 11/12/2012-END
 
-#if	0	// MOD-BY-LEETEN 11/12/2012-FROM:
-#define WITH_SPARSE_AS_VECTOR	0	// ADD-BY-LEETEN 11/11/2012
-#else		// MOD-BY-LEETEN 11/12/2012-TO:
 #define WITH_SPARSE_AS_VECTOR	1	// ADD-BY-LEETEN 11/11/2012
-#endif		// MOD-BY-LEETEN 11/12/2012-END
 
 #include <map>	
 #include <vector>
@@ -294,41 +290,6 @@ namespace WaveletSAT
 			}
 		}
 
-		#if	0	// DEL-BY-LEETEN 11/11/2012-BEGIN
-		//! Set value to the location specified by the 1D index
-		void
-		_SetAt
-		(
-			const IT Bin,
-			const vector<size_t>& vuSubs,
-			const ST Value,
-			void* _Reserved = NULL
-		)
-		{
-			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
-			if( !bIsSparse )
-			{
-				// full
-				vvFull[Bin][uIndex] = Value;
-			}
-			else
-			{
-				// sparse
-				map<IT, ST>& mapCoef = vmapSparse[uIndex];
-				typename map<IT, ST>::iterator ipair = mapCoef.find(Bin);
-				if( mapCoef.end() == ipair )
-					_AddEntryToSparseArray
-					(
-						mapCoef,
-						Bin,
-						Value
-					);
-				else
-					ipair->second = Value;
-			}
-		}
-		#endif	// DEL-BY-LEETEN 11/11/2012-END
-
 		//! Add value to the location specified by the 1D index
 		void
 		_AddAt
@@ -380,13 +341,6 @@ namespace WaveletSAT
 					else
 						ipair->second += Value;
 
-				#if	0	// DEL-BY-LEETEN 11/11/2012-BEGIN
-				// ADD-BY-LEETEN 11/11/2012-BEGIN
-				#if	WITH_SPARSE_AS_VECTOR		
-				vuCounts[uIndex]++;
-				#endif	// #if	WITH_SPARSE_AS_VECTOR	
-				// ADD-BY-LEETEN 11/11/2012-END
-				#endif		// DEL-BY-LEETEN 11/11/2012-END
 			}
 			}	// ADD-By-LEETEN 11/11/2012
 
@@ -402,17 +356,9 @@ namespace WaveletSAT
 				#endif	// #if	!WITH_POINTER_TO_MAP	
 				// ADD-BY-LEETEN 11/12/2012-END
 
-				#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
-				vvpairSparse[uIndex].clear();
-				for(typename map<IT, ST>::const_iterator 
-					ipair = vmapBinSparse.begin();
-					ipair != vmapBinSparse.end();
-					ipair++)
-					vvpairSparse[uIndex].push_back(pair<IT, ST>(ipair->first, ipair->second));
-				#else		// MOD-BY-LEETEN 11/11/2012-TO:
 				vvpairSparse[uIndex].resize(vmapBinSparse.size());
 				copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[uIndex].begin());
-				#endif		// MOD-BY-LEETEN 11/11/2012-END
+
 				/// now clear this map
 				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
 				this->vmapSparse[uIndex].clear();
@@ -432,9 +378,7 @@ namespace WaveletSAT
 		}
 
 		void
-		// MOD-BY-LEETEN 11/11/2012-FROM:	_Weight
 		_Finalize
-		// MOD-BY-LEETEN 11/11/2012-END
 		(
 			ST WaveletWeight,
 			void* _Reserved = NULL
@@ -499,19 +443,8 @@ namespace WaveletSAT
 					// ADD-By-LEETEN 11/11/2012-END
 
 					const map<IT, ST>& vmapBinSparse = this->vmapSparse[e];
-					#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
-					vvpairSparse[e].clear();
-					for(typename map<IT, ST>::const_iterator 
-						ipair = vmapBinSparse.begin();
-						ipair != vmapBinSparse.end();
-						ipair++)
-					{
-						vvpairSparse[e].push_back(pair<IT, ST>(ipair->first, ipair->second));
-					}
-					#else		// MOD-BY-LEETEN 11/11/2012-TO:
 					vvpairSparse[e].resize(vmapBinSparse.size());
 					copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[e].begin());
-					#endif		// MOD-BY-LEETEN 11/11/2012-END
 
 					/// now clear this map
 					this->vmapSparse[e].clear();
@@ -614,11 +547,7 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_SPARSE_AS_VECTOR	
 			const vector< pair<IT, ST> >& vpairSparse = this->vvpairSparse[uIndex];
-			#if	0	// MOD-BY-LEETEN 11/11/2012-FROM:
-			for(typename vector< pair<IT, ST>>::const_iterator 
-			#else		// MOD-BY-LEETEN 11/11/2012-TO:
 			for(typename vector< pair<IT, ST> >::const_iterator 
-			#endif		// MOD-BY-LEETEN 11/11/2012-END
 							ipair = vpairSparse.begin();
 				ipair != vpairSparse.end();
 				ipair++)
@@ -642,6 +571,7 @@ namespace WaveletSAT
 		{
 			#if	WITH_POINTER_TO_MAP	
 			if(this->pvpmapSparse)
+			{	// ADD-BY-LEETEN 11/19/2012
 				for(size_t e = 0; e < this->pvpmapSparse->size(); e++)
 					if( (*this->pvpmapSparse)[e] )
 					{
@@ -649,6 +579,11 @@ namespace WaveletSAT
 						delete (*this->pvpmapSparse)[e];
 						(*this->pvpmapSparse)[e] = NULL;
 					}
+			// ADD-BY-LEETEN 11/19/2012-BEGIN
+				delete [] this->pvpmapSparse;
+				this->pvpmapSparse = NULL;
+			}
+			// ADD-BY-LEETEN 11/19/2012-END
 			#endif	// #if	WITH_POINTER_TO_MAP
 		}
 		// ADD-BY-LEETEN 11/12/2012-END
