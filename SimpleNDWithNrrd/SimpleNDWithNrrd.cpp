@@ -213,6 +213,14 @@ main(int argn, char* argv[])
 	cSimpleND._Finalize();
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	// ADD-BY-LEETEN 12/12/2012-BEGIN
+	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	char szFilepath[NC_MAX_NAME+1];
+	sprintf(szFilepath, "%s.nc", szVolFilePath);
+	cSimpleND._SaveFile(szFilepath);
+	LIBCLOCK_END(bIsPrintingTiming);
+	// ADD-BY-LEETEN 12/12/2012-END
+
 	////////////////////////////////////////////////////////////////////////////
 	// Now we can start to query SATs
 	LIBCLOCK_BEGIN(bIsPrintingTiming);

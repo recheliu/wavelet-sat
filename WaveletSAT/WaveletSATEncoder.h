@@ -24,6 +24,14 @@ using namespace std;
 
 #include "liblog.h"	
 
+// ADD-BY-LEETEN 12/12/2012-BEGIN
+#include "libbuf.h"
+#if	WITH_NETCDF
+#include <netcdf.h>
+#include "lognc.h"
+#endif	// #if	WITH_NETCDF
+// ADD-BY-LEETEN 12/12/2012-END
+
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
 Then the user call _Update(vuPos, value) to update the value at the given location.
@@ -34,7 +42,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The class of our WaveletSAT algorithm.
+	//! The WaveletSAT algorithm.
 	/*!
 	In order to apply wavelet transform for SATs or Integral Histograms, please follow the procedure below:
 	1. Setup the data size by _SetDimLengths().
@@ -354,6 +362,9 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0400,
+			// ADD-BY-LEETEN 12/12/2012-BEGIN
+			DEFLATE_LEVEL,
+			// ADD-BY-LEETEN 12/12/2012-END
 			PARAMETER_END
 		};
 
@@ -377,6 +388,305 @@ public:
 		)
 		{
 		}
+
+		// ADD-BY-LEETEN 12/12/2012-BEGIN
+		virtual 
+		void
+		_SaveFile
+		(
+			const char* szFilepath,
+			void *_Reserved = NULL
+		)
+		{
+			#if WITH_NETCDF 
+			int iNcId = 0;
+
+			// Create the file.
+			#if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szFilepath,
+    				NC_CLOBBER,
+    				&iNcId));
+			#else	// #if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szFilepath,
+				NC_CLOBBER | NC_NETCDF4,
+    				&iNcId));
+			#endif	// #if !WITH_NETCDF4 
+
+			// define the dimensions, including:
+			// data_dim_0, data_dim_1, ... for the data
+			// coef_dim_0, coef_dim_1, ... for the level
+			// level_dim_0, level_dim_1, ... for the level
+			size_t uDimLength;
+			char* szNcDimName;
+			int iNcDimId;
+			vector<int> viDimIds;
+			viDimIds.clear();
+
+			// define the dimension for coefficients, which is unlimited
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						"COEF",
+						NC_UNLIMITED,
+						&iNcDimId ) );
+			viDimIds.push_back(iNcDimId);
+
+			// define the dimension for #bins
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						"BIN",
+						(int)UGetNrOfBins(),
+						&iNcDimId ) );
+			viDimIds.push_back(iNcDimId);
+			size_t uBeforeDim = viDimIds.size();
+
+			// define the dimension for data, levels, and the coefficients
+			static const char *pszDimTypes[] = {"COEF", "DATA", "LEVEL"};
+			enum {
+				DIM_TYPE_COEF,
+				DIM_TYPE_DATA, 
+				DIM_TYPE_LEVEL, 
+				NR_OF_DIM_TYPES
+			};
+
+			for(size_t t = 0; t < NR_OF_DIM_TYPES; t++)
+				for(int d = 0; d < UGetNrOfDims(); d++)
+				{
+					switch(t)
+					{
+					case DIM_TYPE_DATA:
+						uDimLength = (int)this->vuDimLengths[d];
+						break;
+					case DIM_TYPE_LEVEL:
+						uDimLength = (int)this->vuDimLevels[d];
+						break;
+					case DIM_TYPE_COEF:
+						uDimLength = (int)1<<(this->vuDimLevels[d]-1);
+						break;
+					}
+
+					char szNcDimName[NC_MAX_NAME+1];
+					sprintf(szNcDimName, "%s_DIM_%d", pszDimTypes[t], (unsigned int)d);
+					/*
+					LOG_VAR(szNcDimName);
+					LOG_VAR(uDimLength);
+					*/
+
+					ASSERT_NETCDF(nc_def_dim(
+    								iNcId,
+    								szNcDimName,
+    								(int)uDimLength,
+    								&iNcDimId));
+					viDimIds.push_back(iNcDimId);
+				}
+
+			//
+			// now define the variable for the coef headers
+			int piDimIds[NC_MAX_DIMS];
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				piDimIds[d] = viDimIds[uBeforeDim + UGetNrOfDims() * DIM_TYPE_COEF + UGetNrOfDims() - 1 - d];
+
+			// define the #non-zero bins per coef.
+			nc_type eNcType;
+			#ifdef WIN32
+			eNcType = NC_INT;
+			#else
+			eNcType = NC_UINT;
+			#endif
+			int iHeaderCountVarId;
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					"HEADER_COUNT", 
+					eNcType,
+					(int)UGetNrOfDims(),
+					piDimIds,
+					&iHeaderCountVarId));
+
+			// define the offset in the headers
+			#ifdef WIN32
+			eNcType = NC_INT;
+			#else
+			eNcType = NC_UINT64;
+			#endif
+
+			int iHeaderOffsetVarId;
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					"HEADER_OFFSET", 
+					eNcType,
+					(int)UGetNrOfDims(),
+					piDimIds,
+					&iHeaderOffsetVarId));
+
+			// define the pool of the coefficients
+			piDimIds[0] = viDimIds[0];
+			int iCoefVarId;
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					"COEF", 
+					NC_DOUBLE,
+					1,
+					piDimIds,
+					&iCoefVarId));
+
+			// define the pool of the coefficient bins
+			#ifdef WIN32
+			eNcType = NC_INT;
+			#else
+			eNcType = NC_UINT;
+			#endif
+			int iCoefBinVarId;
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					"COEF_BIN", 
+					eNcType,
+					1,
+					piDimIds,
+					&iCoefBinVarId));
+
+			// finish the definition mode
+			ASSERT_NETCDF(nc_enddef(iNcId));
+
+			// convert the basis id to its level subscript
+			vector<size_t> vuBasisCoefLengths;
+			vuBasisCoefLengths.resize(UGetNrOfDims());
+			vector<size_t> vuBasisCoefBase;
+			vuBasisCoefBase.resize(UGetNrOfDims());
+
+			size_t puStart[NC_MAX_DIMS];
+			size_t puCount[NC_MAX_DIMS];
+
+			#ifdef			WIN32
+			TBuffer<int> piCoefs;
+			piCoefs.alloc(this->UGetNrOfBins());
+			#else	// #ifdef	WIN32
+			TBuffer<unsigned int> puCoefs;
+			puCoefs.alloc(this->UGetNrOfBins());
+			#endif	// #ifdef	WIN32
+			TBuffer<double> pdCoefs;
+			pdCoefs.alloc(this->UGetNrOfBins());
+
+			size_t uCoefBase = 0;
+			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
+			{
+				vector<size_t> vuLevelSub;
+				_ConvertIndexToSub(c, vuLevelSub, this->vuDimMaxLevels);
+
+				size_t uNrOfBasisCoefs = 1;
+				for(size_t d = 0; d < vuLevelSub.size(); d++)
+				{
+					// From this subscript, we can get the dim. length in this basis. 
+					size_t uLevel = vuLevelSub[d];
+					size_t uLen = (!uLevel)?1:(1<<(uLevel - 1));
+					vuBasisCoefLengths[d] = uLen;
+					uNrOfBasisCoefs *= uLen;
+
+					// we can also decide it base in the n-dim. pool
+					vuBasisCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
+				}
+
+				for(size_t bc = 0; bc < uNrOfBasisCoefs; bc++)
+				{
+					vector<size_t> vuBasisCoefSub;
+					_ConvertIndexToSub(bc, vuBasisCoefSub, vuBasisCoefLengths);
+
+					vector< pair<size_t, double> > vpairCoefs;
+					this->vcCoefPools[c]._GetCoefSparse
+					(
+						vuBasisCoefSub,
+						vpairCoefs
+					);
+
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+					{
+						puStart[UGetNrOfDims() - 1 - d] = vuBasisCoefSub[d] + vuBasisCoefBase[d];
+						puCount[d] = 1;
+					}
+
+					#ifdef	WIN32
+					int iNrOfNonZeroBins = (int)vpairCoefs.size();
+					ASSERT_NETCDF(nc_put_vara_int(
+					   iNcId,
+					   iHeaderCountVarId,
+					   puStart,
+					   puCount,
+					   &iNrOfNonZeroBins ));
+
+					int iCoefBase = (int)uCoefBase;
+					ASSERT_NETCDF(nc_put_vara_int(
+					   iNcId,
+					   iHeaderOffsetVarId,
+					   puStart,
+					   puCount,
+					   &iCoefBase));
+
+					puStart[0] = uCoefBase;
+					puCount[0] = vpairCoefs.size();
+					for(size_t bi = 0; bi < vpairCoefs.size(); bi++)
+					{
+						piCoefs[bi] = (int)vpairCoefs[bi].first;
+						pdCoefs[bi] = vpairCoefs[bi].second;
+					}
+
+					ASSERT_NETCDF(nc_put_vara_int(
+					   iNcId,
+					   iCoefBinVarId,
+					   puStart,
+					   puCount,
+					   &piCoefs[0]));
+					#else
+					unsigned int uNrOfNonZeroBins = (unsigned int)vpairCoefs.size();
+					ASSERT_NETCDF(nc_put_vara_uint(
+					   iNcId,
+					   iHeaderCountVarId,
+					   puStart,
+					   puCount,
+					   &uNrOfNonZeroBins ));
+
+					unsigned long ulCoefBase = (unsigned long)uCoefBase;
+					ASSERT_NETCDF(nc_put_vara_int(
+					   iNcId,
+					   iHeaderOffsetVarId,
+					   puStart,
+					   puCount,
+					   &ulCoefBase));
+
+					puStart[0] = uCoefBase;
+					puCount[0] = vpairCoefs.size();
+					for(size_t bi = 0; bi < vpairCoefs.size(); bi++)
+					{
+						puCoefs[bi] = (unsigned int)vpairCoefs[bi].first;
+						pdCoefs[bi] = vpairCoefs[bi].second;
+					}
+
+					ASSERT_NETCDF(nc_put_vara_uint(
+					   iNcId,
+					   iCoefBinVarId,
+					   puStart,
+					   puCount,
+					   &puCoefs[0]));
+					#endif
+
+					ASSERT_NETCDF(nc_put_vara_double(
+					   iNcId,
+					   iCoefVarId,
+					   puStart,
+					   puCount,
+					   &pdCoefs[0]));
+
+					uCoefBase += vpairCoefs.size();
+				}
+			}
+
+			// close the file
+			ASSERT_NETCDF(nc_close(iNcId));
+			#else	// #if WITH_NETCDF 
+			#endif	// #if WITH_NETCDF 
+			// write the data resolution
+
+		}
+		// ADD-BY-LEETEN 12/12/2012-END
 
 		//! Finalize the computation of SAT
 		virtual	

@@ -25,7 +25,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The base class of data pool of SepDWT coefficients. 
+	//! SepDWT coefficients per basis of all bins
 	/*!
 	ST: Type of the wavelet coefficients
 	IT: Type of the bin index

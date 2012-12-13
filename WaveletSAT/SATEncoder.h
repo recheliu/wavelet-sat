@@ -20,7 +20,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The class that create SAT in core.
+	//! The class that creates SAT in core.
 	/*!
 	*/
 	template<typename DT, typename ST>

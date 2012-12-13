@@ -33,7 +33,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The class that create SAT in core.
+	//! The class that creates SAT in NetCDF files.
 	/*!
 	*/
 	template<typename DT, typename ST>
@@ -285,6 +285,28 @@ public:
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
 		}
+
+		// ADD-BY-LEETEN 12/12/2012-BEGIN
+		//! Save the coefficients to a file
+		virtual 
+		void
+		_SaveFile
+		(
+			const char* szFilepath,
+			void *_Reserved = NULL
+		)
+		{
+			char *szCopyCommand;
+			#ifdef		WIN32
+			szCopyCommand = "copy";
+			#else	//	#ifdef WIN32
+			szCopyCommand = "cp";
+			#endif	//	#ifdef WIN32
+			char szCommandLine[1024];
+			sprintf(szCommandLine, "%s sat.nc %s", szCopyCommand, szFilepath);
+			system(szCommandLine);
+		}
+		// ADD-BY-LEETEN 12/12/2012-END
 
 		//! Allocate the space to store coefficients for all bins. 
 		/*! 

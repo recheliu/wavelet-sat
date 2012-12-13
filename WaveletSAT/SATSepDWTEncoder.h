@@ -21,7 +21,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The class that create SAT and then run Sep. DWT in core.
+	//! The encoders that computes SAT and applys Sep. DWT in core.
 	/*!
 	*/
 	template<typename DT, typename ST = double>

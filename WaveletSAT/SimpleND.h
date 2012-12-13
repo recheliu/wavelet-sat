@@ -3,19 +3,38 @@
 #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
 #include "SATSepDWTEncoder.h"
+#if	0	// MOD-BY-LEETEN 12/12/2012-FROM:
+
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include "SATFileEncoder.h"	// ADD-BY-LEETEN 10/28/2012
 #endif	// #if WITH_NETCDF	// ADD-BY-LEETEN 10/29/2012
 
+#else		// MOD-BY-LEETEN 12/12/2012-TO:
+
+#if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
+#include <netcdf.h>
+#endif
+
+#endif		// MOD-BY-LEETEN 12/12/2012-END
+
 template<class T>
 class CSimpleND:
 // ADD-BY-LEETEN 10/28/2012-BEGIN
+#if	0	// MOD-BY-LEETEN 12/12/2012-FROM:
+
 #if	WITH_NETCDF
 	public WaveletSAT::CSATFileEncoder<T, double>
 #else // #if	WITH_NETCDF
 // ADD-BY-LEETEN 10/28/2012-END
 public WaveletSAT::CWaveletSATEncoder<T>
 #endif	// #if	WITH_NETCDF	// ADD-BY-LEETEN 10/28/2012
+
+#else		// MOD-BY-LEETEN 12/12/2012-TO:
+
+	public WaveletSAT::CWaveletSATEncoder<T>
+
+#endif		// MOD-BY-LEETEN 12/12/2012-END
+
 	// MOD-BY-LEETEN 10/28/2012-END
 {
 	size_t uNrOfBins;

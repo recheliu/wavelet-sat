@@ -43,7 +43,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The base class of WaveletSAT.
+	//! The base class of sep. DWT 
 	/*!
 	In order to apply wavelet transform for SATs or Integral Histograms, please follow the procedure below:
 	1. Setup the data size by _SetDimLengths().

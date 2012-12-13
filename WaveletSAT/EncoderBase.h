@@ -16,7 +16,7 @@ namespace WaveletSAT
 	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
 	*/
 
-	//! The base class of Encoder
+	//! The base class of the encoders
 	/*!
 	In order to apply wavelet transform for SATs or Integral Histograms, please follow the procedure below:
 	1. Setup the data size by _SetDimLengths().
@@ -103,5 +103,15 @@ protected:
 			void *_Reserved = NULL
 		) = 0;
 
+		// ADD-BY-LEETEN 12/12/2012-BEGIN
+		//! Save the coefficients to a file
+		virtual 
+		void
+		_SaveFile
+		(
+			const char* szFilepath,
+			void *_Reserved = NULL
+		) = 0;
+		// ADD-BY-LEETEN 12/12/2012-END
 	};
 }
