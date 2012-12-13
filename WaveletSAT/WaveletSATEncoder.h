@@ -489,11 +489,19 @@ public:
 
 			// define the #non-zero bins per coef.
 			nc_type eNcType;
+			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 			#ifdef WIN32
 			eNcType = NC_INT;
 			#else
 			eNcType = NC_UINT;
 			#endif
+			#else // MOD-BY-LEETEN 12/13/2012-TO:
+			#if !WITH_NETCDF4
+			eNcType = NC_INT;
+			#else // #if !WITH_NETCDF4
+			eNcType = NC_UINT;
+			#endif // #if !WITH_NETCDF4
+			#endif // MOD-BY-LEETEN 12/13/2012-END
 			int iHeaderCountVarId;
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
@@ -504,12 +512,19 @@ public:
 					&iHeaderCountVarId));
 
 			// define the offset in the headers
+			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 			#ifdef WIN32
 			eNcType = NC_INT;
 			#else
 			eNcType = NC_UINT64;
 			#endif
-
+			#else // MOD-BY-LEETEN 12/13/2012-TO:
+			#if !WITH_NETCDF4
+			eNcType = NC_INT;
+			#else // #if !WITH_NETCDF4
+			eNcType = NC_UINT64;
+			#endif // #if !WITH_NETCDF4
+			#endif // MOD-BY-LEETEN 12/13/2012-END
 			int iHeaderOffsetVarId;
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
@@ -531,11 +546,19 @@ public:
 					&iCoefVarId));
 
 			// define the pool of the coefficient bins
+			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 			#ifdef WIN32
 			eNcType = NC_INT;
 			#else
 			eNcType = NC_UINT;
 			#endif
+			#else // MOD-BY-LEETEN 12/13/2012-TO:
+			#if !WITH_NETCDF4
+			eNcType = NC_INT;
+			#else // #if !WITH_NETCDF4
+			eNcType = NC_UINT;
+			#endif // #if !WITH_NETCDF4
+			#endif // MOD-BY-LEETEN 12/13/2012-END
 			int iCoefBinVarId;
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
@@ -557,6 +580,7 @@ public:
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
 
+			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 			#ifdef			WIN32
 			TBuffer<int> piCoefs;
 			piCoefs.alloc(this->UGetNrOfBins());
@@ -564,6 +588,15 @@ public:
 			TBuffer<unsigned int> puCoefs;
 			puCoefs.alloc(this->UGetNrOfBins());
 			#endif	// #ifdef	WIN32
+			#else // MOD-BY-LEETEN 12/13/2012-TO:
+			#if !WITH_NETCDF4
+			TBuffer<int> piCoefs;
+			piCoefs.alloc(this->UGetNrOfBins());
+			#else // #if !WITH_NETCDF4
+			TBuffer<unsigned int> puCoefs;
+			puCoefs.alloc(this->UGetNrOfBins());
+			#endif // #if !WITH_NETCDF4
+			#endif // MOD-BY-LEETEN 12/13/2012-END
 			TBuffer<double> pdCoefs;
 			pdCoefs.alloc(this->UGetNrOfBins());
 
@@ -604,7 +637,7 @@ public:
 						puCount[d] = 1;
 					}
 
-					#ifdef	WIN32
+					#if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #ifdef	WIN32
 					int iNrOfNonZeroBins = (int)vpairCoefs.size();
 					ASSERT_NETCDF(nc_put_vara_int(
 					   iNcId,
@@ -635,7 +668,7 @@ public:
 					   puStart,
 					   puCount,
 					   &piCoefs[0]));
-					#else
+                                        #else // #if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #else
 					unsigned int uNrOfNonZeroBins = (unsigned int)vpairCoefs.size();
 					ASSERT_NETCDF(nc_put_vara_uint(
 					   iNcId,
@@ -644,6 +677,7 @@ public:
 					   puCount,
 					   &uNrOfNonZeroBins ));
 
+					#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 					unsigned long ulCoefBase = (unsigned long)uCoefBase;
 					ASSERT_NETCDF(nc_put_vara_int(
 					   iNcId,
@@ -651,7 +685,15 @@ public:
 					   puStart,
 					   puCount,
 					   &ulCoefBase));
-
+					#else // MOD-BY-LEETEN 12/13/2012-TO:
+					unsigned long long ullCoefBase = (unsigned long long)uCoefBase;
+					ASSERT_NETCDF(nc_put_vara_ulonglong(
+					   iNcId,
+					   iHeaderOffsetVarId,
+					   puStart,
+					   puCount,
+					   &ullCoefBase));
+					#endif // MOD-BY-LEETEN 12/13/2012-END
 					puStart[0] = uCoefBase;
 					puCount[0] = vpairCoefs.size();
 					for(size_t bi = 0; bi < vpairCoefs.size(); bi++)
@@ -666,8 +708,7 @@ public:
 					   puStart,
 					   puCount,
 					   &puCoefs[0]));
-					#endif
-
+                                        #endif // #if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #endif
 					ASSERT_NETCDF(nc_put_vara_double(
 					   iNcId,
 					   iCoefVarId,
