@@ -215,9 +215,13 @@ main(int argn, char* argv[])
 
 	// ADD-BY-LEETEN 12/12/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	#if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 	char szFilepath[NC_MAX_NAME+1];
 	sprintf(szFilepath, "%s.nc", szVolFilePath);
 	cSimpleND._SaveFile(szFilepath);
+	#else // MOD-BY-LEETEN 12/15/2012-TO:
+	cSimpleND._SaveFile(szVolFilePath);
+	#endif // MOD-BY-LEETEN 12/15/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);
 	// ADD-BY-LEETEN 12/12/2012-END
 

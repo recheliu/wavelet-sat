@@ -109,7 +109,7 @@ protected:
 		void
 		_SaveFile
 		(
-			const char* szFilepath,
+		 const char* szFilepathPrefix, // MOD-BY-LEETEN 12/15/2012: const char* szFilepath,
 			void *_Reserved = NULL
 		) = 0;
 		// ADD-BY-LEETEN 12/12/2012-END

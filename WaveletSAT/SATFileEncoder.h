@@ -292,10 +292,13 @@ public:
 		void
 		_SaveFile
 		(
-			const char* szFilepath,
+		 // MOD-BY-LEETEN 12/15/2012-FROM: const char* szFilepath,
+			const char* szFilepathPrefix,
+			// MOD-BY-LEETEN 12/15/2012-END
 			void *_Reserved = NULL
 		)
 		{
+		  #if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 			char *szCopyCommand;
 			#ifdef		WIN32
 			szCopyCommand = "copy";
@@ -304,6 +307,25 @@ public:
 			#endif	//	#ifdef WIN32
 			char szCommandLine[1024];
 			sprintf(szCommandLine, "%s sat.nc %s", szCopyCommand, szFilepath);
+
+			#else // MOD-BY-LEETEN 12/15/2012-TO:
+
+			#ifdef		WIN32
+			const char *szCopyCommand = "copy";
+			#else	//	#ifdef WIN32
+			const char *szCopyCommand = "cp";
+			#endif	//	#ifdef WIN32
+
+			#if !WITH_NETCDF4
+			const char* szFileExt = "nc";
+			#else // #if !WITH_NETCDF4
+			const char* szFileExt = "nc4";
+			#endif // #if !WITH_NETCDF4
+
+			#endif // MOD-BY-LEETEN 12/15/2012-END
+
+			sprintf(szCommandLine, "%s sat.nc %s.%s", szCopyCommand, szFilepathPrefix, szFileExt);
+#endif
 			system(szCommandLine);
 		}
 		// ADD-BY-LEETEN 12/12/2012-END

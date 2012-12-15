@@ -59,6 +59,15 @@ namespace WaveletSAT
 		public CEncoderBase<T, double>	
 	{
 protected:	
+	  // ADD-BY-LEETEN 12/15/2012-BEGIN
+	  //! Number of non-0 coefficients from all bin SATs.
+	  size_t uNrOfNonZeroCoefs;
+
+	  size_t uCountInFullArray;
+
+	  size_t uCountInSparseArray;
+	  // ADD-BY-LEETEN 12/15/2012-END
+
 		#if	WITH_VECTORS_FOR_COUNTED_COEFS
 		struct CTempCoef
 		{
@@ -394,12 +403,27 @@ public:
 		void
 		_SaveFile
 		(
+		 #if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 			const char* szFilepath,
+			#else // MOD-BY-LEETEN 12/15/2012-TO:
+			const char* szFilepathPrefix,
+			#endif // MOD-BY-LEETEN 12/15/2012-END
 			void *_Reserved = NULL
 		)
 		{
 			#if WITH_NETCDF 
 			int iNcId = 0;
+
+			// ADD-BY-LEETEN 12/15/2012-BEGIN
+			#if !WITH_NETCDF4
+			const char* szFileExt = "wnc";
+			#else // #if !WITH_NETCDF4
+			const char* szFileExt = "wnc4";
+			#endif // #if !WITH_NETCDF4
+
+			char szFilepath[NC_MAX_NAME+1];
+			sprintf(szFilepath, "%s.%s", szFilepathPrefix, szFileExt);
+			// ADD-BY-LEETEN 12/15/2012-END
 
 			// Create the file.
 			#if !WITH_NETCDF4 
@@ -425,11 +449,19 @@ public:
 			viDimIds.clear();
 
 			// define the dimension for coefficients, which is unlimited
+			#if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
 						"COEF",
 						NC_UNLIMITED,
 						&iNcDimId ) );
+			#else // MOD-BY-LEETEN 12/15/2012-TO:
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						"COEF",
+						uNrOfNonZeroCoefs,
+						&iNcDimId ) );
+			#endif // MOD-BY-LEETEN 12/15/2012-END
 			viDimIds.push_back(iNcDimId);
 
 			// define the dimension for #bins
@@ -580,6 +612,7 @@ public:
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
 
+			#if 0 //DEL-BY-LEETEN 12/15/2012-BEGIN
 			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
 			#ifdef			WIN32
 			TBuffer<int> piCoefs;
@@ -599,6 +632,7 @@ public:
 			#endif // MOD-BY-LEETEN 12/13/2012-END
 			TBuffer<double> pdCoefs;
 			pdCoefs.alloc(this->UGetNrOfBins());
+			#endif // DEL-BY-LEETEN 12/15/2012-END
 
 			size_t uCoefBase = 0;
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
@@ -619,6 +653,21 @@ public:
 					vuBasisCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
 				}
 
+				// ADD-BY-LEETEN 12/15/2012-BEGIN
+				vector< pair<size_t, double> > vpairCoefsInBasis;
+				#if !WITH_NETCDF4
+				TBuffer<int> piNrOfNonZeroBins;
+				piNrOfNonZeroBins.alloc(uNrOfBasisCoefs);
+				TBuffer<int> piCoefBases;
+				piCoefBases.alloc(uNrOfBasisCoefs);
+				#else // #if !WITH_NETCDF4
+				TBuffer<unsigned int> puNrOfNonZeroBins;
+				puNrOfNonZeroBins.alloc(uNrOfBasisCoefs);
+				TBuffer<unsigned long long> pullCoefBases;
+				pullCoefBases.alloc(uNrOfBasisCoefs);
+				#endif // #if !WITH_NETCDF4
+				// ADD-BY-LEETEN 12/15/2012-END
+
 				for(size_t bc = 0; bc < uNrOfBasisCoefs; bc++)
 				{
 					vector<size_t> vuBasisCoefSub;
@@ -631,12 +680,12 @@ public:
 						vpairCoefs
 					);
 
+					#if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 					for(size_t d = 0; d < UGetNrOfDims(); d++)
 					{
 						puStart[UGetNrOfDims() - 1 - d] = vuBasisCoefSub[d] + vuBasisCoefBase[d];
 						puCount[d] = 1;
 					}
-
 					#if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #ifdef	WIN32
 					int iNrOfNonZeroBins = (int)vpairCoefs.size();
 					ASSERT_NETCDF(nc_put_vara_int(
@@ -709,6 +758,7 @@ public:
 					   puCount,
 					   &puCoefs[0]));
                                         #endif // #if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #endif
+
 					ASSERT_NETCDF(nc_put_vara_double(
 					   iNcId,
 					   iCoefVarId,
@@ -717,7 +767,106 @@ public:
 					   &pdCoefs[0]));
 
 					uCoefBase += vpairCoefs.size();
+					#else // MOD-BY-LEETEN 12/15/2012-TO:
+					#if !WITH_NETCDF4 
+					piNrOfNonZeroBins[bc] = (int)vpairCoefs.size();
+					piCoefBases[bc] = (int)uCoefBase;
+					#else // #if !WITH_NETCDF4
+					puNrOfNonZeroBins[bc] = (unsigned int)vpairCoefs.size();
+					pullCoefBases[bc] = (unsigned long long)uCoefBase;
+					#endif // #if !WITH_NETCDF4
+					vpairCoefsInBasis.insert(vpairCoefsInBasis.end(), vpairCoefs.begin(), vpairCoefs.end());
+					#endif // MOD-BY-LEETEN 12/15/2012-END
 				}
+				// ADD-BY-LEETEN 12/15/2012-BEGIN
+				// write the header
+				for(size_t d = 0; d < vuBasisCoefLengths.size(); d++)
+				  {
+				    puStart[d] = vuBasisCoefBase[d];
+				    puCount[d] = vuBasisCoefLengths[d];
+				  }
+
+				#if !WITH_NETCDF4
+				ASSERT_NETCDF(nc_put_vara_int(
+							      iNcId,
+							      iHeaderCountVarId,
+							      puStart,
+							      puCount,
+							      &piNrOfNonZeroBins[0] ));
+
+				ASSERT_NETCDF(nc_put_vara_int(
+							      iNcId,
+							      iHeaderOffsetVarId,
+							      puStart,
+							      puCount,
+							      &piCoefBases[0]));
+				#else // #if !WITH_NETCDF4
+				ASSERT_NETCDF(nc_put_vara_uint(
+							       iNcId,
+							       iHeaderCountVarId,
+							       puStart,
+							       puCount,
+							       &puNrOfNonZeroBins[0] ));
+
+				ASSERT_NETCDF(nc_put_vara_ulonglong(
+								    iNcId,
+								    iHeaderOffsetVarId,
+								    puStart,
+								    puCount,
+								    &pullCoefBases[0]));
+				#endif // #if !WITH_NETCDF4
+
+				// write the coefficients
+				puStart[0] = uCoefBase;
+				puCount[0] = vpairCoefsInBasis.size();
+
+				#if !WITH_NETCDF4
+				TBuffer<int> piCoefBins;
+				piCoefBins.alloc(vpairCoefsInBasis.size());
+				#else // #if !WITH_NETCDF4
+				TBuffer<unsigned int> puCoefBins;
+				puCoefBins.alloc(vpairCoefsInBasis.size());
+				#endif // #if !WITH_NETCDF4
+
+				TBuffer<double> pdCoefs;
+				pdCoefs.alloc(vpairCoefsInBasis.size());
+
+				for(size_t c = 0; c < vpairCoefsInBasis.size(); c++)
+				  {
+				    #if !WITH_NETCDF4
+				    piCoefBins[c] = (int)vpairCoefsInBasis[c].first;
+				    #else // #if !WITH_NETCDF4
+				    puCoefBins[c] = (unsigned int)vpairCoefsInBasis[c].first;
+				    #endif // #if !WITH_NETCDF4
+				    pdCoefs[c] = vpairCoefsInBasis[c].second;
+				  }
+
+
+				#if !WITH_NETCDF4
+				ASSERT_NETCDF(nc_put_vara_int(
+							      iNcId,
+							      iCoefBinVarId,
+							      puStart,
+							      puCount,
+							      &piCoefBins[0]));
+				#else // #if !WITH_NETCDF4
+				ASSERT_NETCDF(nc_put_vara_uint(
+							      iNcId,
+							      iCoefBinVarId,
+							      puStart,
+							      puCount,
+							      &puCoefBins[0]));
+				#endif // #if !WITH_NETCDF4
+
+				ASSERT_NETCDF(nc_put_vara_double(
+								 iNcId,
+								 iCoefVarId,
+								 puStart,
+								 puCount,
+								 &pdCoefs[0]));
+
+				uCoefBase += vpairCoefsInBasis.size();
+				// ADD-BY-LEETEN 12/15/2012-END
 			}
 
 			// close the file
@@ -861,6 +1010,31 @@ public:
 			// ADD-BY-LEETEN 11/11/2012-END
 
 			_ShowMemoryUsage(false);
+
+			// ADD-BY-LEETEN 12/15/2012-BEGIN
+			uNrOfNonZeroCoefs = 0;
+			uCountInFullArray = 0;
+			uCountInSparseArray = 0;
+			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+			  {
+			    size_t uF, uS;
+			    this->vcBinCoefs[b]._GetArraySize(uF, uS, dWaveletThreshold);
+			    uCountInFullArray += uF;
+			    uCountInSparseArray += uS;
+			  }
+			// ADD-BY-LEETEN 11/11/2012-BEGIN
+			#else	// #if	!WITH_COEF_POOL
+			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
+			{
+				size_t uF, uS;
+				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
+				uCountInFullArray += uF;
+				uCountInSparseArray += uS;
+			}
+			#endif	// #if	!WITH_COEF_POOL	
+			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
+			// ADD-BY-LEETEN 12/15/2012-END
 		}
 
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -871,6 +1045,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+		  #if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
 			size_t uNrOfNonZeroCoefs = 0;
 			// ADD-BY-LEETEN 10/29/2012-BEGIN
 			size_t uCountInFullArray = 0;
@@ -900,6 +1075,11 @@ public:
 			// ADD-BY-LEETEN 10/29/2012-END
 
 			LOG_VAR(uNrOfNonZeroCoefs);
+			#else // MOD-BY-LEETEN 12/15/2012-TO:
+			LOG_VAR(uCountInFullArray);
+			LOG_VAR(uCountInSparseArray);
+			LOG_VAR(uNrOfNonZeroCoefs);
+			#endif // MOD-BY-LEETEN 12/15/2012-END
 
 			size_t uNrOfDataItems = this->uDataSize;
 
