@@ -45,7 +45,7 @@ include_directories (
 link_directories (
 	"${MYLIB_DIR}/lib" )
 
-add_subdirectory(SAT)
+# DEL-BY-LEETEN 12/16/2012:	add_subdirectory(SAT)
 add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
 # MOD-BY-LEETEN 10/27/2012-FROM:	add_dependencies(SimpleND SAT)
@@ -59,6 +59,12 @@ add_dependencies(SimpleNDWithNrrd WaveletSAT)
 # MOD-BY-LEETEN 10/27/2012-END
 # ADD-BY-LEETEN 09/30/2012-END
 
+# ADD-BY-LEETEN 12/16/2012-BEGIN
+add_subdirectory(SimpleNDEncoder)
+add_dependencies(SimpleNDEncoder WaveletSAT)
+add_subdirectory(SimpleNDQuery)
+add_dependencies(SimpleNDQuery WaveletSAT)
+# ADD-BY-LEETEN 12/16/2012-END
 
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 

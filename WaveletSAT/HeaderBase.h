@@ -42,6 +42,23 @@ protected:
 		//! The #bins of this SAT
 		size_t uNrOfBins;
 		
+		// ADD-BY-LEETEN 12/16/2012-BEGIN
+public:
+		////////////////////////////////////////////////////////////////////
+		//! Data Size
+		virtual 
+		void
+		_GetDataSize
+		(
+			vector<size_t>& vuDataSize,
+			void *_Reserved = NULL
+		) const
+		{
+			vuDataSize.clear();
+			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDataSize.begin());
+		}
+		// ADD-BY-LEETEN 12/16/2012-END
+
 		//! #Dimensions
 		/*!
 		D
@@ -69,8 +86,10 @@ protected:
 		{
 			return uNrOfBins;
 		}
+#if	0	// DEL-BY-LEETEN 12/15/2012-BEGIN
 public:
 		////////////////////////////////////////////////////////////////////
+#endif		// DEL-BY-LEETEN 12/15/2012-END
 		/*
 		The public interface. 
 		*/
