@@ -32,7 +32,15 @@ namespace WaveletSAT
 	template<typename T>
 	// The class that load the coefficients from files (in NetCDF format)
 	class CSATSepDWTFile:
+#if 0 // MOD-BY-LEETEN 12/16/2012-FROM:
 		public CWaveletSATEncoder<T>
+#else // MOD-BY-LEETEN 12/16/2012-TO:
+#ifdef 	WIN32
+		public CWaveletSATEncoder<T>
+#else	// #ifdef WIN32
+		public CWaveletSATEncoder<double>
+#endif	// #ifdef WIN32
+#endif // MOD-BY-LEETEN 12/16/2012-END
 	{
 protected:	
 public:
@@ -157,7 +165,11 @@ public:
 			typeCoefBin = NC_INT;
 			#else // #if !WITH_NETCDF4
 			TBuffer<unsigned long long> pHeaderOffset;
+			#if	0	// MOD-BY-LEETEN 12/16/2012-FROM:
 			typeHeaderOffset = NC_ULONGLONG;
+			#else // MOD-BY-LEETEN 12/16/2012-TO:
+			typeHeaderOffset = NC_UINT64;
+			#endif // MOD-BY-LEETEN 12/16/2012-END
 			TBuffer<unsigned int> pHeaderCount;
 			typeHeaderCount = NC_UINT;
 			TBuffer<unsigned int> pCoefBin;
@@ -250,6 +262,7 @@ public:
 							vuBasisSub,
 							pCoefValue[coefi]);
 				}
+				this->vcCoefPools[c]._Finalize(1.0); // ADD-BY-LEETEN 12/16/2012
 			}
 
 			// close the file
@@ -257,7 +270,7 @@ public:
 			#else	// #if WITH_NETCDF 
 			#endif	// #if WITH_NETCDF 
 
-			_Finalize();
+			// DEL-BY-LEETEN 12/16/2012-TO: _Finalize();
 		}
 
 		CSATSepDWTFile():

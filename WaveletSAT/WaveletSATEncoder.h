@@ -640,7 +640,11 @@ public:
 			typeHeaderCount	= NC_INT;
 			typeCoefBin		= NC_INT;	
 			#else // #if !WITH_NETCDF4
+			#if 0 // MOD-BY-LEETEN 12/16/2012-FROM:
 			typeHeaderOffset= NC_ULONGLONG;
+			#else // MOD-BY-LEETEN 12/16/2012-TO:
+			typeHeaderOffset= NC_UINT64;
+			#endif // MOD-BY-LEETEN 12/16/2012-END
 			typeHeaderCount	= NC_UINT;
 			typeCoefBin		= NC_UINT;	
 			#endif // #if !WITH_NETCDF4
