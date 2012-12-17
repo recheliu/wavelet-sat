@@ -14,6 +14,8 @@ protected:
 		//! NetCDF ID
 		int iNcId;
 
+		int iDeflateLevel; // ADD-BY-LEETEN 12/16/2012
+
 		const char* szDimValue;
 		int ncDimValue;
 
@@ -51,7 +53,35 @@ protected:
 		int ncVarCoefValue;
 		nc_type typeCoefValue;
 public:
+		// ADD-BY-LEETEN 12/16/2012-BEGIN
+		enum EParameter
+		{
+			PARAMETER_BEGIN = 0x0A00,
+			// ADD-BY-LEETEN 12/12/2012-BEGIN
+			DEFLATE_LEVEL,
+			// ADD-BY-LEETEN 12/12/2012-END
+			PARAMETER_END
+		};
+
+		virtual	
+		void
+		_SetLong(
+			int eName,
+			long lValue,
+			void* _Reserved = NULL
+		)
+		{
+		  switch(eName)
+		    {
+		    case DEFLATE_LEVEL:
+		      iDeflateLevel = lValue;
+		      break;
+		    }
+		}
+		// ADD-BY-LEETEN 12/16/2012-END
+
 		CSATSepDWTNetCDF():
+		iDeflateLevel(0), // ADD-BY-LEETEN 12/16/2012
 			szDimValue("VALUE"),
 			szDimBin("BIN"),
 			szDimDim("DIM"),

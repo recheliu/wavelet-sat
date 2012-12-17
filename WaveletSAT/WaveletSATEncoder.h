@@ -375,9 +375,11 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0400,
+			#if 0 // DEL-BY-LEETEN 12/16/2012-BEGIN
 			// ADD-BY-LEETEN 12/12/2012-BEGIN
 			DEFLATE_LEVEL,
 			// ADD-BY-LEETEN 12/12/2012-END
+			#endif // DEL-BY-LEETEN 12/16/2012-END
 			PARAMETER_END
 		};
 
@@ -389,7 +391,13 @@ public:
 			void* _Reserved = NULL
 		)
 		{
+		  #if 0 // MOD-BY-LEETEN 12/16/2012-FROM:
 			CHeaderBase::_SetLong(eName, lValue);
+			#else // MOD-BY-LEETEN 12/16/2012-TO:
+		  CSATSepDWTNetCDF::_SetLong(eName, lValue);
+		  CSepDWTHeader::_SetLong(eName, lValue);
+		  // CEncoderBase<T, double>::_SetLong(eName, lValue);
+		  #endif // MOD-BY-LEETEN 12/16/2012-END
 		}
 
 		virtual	
@@ -684,6 +692,35 @@ public:
 					piDimIds,
 					&ncVarCoefBin));
 			#endif	// MOD-BY-LEETEN 12/16/2012-END
+
+			// ADD-BY-LEETEN 12/16/2012-BEGIN
+			#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarHeaderCount, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarHeaderOffset, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefBin, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefValue, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			#endif // #if WITH_NETCDF4
+			// ADD-BY-LEETEN 12/16/2012-END
 
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
