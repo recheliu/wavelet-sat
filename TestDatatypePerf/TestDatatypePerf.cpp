@@ -87,26 +87,52 @@ _TestType()
 	vector<T> v2;
 	v2.resize(vi2.size());
 	_Copy<T, int>(v2, vi2);
+
+	// ADD-BY-LEETEN 01/22/2012-BEGIN
+	// Allocate buffer to hold the result. This forces the compiler to compute all iterations
+	vector<T> vProds;
+	vProds.resize(uNrOfTests);
+	vector<T> vSums;
+	vSums.resize(uNrOfTests);
+	vector<T> vMuls;
+	vMuls.resize(uNrOfTests);
+	// ADD-BY-LEETEN 01/22/2012-END
+
 	LIBCLOCK_END(1);
 
 	LIBCLOCK_BEGIN(1);	
 	T Prod;
 	for(size_t t = 0; t < uNrOfTests; t++)
+	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
 		Prod = _DotProduct<T>(v1, v2);	
+	#else	// MOD-BY-LEETEN 01/22/2012-TO:
+		vProds[t] = _DotProduct<T>(v1, v2);	
+	Prod = vProds[0];
+	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Prod);
 
 	T Sum;
 	LIBCLOCK_BEGIN(1);	
 	for(size_t t = 0; t < uNrOfTests; t++)
+	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
 		Sum = _Sum<T>(v1, v2);	
+	#else	// MOD-BY-LEETEN 01/22/2012-TO:
+		vSums[t] = _Sum<T>(v1, v2);	
+	Sum = vSums[0];
+	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Sum);
 
 	T Mul;
 	LIBCLOCK_BEGIN(1);	
 	for(size_t t = 0; t < uNrOfTests; t++)
+	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
 		Mul = _Multiply<T>(v1);	
+	#else	// MOD-BY-LEETEN 01/22/2012-TO:
+		vMuls[t] = _Multiply<T>(v1);	
+	Mul = vMuls[0];
+	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Mul);
 	LIBCLOCK_PRINT(1);	

@@ -9,7 +9,22 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(WaveletSAT)
 
 # ADD-BY-LEETEN 09/02/2011-BEGIN
-set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
+# MOD-BY-LEETEN 12/22/2012-FROM:
+	#	set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
+# TO:
+set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
+set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
+
+include_directories(
+	${LIB_DIR}/include
+	${MYLIB_DIR}/include
+)
+
+link_directories(
+	${LIB_DIR}/lib
+	${MYLIB_DIR}/lib
+)
+# MOD-BY-LEETEN 12/22/2012-END
 
 # ADD-BY-LEETEN 10/28/2012-BEGIN
 set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?")	

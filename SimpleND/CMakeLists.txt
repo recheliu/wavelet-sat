@@ -40,15 +40,17 @@ endif()
 # ADD-BY-LEETEN 10/28/2012-BEGIN
 if( WITH_NETCDF )
 	if( DEFINED WIN32 )
-		target_link_libraries(${PROJECT_NAME}
-			libszip.lib
-			zlib.lib
-			hdf5.lib
-			hdf5_cpp.lib
-			hdf5_hl.lib
-			hdf5_hl_cpp.lib
-			netcdf.lib
-			)
+		# # DEL-BY-LEETEN 12/22/2012-BEGIN
+		# target_link_libraries(${PROJECT_NAME}
+			# libszip.lib
+			# zlib.lib
+			# hdf5.lib
+			# hdf5_cpp.lib
+			# hdf5_hl.lib
+			# hdf5_hl_cpp.lib
+			# netcdf.lib
+			# )
+		# # DEL-BY-LEETEN 12/22/2012-END
 	else()
 		target_link_libraries(${PROJECT_NAME}
 			# DEL-BY-LEETEN 10/28/2012: szip
