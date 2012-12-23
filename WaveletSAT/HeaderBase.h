@@ -86,10 +86,6 @@ public:
 		{
 			return uNrOfBins;
 		}
-#if	0	// DEL-BY-LEETEN 12/15/2012-BEGIN
-public:
-		////////////////////////////////////////////////////////////////////
-#endif		// DEL-BY-LEETEN 12/15/2012-END
 		/*
 		The public interface. 
 		*/

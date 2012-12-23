@@ -70,27 +70,6 @@ protected:
 	  size_t uCountInSparseArray;
 	  // ADD-BY-LEETEN 12/15/2012-END
 
-		#if	0	// DEL-BY-LEETEN 12/16/2012-BEGIN
-		#if	WITH_VECTORS_FOR_COUNTED_COEFS
-		struct CTempCoef
-		{
-			size_t uCount;
-			double dCoef;
-			CTempCoef ():
-				uCount(0),
-				dCoef(0.0)
-			{
-			}
-			
-			CTempCoef(size_t uC, double dC):
-				uCount(uC),
-				dCoef(dC)
-			{
-			}
-		};
-		#endif	// #if	WITH_VECTORS_FOR_COUNTED_COEFS
-		#endif		// DEL-BY-LEETEN 12/16/2012-END
-
 		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
 		bool bIsFinalizedWithoutWavelet;
 
@@ -375,11 +354,6 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0400,
-			#if 0 // DEL-BY-LEETEN 12/16/2012-BEGIN
-			// ADD-BY-LEETEN 12/12/2012-BEGIN
-			DEFLATE_LEVEL,
-			// ADD-BY-LEETEN 12/12/2012-END
-			#endif // DEL-BY-LEETEN 12/16/2012-END
 			PARAMETER_END
 		};
 
@@ -391,13 +365,9 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-		  #if 0 // MOD-BY-LEETEN 12/16/2012-FROM:
-			CHeaderBase::_SetLong(eName, lValue);
-			#else // MOD-BY-LEETEN 12/16/2012-TO:
 		  CSATSepDWTNetCDF::_SetLong(eName, lValue);
 		  CSepDWTHeader::_SetLong(eName, lValue);
 		  // CEncoderBase<T, double>::_SetLong(eName, lValue);
-		  #endif // MOD-BY-LEETEN 12/16/2012-END
 		}
 
 		virtual	
@@ -415,16 +385,11 @@ public:
 		void
 		_SaveFile
 		(
-		 #if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
-			const char* szFilepath,
-			#else // MOD-BY-LEETEN 12/15/2012-TO:
 			const char* szFilepathPrefix,
-			#endif // MOD-BY-LEETEN 12/15/2012-END
 			void *_Reserved = NULL
 		)
 		{
 			#if WITH_NETCDF 
-			// DEL-BY-LEETEN 12/16/2012:	int iNcId = 0;
 			// ADD-BY-LEETEN 12/15/2012-BEGIN
 			#if !WITH_NETCDF4
 			const char* szFileExt = "wnc";
@@ -456,50 +421,10 @@ public:
 			size_t uDimLength;
 			char* szNcDimName;
 			int iNcDimId;
-			#if	0	// MOD-BY-LEETEN 12/16/2012-FROM:
-			vector<int> viDimIds;
-			viDimIds.clear();
-			#else		// MOD-BY-LEETEN 12/16/2012-TO:
 			vncDims.clear();
-			#endif		// MOD-BY-LEETEN 12/16/2012-END
 
 			// define the dimension for coefficients, which is unlimited
 
-			#if	0	// MOD-BY-LEETEN 12/16/2012-FROM:
-			#if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
-			ASSERT_NETCDF(nc_def_dim(
-						iNcId,
-						"COEF",
-						NC_UNLIMITED,
-						&iNcDimId ) );
-			#else // MOD-BY-LEETEN 12/15/2012-TO:
-			ASSERT_NETCDF(nc_def_dim(
-						iNcId,
-						"COEF",
-						uNrOfNonZeroCoefs,
-						&iNcDimId ) );
-			#endif // MOD-BY-LEETEN 12/15/2012-END
-			viDimIds.push_back(iNcDimId);
-
-			// define the dimension for #bins
-			ASSERT_NETCDF(nc_def_dim(
-						iNcId,
-						"BIN",
-						(int)UGetNrOfBins(),
-						&iNcDimId ) );
-			viDimIds.push_back(iNcDimId);
-
-			size_t uBeforeDim = viDimIds.size();
-
-			// define the dimension for data, levels, and the coefficients
-			static const char *pszDimTypes[] = {"COEF", "DATA", "LEVEL"};
-			enum {
-				DIM_TYPE_COEF,
-				DIM_TYPE_DATA, 
-				DIM_TYPE_LEVEL, 
-				NR_OF_DIM_TYPES
-			};
-			#else	// MOD-BY-LEETEN 12/16/2012-TO:
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
 						szDimValue,
@@ -517,7 +442,6 @@ public:
 						szDimDim,
 						(int)UGetNrOfDims(),
 						&ncDimDim ) );
-			#endif	// MOD-BY-LEETEN 12/16/2012-END
 
 			for(size_t t = 0; t < NR_OF_DIM_TYPES; t++)
 				for(int d = 0; d < UGetNrOfDims(); d++)
@@ -547,112 +471,21 @@ public:
     								szNcDimName,
     								(int)uDimLength,
     								&iNcDimId));
-					// MOD-BY-LEETEN 12/16/2012-FROM:	viDimIds.push_back(iNcDimId);
 					vncDims.push_back(iNcDimId);
-					// MOD-BY-LEETEN 12/16/2012-END
 				}
 
 			//
 			// now define the variable for the coef headers
 			int piDimIds[NC_MAX_DIMS];
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
-				// MOD-BY-LEETEN 12/16/2012-FROM:	piDimIds[d] = viDimIds[uBeforeDim + UGetNrOfDims() * DIM_TYPE_COEF + UGetNrOfDims() - 1 - d];
 				piDimIds[d] = vncDims[UGetNrOfDims() * DIM_TYPE_COEF + UGetNrOfDims() - 1 - d];
-				// MOD-BY-LEETEN 12/16/2012-END
 
-			#if	0	// MOD-BY-LEETEN 12/16/2012-FROM:
-			// define the #non-zero bins per coef.
-			nc_type eNcType;
-			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
-			#ifdef WIN32
-			eNcType = NC_INT;
-			#else
-			eNcType = NC_UINT;
-			#endif
-			#else // MOD-BY-LEETEN 12/13/2012-TO:
-			#if !WITH_NETCDF4
-			eNcType = NC_INT;
-			#else // #if !WITH_NETCDF4
-			eNcType = NC_UINT;
-			#endif // #if !WITH_NETCDF4
-			#endif // MOD-BY-LEETEN 12/13/2012-END
-			int iHeaderCountVarId;
-			ASSERT_NETCDF(nc_def_var(
-					iNcId,
-					"HEADER_COUNT", 
-					eNcType,
-					(int)UGetNrOfDims(),
-					piDimIds,
-					&iHeaderCountVarId));
-			this->ncVarHeaderCount = iHeaderCountVarId;
-
-			// define the offset in the headers
-			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
-			#ifdef WIN32
-			eNcType = NC_INT;
-			#else
-			eNcType = NC_UINT64;
-			#endif
-			#else // MOD-BY-LEETEN 12/13/2012-TO:
-			#if !WITH_NETCDF4
-			eNcType = NC_INT;
-			#else // #if !WITH_NETCDF4
-			eNcType = NC_UINT64;
-			#endif // #if !WITH_NETCDF4
-			#endif // MOD-BY-LEETEN 12/13/2012-END
-			int iHeaderOffsetVarId;
-			ASSERT_NETCDF(nc_def_var(
-					iNcId,
-					"HEADER_OFFSET", 
-					eNcType,
-					(int)UGetNrOfDims(),
-					piDimIds,
-					&iHeaderOffsetVarId));
-
-			// define the pool of the coefficients
-			piDimIds[0] = viDimIds[0];
-			int iCoefVarId;
-			ASSERT_NETCDF(nc_def_var(
-					iNcId,
-					"COEF", 
-					NC_DOUBLE,
-					1,
-					piDimIds,
-					&iCoefVarId));
-
-			// define the pool of the coefficient bins
-			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
-			#ifdef WIN32
-			eNcType = NC_INT;
-			#else
-			eNcType = NC_UINT;
-			#endif
-			#else // MOD-BY-LEETEN 12/13/2012-TO:
-			#if !WITH_NETCDF4
-			eNcType = NC_INT;
-			#else // #if !WITH_NETCDF4
-			eNcType = NC_UINT;
-			#endif // #if !WITH_NETCDF4
-			#endif // MOD-BY-LEETEN 12/13/2012-END
-			int iCoefBinVarId;
-			ASSERT_NETCDF(nc_def_var(
-					iNcId,
-					"COEF_BIN", 
-					eNcType,
-					1,
-					piDimIds,
-					&iCoefBinVarId));
-			#else	// MOD-BY-LEETEN 12/16/2012-TO:
 			#if !WITH_NETCDF4
 			typeHeaderOffset= NC_INT;
 			typeHeaderCount	= NC_INT;
 			typeCoefBin		= NC_INT;	
 			#else // #if !WITH_NETCDF4
-			#if 0 // MOD-BY-LEETEN 12/16/2012-FROM:
-			typeHeaderOffset= NC_ULONGLONG;
-			#else // MOD-BY-LEETEN 12/16/2012-TO:
 			typeHeaderOffset= NC_UINT64;
-			#endif // MOD-BY-LEETEN 12/16/2012-END
 			typeHeaderCount	= NC_UINT;
 			typeCoefBin		= NC_UINT;	
 			#endif // #if !WITH_NETCDF4
@@ -691,7 +524,6 @@ public:
 					1,
 					piDimIds,
 					&ncVarCoefBin));
-			#endif	// MOD-BY-LEETEN 12/16/2012-END
 
 			// ADD-BY-LEETEN 12/16/2012-BEGIN
 			#if WITH_NETCDF4 
@@ -734,28 +566,6 @@ public:
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
 
-			#if 0 //DEL-BY-LEETEN 12/15/2012-BEGIN
-			#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
-			#ifdef			WIN32
-			TBuffer<int> piCoefs;
-			piCoefs.alloc(this->UGetNrOfBins());
-			#else	// #ifdef	WIN32
-			TBuffer<unsigned int> puCoefs;
-			puCoefs.alloc(this->UGetNrOfBins());
-			#endif	// #ifdef	WIN32
-			#else // MOD-BY-LEETEN 12/13/2012-TO:
-			#if !WITH_NETCDF4
-			TBuffer<int> piCoefs;
-			piCoefs.alloc(this->UGetNrOfBins());
-			#else // #if !WITH_NETCDF4
-			TBuffer<unsigned int> puCoefs;
-			puCoefs.alloc(this->UGetNrOfBins());
-			#endif // #if !WITH_NETCDF4
-			#endif // MOD-BY-LEETEN 12/13/2012-END
-			TBuffer<double> pdCoefs;
-			pdCoefs.alloc(this->UGetNrOfBins());
-			#endif // DEL-BY-LEETEN 12/15/2012-END
-
 			size_t uCoefBase = 0;
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
@@ -775,224 +585,6 @@ public:
 					vuBasisCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
 				}
 
-				#if	0	// MOD-BY-LEETEN 12/15/2012-FROM:
-				// ADD-BY-LEETEN 12/15/2012-BEGIN
-				vector< pair<size_t, double> > vpairCoefsInBasis;
-				#if !WITH_NETCDF4
-				TBuffer<int> piNrOfNonZeroBins;
-				piNrOfNonZeroBins.alloc(uNrOfBasisCoefs);
-				TBuffer<int> piCoefBases;
-				piCoefBases.alloc(uNrOfBasisCoefs);
-				#else // #if !WITH_NETCDF4
-				TBuffer<unsigned int> puNrOfNonZeroBins;
-				puNrOfNonZeroBins.alloc(uNrOfBasisCoefs);
-				TBuffer<unsigned long long> pullCoefBases;
-				pullCoefBases.alloc(uNrOfBasisCoefs);
-				#endif // #if !WITH_NETCDF4
-				// ADD-BY-LEETEN 12/15/2012-END
-
-				for(size_t bc = 0; bc < uNrOfBasisCoefs; bc++)
-				{
-					vector<size_t> vuBasisCoefSub;
-					_ConvertIndexToSub(bc, vuBasisCoefSub, vuBasisCoefLengths);
-
-					vector< pair<size_t, double> > vpairCoefs;
-					this->vcCoefPools[c]._GetCoefSparse
-					(
-						vuBasisCoefSub,
-						vpairCoefs
-					);
-
-					#if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
-					for(size_t d = 0; d < UGetNrOfDims(); d++)
-					{
-						puStart[UGetNrOfDims() - 1 - d] = vuBasisCoefSub[d] + vuBasisCoefBase[d];
-						puCount[d] = 1;
-					}
-					#if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #ifdef	WIN32
-					int iNrOfNonZeroBins = (int)vpairCoefs.size();
-					ASSERT_NETCDF(nc_put_vara_int(
-					   iNcId,
-					   iHeaderCountVarId,
-					   puStart,
-					   puCount,
-					   &iNrOfNonZeroBins ));
-
-					int iCoefBase = (int)uCoefBase;
-					ASSERT_NETCDF(nc_put_vara_int(
-					   iNcId,
-					   iHeaderOffsetVarId,
-					   puStart,
-					   puCount,
-					   &iCoefBase));
-
-					puStart[0] = uCoefBase;
-					puCount[0] = vpairCoefs.size();
-					for(size_t bi = 0; bi < vpairCoefs.size(); bi++)
-					{
-						piCoefs[bi] = (int)vpairCoefs[bi].first;
-						pdCoefs[bi] = vpairCoefs[bi].second;
-					}
-
-					ASSERT_NETCDF(nc_put_vara_int(
-					   iNcId,
-					   iCoefBinVarId,
-					   puStart,
-					   puCount,
-					   &piCoefs[0]));
-                                        #else // #if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #else
-					unsigned int uNrOfNonZeroBins = (unsigned int)vpairCoefs.size();
-					ASSERT_NETCDF(nc_put_vara_uint(
-					   iNcId,
-					   iHeaderCountVarId,
-					   puStart,
-					   puCount,
-					   &uNrOfNonZeroBins ));
-
-					#if 0 // MOD-BY-LEETEN 12/13/2012-FROM:
-					unsigned long ulCoefBase = (unsigned long)uCoefBase;
-					ASSERT_NETCDF(nc_put_vara_int(
-					   iNcId,
-					   iHeaderOffsetVarId,
-					   puStart,
-					   puCount,
-					   &ulCoefBase));
-					#else // MOD-BY-LEETEN 12/13/2012-TO:
-					unsigned long long ullCoefBase = (unsigned long long)uCoefBase;
-					ASSERT_NETCDF(nc_put_vara_ulonglong(
-					   iNcId,
-					   iHeaderOffsetVarId,
-					   puStart,
-					   puCount,
-					   &ullCoefBase));
-					#endif // MOD-BY-LEETEN 12/13/2012-END
-					puStart[0] = uCoefBase;
-					puCount[0] = vpairCoefs.size();
-					for(size_t bi = 0; bi < vpairCoefs.size(); bi++)
-					{
-						puCoefs[bi] = (unsigned int)vpairCoefs[bi].first;
-						pdCoefs[bi] = vpairCoefs[bi].second;
-					}
-
-					ASSERT_NETCDF(nc_put_vara_uint(
-					   iNcId,
-					   iCoefBinVarId,
-					   puStart,
-					   puCount,
-					   &puCoefs[0]));
-                                        #endif // #if !WITH_NETCDF4 // MOD-BY-LEETEN 12/13/2012-FROM: #endif
-
-					ASSERT_NETCDF(nc_put_vara_double(
-					   iNcId,
-					   iCoefVarId,
-					   puStart,
-					   puCount,
-					   &pdCoefs[0]));
-
-					uCoefBase += vpairCoefs.size();
-					#else // MOD-BY-LEETEN 12/15/2012-TO:
-					#if !WITH_NETCDF4 
-					piNrOfNonZeroBins[bc] = (int)vpairCoefs.size();
-					piCoefBases[bc] = (int)uCoefBase;
-					#else // #if !WITH_NETCDF4
-					puNrOfNonZeroBins[bc] = (unsigned int)vpairCoefs.size();
-					pullCoefBases[bc] = (unsigned long long)uCoefBase;
-					#endif // #if !WITH_NETCDF4
-					vpairCoefsInBasis.insert(vpairCoefsInBasis.end(), vpairCoefs.begin(), vpairCoefs.end());
-					#endif // MOD-BY-LEETEN 12/15/2012-END
-				}
-				// ADD-BY-LEETEN 12/15/2012-BEGIN
-				// write the header
-				for(size_t d = 0; d < vuBasisCoefLengths.size(); d++)
-				  {
-					#if	0	// MOD-BY-LEETEN 12/16/2012-FROM:
-				    puStart[d] = vuBasisCoefBase[d];
-				    puCount[d] = vuBasisCoefLengths[d];
-					#else		// MOD-BY-LEETEN 12/16/2012-TO:
-				    puStart[d] = vuBasisCoefBase[UGetNrOfDims() - 1 - d];
-				    puCount[d] = vuBasisCoefLengths[UGetNrOfDims() - 1 - d];
-					#endif		// MOD-BY-LEETEN 12/16/2012-END
-				  }
-
-				#if !WITH_NETCDF4
-				ASSERT_NETCDF(nc_put_vara_int(
-							      iNcId,
-							      iHeaderCountVarId,
-							      puStart,
-							      puCount,
-							      &piNrOfNonZeroBins[0] ));
-
-				ASSERT_NETCDF(nc_put_vara_int(
-							      iNcId,
-							      iHeaderOffsetVarId,
-							      puStart,
-							      puCount,
-							      &piCoefBases[0]));
-				#else // #if !WITH_NETCDF4
-				ASSERT_NETCDF(nc_put_vara_uint(
-							       iNcId,
-							       iHeaderCountVarId,
-							       puStart,
-							       puCount,
-							       &puNrOfNonZeroBins[0] ));
-
-				ASSERT_NETCDF(nc_put_vara_ulonglong(
-								    iNcId,
-								    iHeaderOffsetVarId,
-								    puStart,
-								    puCount,
-								    &pullCoefBases[0]));
-				#endif // #if !WITH_NETCDF4
-
-				// write the coefficients
-				puStart[0] = uCoefBase;
-				puCount[0] = vpairCoefsInBasis.size();
-
-				#if !WITH_NETCDF4
-				TBuffer<int> piCoefBins;
-				piCoefBins.alloc(vpairCoefsInBasis.size());
-				#else // #if !WITH_NETCDF4
-				TBuffer<unsigned int> puCoefBins;
-				puCoefBins.alloc(vpairCoefsInBasis.size());
-				#endif // #if !WITH_NETCDF4
-
-				TBuffer<double> pdCoefs;
-				pdCoefs.alloc(vpairCoefsInBasis.size());
-
-				for(size_t c = 0; c < vpairCoefsInBasis.size(); c++)
-				  {
-				    #if !WITH_NETCDF4
-				    piCoefBins[c] = (int)vpairCoefsInBasis[c].first;
-				    #else // #if !WITH_NETCDF4
-				    puCoefBins[c] = (unsigned int)vpairCoefsInBasis[c].first;
-				    #endif // #if !WITH_NETCDF4
-				    pdCoefs[c] = vpairCoefsInBasis[c].second;
-				  }
-
-				#if !WITH_NETCDF4
-				ASSERT_NETCDF(nc_put_vara_int(
-							      iNcId,
-							      iCoefBinVarId,
-							      puStart,
-							      puCount,
-							      &piCoefBins[0]));
-				#else // #if !WITH_NETCDF4
-				ASSERT_NETCDF(nc_put_vara_uint(
-							      iNcId,
-							      iCoefBinVarId,
-							      puStart,
-							      puCount,
-							      &puCoefBins[0]));
-				#endif // #if !WITH_NETCDF4
-
-				ASSERT_NETCDF(nc_put_vara_double(
-								 iNcId,
-								 iCoefVarId,
-								 puStart,
-								 puCount,
-								 &pdCoefs[0]));
-
-				#else	// MOD-BY-LEETEN 12/15/2012-TO:
 				vector< pair<size_t, double> > vpairCoefsInBasis;
 
 				#if !WITH_NETCDF4
@@ -1079,7 +671,6 @@ public:
 								 puStart,
 								 puCount,
 								 (void*)&pCoefValues[0]));
-				#endif	// MOD-BY-LEETEN 12/15/2012-END
 
 				uCoefBase += vpairCoefsInBasis.size();
 				// ADD-BY-LEETEN 12/15/2012-END
@@ -1199,7 +790,6 @@ public:
 			}	
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_COEF_POOL
-			// DEL-BY-LEETEN 12/16/2012:	if( !bIsFinalizedWithoutWavelet )	
 			{
 				for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 														{
@@ -1221,11 +811,9 @@ public:
 					}
 
 					dWavelet = sqrt(dWavelet);
-					// MOD-BY-LEETEN 12/16/2012-FROM:	this->vcCoefPools[c]._Finalize( dWavelet / dWaveletDenomiator);
 					}
 					double dWeight = ( !bIsFinalizedWithoutWavelet )?(dWavelet / dWaveletDenomiator):1.0;
 					this->vcCoefPools[c]._Finalize( dWeight );
-					// MOD-BY-LEETEN 12/16/2012-END
 					// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
 				}
 			}	
@@ -1268,41 +856,9 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-		  #if 0 // MOD-BY-LEETEN 12/15/2012-FROM:
-			size_t uNrOfNonZeroCoefs = 0;
-			// ADD-BY-LEETEN 10/29/2012-BEGIN
-			size_t uCountInFullArray = 0;
-			size_t uCountInSparseArray = 0;
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			for(size_t b = 0; b < UGetNrOfBins(); b++)
-			  {
-			    size_t uF, uS;
-			    this->vcBinCoefs[b]._GetArraySize(uF, uS, dWaveletThreshold);
-			    uCountInFullArray += uF;
-			    uCountInSparseArray += uS;
-			  }
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL
-			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
-			{
-				size_t uF, uS;
-				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
-				uCountInFullArray += uF;
-				uCountInSparseArray += uS;
-			}
-			#endif	// #if	!WITH_COEF_POOL	
-			// ADD-BY-LEETEN 11/11/2012-END
-			LOG_VAR(uCountInFullArray);
-			LOG_VAR(uCountInSparseArray);
-			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
-			// ADD-BY-LEETEN 10/29/2012-END
-
-			LOG_VAR(uNrOfNonZeroCoefs);
-			#else // MOD-BY-LEETEN 12/15/2012-TO:
 			LOG_VAR(uCountInFullArray);
 			LOG_VAR(uCountInSparseArray);
 			LOG_VAR(uNrOfNonZeroCoefs);
-			#endif // MOD-BY-LEETEN 12/15/2012-END
 
 			size_t uNrOfDataItems = this->uDataSize;
 

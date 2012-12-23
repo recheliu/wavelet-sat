@@ -85,14 +85,10 @@ main(int argn, char* argv[])
 
 	// create a lookup table to shuffule the value
 	vector<int> viShuffleTable;
-	// MOD-BY-LEETEN 10/17/2012-FROM:	for(size_t i = 0; i < iValueMax; i++)
 	for(int i = 0; i < iValueMax; i++)
-	// MOD-BY-LEETEN 10/17/2012-END
 		viShuffleTable.push_back((int)i);
 
-	// MOD-BY-LEETEN 10/17/2012-FROM:	for(size_t i = iValueMax; i > 0; i--)
 	for(int i = iValueMax; i > 0; i--)
-	// MOD-BY-LEETEN 10/17/2012-END
 	{
 		size_t uRand = rand() % i;
 		swap(viShuffleTable[i - 1], viShuffleTable[uRand]);
@@ -108,20 +104,11 @@ main(int argn, char* argv[])
 		vuDimLengths.push_back(uDimLength);
 		uNrOfValues *= uDimLength;
 	}
-	// MOD-BY-LEETEN 10/27/2012-FROM:	cSimpleND._SetDimLengths(vuDimLengths);
 	cSimpleND._Set(vuDimLengths, uNrOfBins);
-	// MOD-BY-LEETEN 10/27/2012-END
 
 	// Step 2: Allocate the needed #SATs
 	cSimpleND._SetHistogram(uNrOfBins, 0, iValueMax);
-	#if	0	// MOD-BY-LEETEN 10/27/2012-FROM:
-	vector<size_t> vuDimMaxLevels;
-	for(size_t d = 0; d < uNrOfDims; d++)
-		vuDimMaxLevels.push_back(uMaxLevel);
-	cSimpleND._AllocateBins(uNrOfBins, vuDimMaxLevels);
-	#else		// MOD-BY-LEETEN 10/27/2012-TO:
 	cSimpleND._Allocate();
-	#endif		// MOD-BY-LEETEN 10/27/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);

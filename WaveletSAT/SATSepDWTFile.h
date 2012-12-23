@@ -43,6 +43,7 @@ namespace WaveletSAT
 #endif // MOD-BY-LEETEN 12/16/2012-END
 	{
 protected:	
+			const char* szFilepath;	// ADD-BY-LEETEN 12/23/2012
 public:
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -55,6 +56,34 @@ public:
 			PARAMETER_END
 		};
 
+		// ADD-BY-LEETEN 12/23/2012-BEGIN
+		//! Compute and display statistics for the computed wavelet coefficients.
+		virtual	
+		void
+		_ShowStatistics
+		(
+			void *_Reserved = NULL
+		)
+		{
+			// read the file size
+			FILE* fp = fopen(szFilepath, "rb");
+			fseek(fp, 0, SEEK_END);
+			size_t uFileSize = ftell(fp);
+			fclose(fp);
+			LOG_VAR(uFileSize);
+
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				LOG_VAR(vuDimLengths[d]);
+			LOG_VAR(UGetNrOfBins());
+
+			double dOverhead = (double)uFileSize / (double)this->uDataSize;
+			LOG_VAR(dOverhead);
+
+			double dCR = (double)(this->uDataSize * UGetNrOfBins() * sizeof(T)) / (double)uFileSize;
+			LOG_VAR(dCR);
+		}
+		// ADD-BY-LEETEN 12/23/2012-END
+
 		virtual 
 		void
 		_LoadFile
@@ -63,6 +92,8 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			this->szFilepath = szFilepath;			// ADD-BY-LEETEN 12/23/2012
+
 			#if WITH_NETCDF 
 
 			#if !WITH_NETCDF4 
