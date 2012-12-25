@@ -1,15 +1,21 @@
 #pragma once
 
+#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
-#include "SATSepDWTFile.h"
+#endif	// DEL-BY-LEETEN 12/25/2012-END
+// MOD-BY-LEETEN 12/25/2012-FROM:	#include "SATSepDWTFile.h"
+#include "SATSepDWTOutOfCore.h"
+// MOD-BY-LEETEN 12/25/2012-END
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include <netcdf.h>
 #endif
 
 template<class T>
 class CSimpleNDFile:
-	public WaveletSAT::CSATSepDWTFile<T>
+	// MOD-BY-LEETEN 12/25/2012-FROM:	public WaveletSAT::CSATSepDWTFile<T>
+	public WaveletSAT::CSATSepDWTOutOfCore<T>
+	// MOD-BY-LEETEN 12/25/2012-END
 {
 	size_t uNrOfBins;
 	T valueMin, valueMax;

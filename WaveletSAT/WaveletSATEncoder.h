@@ -480,6 +480,7 @@ public:
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				piDimIds[d] = vncDims[UGetNrOfDims() * DIM_TYPE_COEF + UGetNrOfDims() - 1 - d];
 
+			#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 			#if !WITH_NETCDF4
 			typeHeaderOffset= NC_INT;
 			typeHeaderCount	= NC_INT;
@@ -490,7 +491,7 @@ public:
 			typeCoefBin		= NC_UINT;	
 			#endif // #if !WITH_NETCDF4
 			typeCoefValue	= NC_DOUBLE;
-
+			#endif	// DEL-BY-LEETEN 12/25/2012-END
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
 					szVarHeaderCount,
@@ -587,6 +588,7 @@ public:
 
 				vector< pair<size_t, double> > vpairCoefsInBasis;
 
+				#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 				#if !WITH_NETCDF4
 				typedef int	TYPE_HEADER_COUNT;
 				typedef int	TYPE_HEADER_OFFSET;
@@ -597,7 +599,7 @@ public:
 				typedef unsigned int		TYPE_COEF_BIN;
 				#endif // #if !WITH_NETCDF4
 				typedef double TYPE_COEF_VALUE;
-				
+				#endif	// DEL-BY-LEETEN 12/25/2012-END
 				TBuffer<TYPE_HEADER_COUNT>	pHeaderCount;
 				TBuffer<TYPE_HEADER_OFFSET>	pHeaderOffset;
 				
@@ -617,7 +619,9 @@ public:
 					);
 
 					pHeaderCount[bc] = (TYPE_HEADER_COUNT)vpairCoefs.size();
-					pHeaderOffset[bc] = (TYPE_HEADER_OFFSET)uCoefBase;
+					// MOD-BY-LEETEN 12/25/2012-FROM:	pHeaderOffset[bc] = (TYPE_HEADER_OFFSET)uCoefBase;
+					pHeaderOffset[bc] = (TYPE_HEADER_OFFSET)uCoefBase + vpairCoefsInBasis.size();
+					// MOD-BY-LEETEN 12/25/2012-END
 					vpairCoefsInBasis.insert(vpairCoefsInBasis.end(), vpairCoefs.begin(), vpairCoefs.end());
 				}
 				// ADD-BY-LEETEN 12/15/2012-BEGIN

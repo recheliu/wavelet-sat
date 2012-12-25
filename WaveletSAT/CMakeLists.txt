@@ -38,10 +38,12 @@ set(HEADER_FILES
 
 		# ADD-BY-LEETEN 12/16/2012-BEGIN
 		SATSepDWTNetCDF.h	# The class that contains the information for NetCDF format
-		SATSepDWTFile.h
+		# DEL-BY-LEETEN 12/25/2012:	SATSepDWTFile.h
 		SimpleNDFile.h
 		# ADD-BY-LEETEN 12/16/2012-END
 
+		SATSepDWTOutOfCore.h	# ADD-BY-LEETEN 12/25/2012
+		
 		utils.h			# ADD-BY-LEETEN 10/29/2012
 	)
 	

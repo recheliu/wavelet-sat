@@ -29,6 +29,19 @@ namespace WaveletSAT
 	class CSATSepDWTNetCDF
 	{
 protected:	
+		// ADD-BY-LEETEN 12/25/2012-BEGIN
+		#if !WITH_NETCDF4
+		typedef int	TYPE_HEADER_COUNT;
+		typedef int	TYPE_HEADER_OFFSET;
+		typedef int	TYPE_COEF_BIN;
+		#else // #if !WITH_NETCDF4
+		typedef unsigned int 		TYPE_HEADER_COUNT;
+		typedef unsigned long long	TYPE_HEADER_OFFSET;
+		typedef unsigned int		TYPE_COEF_BIN;
+		#endif // #if !WITH_NETCDF4
+		typedef double TYPE_COEF_VALUE;
+		// ADD-BY-LEETEN 12/25/2012-END
+
 		//! NetCDF ID
 		int iNcId;
 
@@ -100,6 +113,18 @@ public:
 
 		CSATSepDWTNetCDF():
 		iDeflateLevel(0), // ADD-BY-LEETEN 12/16/2012
+			// ADD-BY-LEETEN 12/25/2012-BEGIN
+			#if !WITH_NETCDF4
+			typeHeaderOffset(NC_INT),
+			typeHeaderCount(NC_INT),
+			typeCoefBin(NC_INT),
+			#else // #if !WITH_NETCDF4
+			typeHeaderOffset(NC_UINT64),
+			typeHeaderCount(NC_UINT),
+			typeCoefBin(NC_UINT),
+			#endif // #if !WITH_NETCDF4
+			typeCoefValue(NC_DOUBLE),
+			// ADD-BY-LEETEN 12/25/2012-END
 			szDimValue("VALUE"),
 			szDimBin("BIN"),
 			szDimDim("DIM"),

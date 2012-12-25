@@ -187,6 +187,7 @@ public:
 
 			/////////////////////////////////////////////////////////////////////
 			// define the #non-zero bins per coef.
+			#if	0	// MOD-BY-LEETEN 12/25/2012-FROM:
 			#if !WITH_NETCDF4
 			TBuffer<int> pHeaderOffset;
 			typeHeaderOffset = NC_INT;
@@ -208,7 +209,12 @@ public:
 			#endif // #if !WITH_NETCDF4
 			TBuffer<double> pCoefValue;
 			typeCoefValue = NC_DOUBLE;
-
+			#else	// MOD-BY-LEETEN 12/25/2012-TO:
+			TBuffer<TYPE_HEADER_OFFSET> pHeaderOffset;
+			TBuffer<TYPE_HEADER_COUNT>	pHeaderCount;
+			TBuffer<TYPE_COEF_BIN>		pCoefBin;
+			TBuffer<TYPE_COEF_VALUE>	pCoefValue;
+			#endif	// MOD-BY-LEETEN 12/25/2012-END
 			// convert the basis id to its level subscript
 			vector<size_t> vuBasisHeaderSize;
 			vuBasisHeaderSize.resize(UGetNrOfDims());

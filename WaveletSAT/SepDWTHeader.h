@@ -289,7 +289,7 @@ public:
 			#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
 		}
 
-		//! Compute statistics of the compressed result.
+		//! Set up the data dimensions
 		virtual
 		void
 		_Set
