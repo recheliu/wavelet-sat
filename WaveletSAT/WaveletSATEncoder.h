@@ -290,6 +290,7 @@ protected:
 			// now find the combination of the coefficients of all dimensions
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
 
+			#if	0	// MOD-BY-LEETEN 12/25/2012-FROM:
 			vector<long> vlWavelets;
 			vlWavelets.resize(uNrOfWaveletsFromAllDims);
 
@@ -324,6 +325,12 @@ protected:
 					vuSubs[p] = uPos / w;
 				}
 			}
+			#else	// MOD-BY-LEETEN 12/25/2012-TO:
+			vector<long> vlWavelets;
+			vector<size_t> vuSubs;	// the subscripts of different level
+
+			_GetForwardWavelet(vuPos, vuSubs, vlWavelets, true);
+			#endif	// MOD-BY-LEETEN 12/25/2012-END
 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
@@ -1163,6 +1170,7 @@ public:
 			#else	// #if	!WITH_COEF_POOL	
 			vector<size_t> vuEmpty;	// this empty vector is used to speed up the access of elements
 
+			#if	0	// MOD-BY-LEETEN 12/25/2012-FROM:
 			vdSums.resize(UGetNrOfBins());
 			vector<double> vdWaveletBasis;
 			vdWaveletBasis.resize( this->uNrOfWaveletsFromAllDims );
@@ -1202,6 +1210,20 @@ public:
 					vuSubs[p] = uPos / w;
 				}
 			}
+			#else	// MOD-BY-LEETEN 12/25/2012-TO:
+			vdSums.resize(UGetNrOfBins());
+			vector<size_t> vuPoolSubs;
+			vuPoolSubs.resize( UGetNrOfDims() );
+
+			vector<double> vdWaveletBasis;
+			vector<size_t> vuSubs;
+
+			_GetBackwardWavelet(
+				vuPos, 
+				vuSubs, 
+				vdWaveletBasis, 
+				true);
+			#endif	// MOD-BY-LEETEN 12/25/2012-END
 		
 			// now find the combination of the coefficients of all dimensions 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)

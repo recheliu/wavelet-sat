@@ -235,6 +235,7 @@ namespace WaveletSAT
 			{
 				mapSparse.insert(pair<IT, ST>(Bin, Value));
 
+				#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 				// estimate the current memory usage
 				static size_t uCount;
 				const size_t uMaxCount = 100000;
@@ -244,6 +245,7 @@ namespace WaveletSAT
 					_ShowMemoryUsage(true);
 				}
 				uCount++;
+				#endif	// DEL-BY-LEETEN 12/25/2012-END
 			}
 		}
 

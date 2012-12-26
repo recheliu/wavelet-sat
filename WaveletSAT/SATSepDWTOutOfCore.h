@@ -131,6 +131,8 @@ public:
 				}
 			}
 
+			size_t uNrOfOutOfCores = 0;	// ADD-BY-LEETEN 12/25/2012
+
 			/////////////////////////////////////////////////////////////////
 			vector<size_t> vuPoolDimLengths;
 			vuPoolDimLengths.resize(this->UGetNrOfDims());
@@ -147,9 +149,16 @@ public:
 				{
 					vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:(1<<vuPoolSubs[d] - 1);
 					// decide whether the array is sparse.
-					if( vuPoolSubs[d] > vuOptimalDimLevel[d] )
+					// MOD-BY-LEETEN 12/25/2012-FROM:	if( vuPoolSubs[d] > vuOptimalDimLevel[d] )
+					if( vuPoolSubs[d] >= vuOptimalDimLevel[d] )
+					// MOD-BY-LEETEN 12/25/2012-END
 						bIsOutOfCore  = true;
 				}
+
+				// ADD-BY-LEETEN 12/25/2012-BEGIN
+				if(bIsOutOfCore )
+					uNrOfOutOfCores++;
+				// ADD-BY-LEETEN 12/25/2012-END
 
 				if( !uNrOfCoefsInFullArray )
 					bIsOutOfCore  = true;
@@ -166,6 +175,7 @@ public:
 				else
 					vpcCoefPools[c] = NULL;
 			}
+			LOG_VAR(uNrOfOutOfCores);	// ADD-BY-LEETEN 12/25/2012
 		}
 
 		
@@ -435,15 +445,18 @@ public:
 
 			vdSums.resize(UGetNrOfBins());
 
+			#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 			vector<double> vdWaveletBasis;
 			vdWaveletBasis.resize( this->uNrOfWaveletsFromAllDims );
 
 			vector<size_t> vuSubs;		vuSubs.resize( this->uNrOfWaveletsFromAllDims );
+			#endif	// DEL-BY-LEETEN 12/25/2012-END
 			vector<size_t> vuPoolSub;	vuPoolSub.resize( UGetNrOfDims() );
 			vector<size_t> vuPoolBase;	vuPoolBase.resize( UGetNrOfDims() );
 			vector<size_t> vuSubInPool;	vuSubInPool.resize( UGetNrOfDims() );
 			vector<size_t> vuHeaderSub;	vuHeaderSub.resize( UGetNrOfDims() );
-			
+		
+			#if	0	// MOD-BY-LEETEN 12/25/2012-FROM:
 			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -473,7 +486,16 @@ public:
 					vuSubs[p] = uPos / w;
 				}
 			}
-		
+			#else	// MOD-BY-LEETEN 12/25/2012-TO:
+			vector<double> vdWaveletBasis;
+			vector<size_t> vuSubs;
+			_GetBackwardWavelet(
+				vuPos, 
+				vuSubs, 
+				vdWaveletBasis, 
+				true);
+			#endif	// MOD-BY-LEETEN 12/25/2012-END
+
 			// now find the combination of the coefficients of all dimensions 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
@@ -518,6 +540,11 @@ public:
 					size_t uStart = (size_t)vuHeaderOffset[uHeaderIndex];
 					size_t uCount = (size_t)vusHeaderCount[uHeaderIndex];
 
+					// ADD-BY-LEETEN 12/25/2012-BEGIN
+					if( uCount )
+					{
+					// ADD-BY-LEETEN 12/25/2012-END
+
 					ASSERT_NETCDF(nc_get_vara(
 						iNcId,
 						ncVarCoefBin,
@@ -531,6 +558,7 @@ public:
 						&uStart,
 						&uCount,
 						(void*)&pCoefValue[0]));
+					}	// ADD-BY-LEETEN 12/25/2012
 
 					for(size_t i = 0; i < uCount; i++)
 						vdSums[pCoefBin[i]] += pCoefValue[i] * dWavelet;

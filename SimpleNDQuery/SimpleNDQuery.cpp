@@ -135,6 +135,7 @@ main(int argn, char* argv[])
 	assert(bIsOptParsed);
 	assert(szVolFilePath);
 	assert(szNcFilePath);
+	LOG_VAR(szNcFilePath);	// ADD-BY-LEETEN 12/25/2012
 
 	// load the WaveletSAT
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -198,6 +199,7 @@ main(int argn, char* argv[])
 			size_t uIndex = 0;
 			if( iIsVerbose )
 				printf("B(");
+
 			for(size_t 
 				d = 0, uDimLengthProduct = 1; 
 				d < uNrOfDims; 

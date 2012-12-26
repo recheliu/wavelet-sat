@@ -173,6 +173,90 @@ public:
 			return dWaveletThreshold;
 		}
 
+		// ADD-BY-LEETEN 12/25/2012-BEGIN
+		virtual
+		void 
+		_GetForwardWavelet(
+			const vector<size_t>& vuPos, 
+			vector<size_t>& vuSubs, 
+			vector<long>& vlWavelets, 
+			bool bIsNorminatorOnly,
+			void* _Reserved = NULL)
+		{
+			vuSubs.resize(uNrOfWaveletsFromAllDims);
+			vlWavelets.resize(uNrOfWaveletsFromAllDims);
+			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uDimMaxLevel = vuDimMaxLevels[d];
+				size_t uPos = vuPos[d];
+				size_t uMaxWin = 1 << vuDimLevels[d];
+				for(size_t 	
+					l = 0, w = uMaxWin;
+					l < uDimMaxLevel; 
+					l++, p++, w >>= 1)
+				{
+					long lWavelet;
+					// Given the currenet level l and subscript uPos, compute the sum of the portion in wavelet after uPos
+					size_t uPosInWavelet = uPos % w;
+					if( 0 == l )
+						lWavelet = (long)w / 2 - (long)uPosInWavelet;
+					else
+					{
+						if( uPosInWavelet < w / 2)
+							lWavelet = (long)uPosInWavelet;
+						else
+							lWavelet = (long)(w - uPosInWavelet);
+						lWavelet *= -1;		
+					}
+					vlWavelets[p] = lWavelet;
+					vuSubs[p] = uPos / w;
+				}
+			}
+		}
+
+		virtual
+		void
+		_GetBackwardWavelet(
+			const vector<size_t>& vuPos, 
+			vector<size_t>& vuSubs, 
+			vector<double>& vdWaveletBasis, 
+			bool bIsNorminatorOnly,
+			void* _Reserved = NULL)
+		{
+			vdWaveletBasis.resize( this->uNrOfWaveletsFromAllDims );
+			vuSubs.resize( this->uNrOfWaveletsFromAllDims );
+			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
+			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uPos = vuPos[d];
+				size_t uDimMaxLevel = vuDimMaxLevels[d];
+				size_t uMaxWin = 1 << vuDimLevels[d];
+				for(size_t 	
+					l = 0, w = uMaxWin; 
+					l < uDimMaxLevel; 
+					l++, p++, w >>= 1)
+				{
+					// Decide the wavelet size based on the current level, and then the wavelet basis values based on the position within this wavelet
+					double dWaveletBasis = 0.0;
+					
+					// assume Haar wavelet for now
+					// Given the currenet level l and subscript uPos, compute the corresponding wavelet value
+					size_t uPosInWavelet = uPos % w;				
+					if( uPosInWavelet < w / 2)
+						dWaveletBasis = 1.0;
+					else
+						dWaveletBasis = -1.0;
+						
+					if( l >= 2 )
+						dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
+					vdWaveletBasis[p] = dWaveletBasis;
+
+					vuSubs[p] = uPos / w;
+				}
+			}
+		}
+		// ADD-BY-LEETEN 12/25/2012-END
+
 		virtual	
 		void 
 		_SetMaxLevels
