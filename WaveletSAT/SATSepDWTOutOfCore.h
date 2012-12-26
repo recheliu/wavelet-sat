@@ -3,6 +3,7 @@
 #include <map>	
 
 #include <vector>
+#include <algorithm>	// ADD-BY-LEETEN 12/26/2012
 using namespace std;
 #include <math.h>
 
@@ -43,6 +44,12 @@ protected:
 
 			TBuffer<TYPE_COEF_BIN>		pCoefBin;
 			TBuffer<TYPE_COEF_VALUE>	pCoefValue;
+
+			// ADD-BY-LEETEN 12/26/2012-BEGIN
+			size_t uNrOfNonZeroCoefs;
+			vector<bool> vbHeaderInCore;
+			// ADD-BY-LEETEN 12/26/2012-END
+
 public:
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -73,11 +80,14 @@ public:
 					void *_Reserved = NULL
 					)
 		{
+			#if	0	// DEL-BY-LEETEN 12/26/2012-BEGIN
 			vuHeaderOffset.resize(uNrOfCoefs);
 			vusHeaderCount.resize(uNrOfCoefs);
+			#endif	// DEL-BY-LEETEN 12/26/2012-END
 			pCoefBin.alloc(UGetNrOfBins());
 			pCoefValue.alloc(UGetNrOfBins());
 
+			#if	0	// MOD-BY-LEETEN 12/26/2012-FROM:
 			// decide which basis should be in core
 			uNrOfCoefsInFullArray = min(
 				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(T))), 
@@ -176,6 +186,26 @@ public:
 					vpcCoefPools[c] = NULL;
 			}
 			LOG_VAR(uNrOfOutOfCores);	// ADD-BY-LEETEN 12/25/2012
+			#else	// MOD-BY-LEETEN 12/26/2012-TO:
+			// sort the header indices by its # coefficients
+			vector< pair<unsigned short, long long> > vpairHeader;
+			vpairHeader.resize(uNrOfCoefs);
+			for(size_t c = 0; c < uNrOfCoefs; c++)
+				vpairHeader[c] = make_pair(this->vusHeaderCount[c], -(long long)c);
+			sort(vpairHeader.begin(), vpairHeader.end());
+
+			////////////////////////////////////////////////////////
+			// now collect the coefficients
+			// Mark the selected header
+			uNrOfCoefsInFullArray = min(
+				(size_t)floor( (double)uSizeOfFullArrays/(double)sizeof(T)), 
+				uNrOfNonZeroCoefs);
+			vbHeaderInCore.resize(uNrOfCoefs);
+			for(size_t c = 0, uCollectedCoefs = 0; c < uNrOfCoefs && uCollectedCoefs < uNrOfCoefsInFullArray; uCollectedCoefs += vpairHeader[c].first, c++)
+				vbHeaderInCore[abs(vpairHeader[c].second)] = true;
+
+			this->vpcCoefPools.resize(this->uNrOfUpdatingCoefs);	// allocate the pools
+			#endif	// MOD-BY-LEETEN 12/26/2012-END
 		}
 
 		
@@ -260,6 +290,12 @@ public:
 				iNcId,
 				szDimValue,
 				&ncDimValue));
+			// ADD-BY-LEETEN 12/26/2012-BEGIN
+			ASSERT_NETCDF(nc_inq_dimlen (
+				iNcId,
+				ncDimValue,
+				&uNrOfNonZeroCoefs));
+			// ADD-BY-LEETEN 12/26/2012-END
 
 			vector<size_t> vuDimLengths;
 			for(size_t t = 0; t < NR_OF_DIM_TYPES; t++)
@@ -292,7 +328,7 @@ public:
 				}
 
 			_Set(vuDimLengths, uNrOfBins);
-			_Allocate();
+			// DEL-BY-LEETEN 12/26/2012:	_Allocate();
 
 			//
 			// now define the variable for the coef headers
@@ -319,6 +355,10 @@ public:
 			TBuffer<TYPE_HEADER_COUNT> pHeaderCount;
 
 			// now read the entire header
+			// ADD-BY-LEETEN 12/26/2012-BEGIN
+			vuHeaderOffset.resize(uNrOfCoefs);
+			vusHeaderCount.resize(uNrOfCoefs);
+			// ADD-BY-LEETEN 12/26/2012-END
 			pHeaderOffset.alloc(vuHeaderOffset.size());
 			ASSERT_NETCDF(nc_get_var(
 				iNcId,
@@ -337,6 +377,12 @@ public:
 				vusHeaderCount[h] = (unsigned short)pHeaderCount[h];
 			pHeaderCount.free();
 
+			// ADD-BY-LEETEN 12/26/2012-BEGIN
+			_Allocate();
+			size_t uNrOfAllocatedPools = 0;
+			size_t uNrOfInCoreHeaders = 0;
+			// ADD-BY-LEETEN 12/26/2012-END
+
 			/////////////////////////////////////////////////////////////////
 			// now load the coefficients that can be in core
 			vector<size_t> vuBasisHeaderSize;
@@ -347,8 +393,10 @@ public:
 			size_t puCount[NC_MAX_DIMS];
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
+				#if	0	// DEL-BY-LEETEN 12/26/2012-BEGIN
 				if( !this->vpcCoefPools[c] )
 					continue;
+				#endif	// DEL-BY-LEETEN 12/26/2012-END
 
 				vector<size_t> vuLevelSub;
 				_ConvertIndexToSub(c, vuLevelSub, this->vuDimMaxLevels);
@@ -419,6 +467,33 @@ public:
 					vector<size_t> vuBasisSub;
 					_ConvertIndexToSub(basis, vuBasisSub, vuBasisHeaderSize);
 
+					// ADD-BY-LEETEN 12/26/2012-BEGIN
+					vector<size_t> vuCoefSub;
+					vuCoefSub.resize(UGetNrOfDims());
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+						vuCoefSub[d] = vuBasisHeaderBase[d] + vuBasisSub[d];
+					size_t uCoefIndex = UConvertSubToIndex(vuCoefSub, this->vuCoefLengths);
+					bool bIsInCore = this->vbHeaderInCore[uCoefIndex];
+
+					if( !bIsInCore )
+					{
+						coefi += pHeaderCount[basis];
+						continue;
+					}
+
+					uNrOfInCoreHeaders++;
+					if( !vpcCoefPools[c] )
+					{
+						vpcCoefPools[c]= new CSepDWTPool<T, unsigned short>;
+						vpcCoefPools[c]->_Set(
+							UGetNrOfBins(),
+							vuBasisHeaderSize,
+							vuMaxCounts[c],
+							true);
+						uNrOfAllocatedPools++;
+					}
+					// ADD-BY-LEETEN 12/26/2012-END
+
 					// scan through all bin
 					for(size_t bini = 0; bini < pHeaderCount[basis]; bini++, coefi++)
 						this->vpcCoefPools[c]->_AddAt(
@@ -426,8 +501,14 @@ public:
 							vuBasisSub,
 							pBasisCoefValue[coefi]);
 				}
+				if( vpcCoefPools[c] )	// ADD-BY-LEETEN 12/26/2012
 				this->vpcCoefPools[c]->_Finalize(1.0);
 			}
+			// ADD-BY-LEETEN 12/26/2012-BEGIN
+			LOG_VAR(uNrOfCoefs);
+			LOG_VAR(uNrOfInCoreHeaders);
+			LOG_VAR(uNrOfAllocatedPools);
+			// ADD-BY-LEETEN 12/26/2012-END
 			// #endif	// #if WITH_NETCDF 
 		}
 
@@ -519,7 +600,10 @@ public:
 					vuHeaderSub[d] = vuPoolBase[d] + vuSubInPool[d];
 				}
 
-				if( this->vpcCoefPools[c] )
+				// MOD-BY-LEETEN 12/26/2012-FROM:	if( this->vpcCoefPools[c] )
+				size_t uHeaderIndex = UConvertSubToIndex(vuHeaderSub, this->vuCoefLengths);
+				if( this->vbHeaderInCore[uHeaderIndex] )
+				// MOD-BY-LEETEN 12/26/2012-END
 				{
 					vector< pair<size_t, double> > vpairCoefs;
 					this->vpcCoefPools[c]->_GetCoefSparse
@@ -536,7 +620,7 @@ public:
 				}
 				else
 				{
-					size_t uHeaderIndex = UConvertSubToIndex(vuHeaderSub, this->vuCoefLengths);
+					// DEL-BY-LEETEN 12/26/2012:	size_t uHeaderIndex = UConvertSubToIndex(vuHeaderSub, this->vuCoefLengths);
 					size_t uStart = (size_t)vuHeaderOffset[uHeaderIndex];
 					size_t uCount = (size_t)vusHeaderCount[uHeaderIndex];
 
@@ -576,7 +660,12 @@ public:
 		{
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 					if(vpcCoefPools[c])
+					{	// ADD-BY-LEETEN 12/26/2012
 						delete vpcCoefPools[c];
+					// ADD-BY-LEETEN 12/26/2012-BEGIN
+						vpcCoefPools[c] = NULL;
+					}
+					// ADD-BY-LEETEN 12/26/2012-END
 
 			/*
 			// Ideally, the file should be closed. Nevertheless, I will get an error message at this point. 
