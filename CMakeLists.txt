@@ -26,6 +26,24 @@ link_directories(
 )
 # MOD-BY-LEETEN 12/22/2012-END
 
+# ADD-BY-LEETEN 12/28/2012-BEGIN
+set(WITH_BOOST	OFF	CACHE 	BOOL "Is Boost used?")	
+set(BOOST_INC_DIR 	"/usr/local/include" 	CACHE PATH "The path to Boost headers.")	
+set(BOOST_LIB_DIR 	"/usr/local/lib" 		CACHE PATH "The path to Boost libraries.")	
+if( WITH_BOOST )
+	add_definitions(
+		-DWITH_BOOST
+	)
+	include_directories(
+		${BOOST_INC_DIR}
+	)
+
+	link_directories(
+		${BOOST_LIB_DIR}
+	)
+endif()
+# ADD-BY-LEETEN 12/28/2012-END
+
 # ADD-BY-LEETEN 10/28/2012-BEGIN
 set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?")	
 set(WITH_NETCDF4	ON	CACHE 	BOOL "Is NetCDF4 used?")	# ADD-BY-LEETEN 11/09/2012

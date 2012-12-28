@@ -1,5 +1,12 @@
 #pragma once
 
+// ADD-BY-LEETEN 12/28/2012-BEGIN
+#if	WITH_BOOST
+#include <boost/filesystem/operations.hpp>
+namespace fs = boost::filesystem;
+#endif	// #if	WITH_BOOST
+// ADD-BY-LEETEN 12/28/2012-END
+
 #include <map>	
 
 #include <vector>
@@ -19,6 +26,14 @@ using namespace std;
 #include "lognc.h"
 #endif	// #if	WITH_NETCDF
 
+// ADD-BY-LEETEN 12/28/2012-BEGIN
+// if this is non-0, the header with most coefficients will be place in core first
+#define	IS_SELECTING_MOST_FIRST					1
+
+// if this is non-0, when a coefficient is chosen, other coefficients of the same wavelet will be chosen as well
+#define IS_SELECTING_THE_SAME_WAVELET			1
+// ADD-BY-LEETEN 12/28/2012-END
+
 namespace WaveletSAT
 {
 	template<typename T>
@@ -28,6 +43,20 @@ namespace WaveletSAT
 		public CSepDWTHeader
 	{
 protected:	
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			//! The accumulated #I/O requests since the I/O counters are reset.
+			size_t uAccumNrOfIORequest;
+
+			//! The max #I/O requests per query since the I/O counters are reset.
+			size_t uMaxNrOfIORequest;
+
+			//! The min #I/O requests per query since the I/O counters are reset.
+			size_t uMinNrOfIORequest;
+
+			//! The #query since the I/O counters are reset.
+			size_t uNrOfQueries;
+			// ADD-BY-LEETEN 12/28/2012-END
+
 			const char* szFilepath;	
 
 			vector<size_t>			vuHeaderOffset;
@@ -59,6 +88,12 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0a00,
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			ACCUM_NR_OF_IO_REQUESTS,
+			MAX_NR_OF_IO_REQUESTS,
+			MIN_NR_OF_IO_REQUESTS,
+			RESET_IO_COUNTERS,
+			// ADD-BY-LEETEN 12/28/2012-END
 			PARAMETER_END
 		};
 
@@ -73,6 +108,50 @@ public:
 			CSATSepDWTNetCDF::_SetLong(eName, lValue);
 			CSepDWTHeader::_SetLong(eName, lValue);
 		}
+
+		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		virtual	
+		void
+		_GetLong(
+			int eName,
+			long *plValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case ACCUM_NR_OF_IO_REQUESTS:
+				*plValue = (long)uAccumNrOfIORequest;
+				break;
+			case MAX_NR_OF_IO_REQUESTS:
+				*plValue = (long)uMaxNrOfIORequest;
+				break;
+			case MIN_NR_OF_IO_REQUESTS:
+				*plValue = (long)uMinNrOfIORequest;
+				break;
+			}
+		}
+
+		virtual
+		void
+		_SetBoolean
+		(
+			int eName,
+			bool bValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case RESET_IO_COUNTERS:
+				uAccumNrOfIORequest = 0;
+				uMaxNrOfIORequest = 0;
+				uMinNrOfIORequest = uNrOfUpdatingCoefs;
+				uNrOfQueries = 0;
+				break;
+			}
+		}
+		// ADD-BY-LEETEN 12/28/2012-END
 
 		virtual
 		void
@@ -201,8 +280,64 @@ public:
 				(size_t)floor( (double)uSizeOfFullArrays/(double)sizeof(T)), 
 				uNrOfNonZeroCoefs);
 			vbHeaderInCore.resize(uNrOfCoefs);
+			#if	0	// MOD-BY-LEETEN 12/28/2012-FROM:
 			for(size_t c = 0, uCollectedCoefs = 0; c < uNrOfCoefs && uCollectedCoefs < uNrOfCoefsInFullArray; uCollectedCoefs += vpairHeader[c].first, c++)
 				vbHeaderInCore[abs(vpairHeader[c].second)] = true;
+			#else	// MOD-BY-LEETEN 12/28/2012-TO:
+			// vector<size_t> vuHeaderSub;	vuHeaderSub.resize(UGetNrOfDims());
+			vector<size_t> vuLevel;		vuLevel.resize(UGetNrOfDims());
+			vector<size_t> vuLevelBase;	vuLevelBase.resize(UGetNrOfDims());
+			vector<size_t> vuLevelSize;	vuLevelSize.resize(UGetNrOfDims());
+			vector<size_t> vuSubInLevel;vuSubInLevel.resize(UGetNrOfDims());
+			vector<size_t> vuCoefSub;	vuCoefSub.resize(UGetNrOfDims());
+			size_t uCollectedCoefs = 0;
+
+			#if				IS_SELECTING_MOST_FIRST
+			reverse(vpairHeader.begin(), vpairHeader.end());
+			#endif	// #if	IS_SELECTING_MOST_FIRST
+
+			for(size_t c = 0; c < uNrOfCoefs && uCollectedCoefs <= uNrOfCoefsInFullArray; c++)
+			{
+				#if		!IS_SELECTING_THE_SAME_WAVELET
+				if( uCollectedCoefs + vpairHeader[c].first > uNrOfCoefsInFullArray )
+					break;
+
+				vbHeaderInCore[abs(vpairHeader[c].second)] = true;
+				uCollectedCoefs += vpairHeader[c].first; 
+				#else	// #if		!IS_SELECTING_THE_SAME_WAVELET
+				size_t uHeader = abs(vpairHeader[c].second);
+				if( vbHeaderInCore[uHeader] )
+					continue;
+
+				_ConvertIndexToLevels
+				(
+					uHeader,
+					vuLevel,
+					vuSubInLevel,
+					vuLevelBase,
+					vuLevelSize
+				);
+				size_t uLevelSize = 1;
+				for(size_t d = 0; d < vuLevelSize.size(); d++)
+					uLevelSize *= vuLevelSize[d];
+
+				for(size_t i = 0; i < uLevelSize && uCollectedCoefs < uNrOfCoefsInFullArray; i++)
+				{
+					_ConvertIndexToSub(i, vuSubInLevel, vuLevelSize);
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+						vuCoefSub[d] = vuLevelBase[d] + vuSubInLevel[d];
+					size_t uCoefIndex = UConvertSubToIndex(vuCoefSub, vuCoefLengths);
+					if( uCollectedCoefs + vusHeaderCount[uCoefIndex] > uNrOfCoefsInFullArray )
+						break;
+					vbHeaderInCore[uCoefIndex] = true;
+					uCollectedCoefs += vusHeaderCount[uCoefIndex];
+				}
+				#endif	// #if		!IS_SELECTING_THE_SAME_WAVELET
+			}
+			LOG_VAR(uCollectedCoefs);
+			LOG_VAR(uNrOfCoefsInFullArray);
+			LOG_VAR(uNrOfNonZeroCoefs);
+			#endif	// MOD-BY-LEETEN 12/28/2012-END
 
 			this->vpcCoefPools.resize(this->uNrOfUpdatingCoefs);	// allocate the pools
 			#endif	// MOD-BY-LEETEN 12/26/2012-END
@@ -219,10 +354,17 @@ public:
 		)
 		{
 			// read the file size
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			#if		WITH_BOOST
+			fs::path pathNativePath( szFilepath, fs::native );
+			size_t uFileSize = fs::file_size( pathNativePath );
+			#else	// #if WITH_BOOST
+			// ADD-BY-LEETEN 12/28/2012-END
 			FILE* fp = fopen(szFilepath, "rb");
 			fseek(fp, 0, SEEK_END);
 			size_t uFileSize = ftell(fp);
 			fclose(fp);
+			#endif	// #if WITH_BOOST	// ADD-BY-LEETEN 12/28/2012
 			LOG_VAR(uFileSize);
 
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
@@ -577,6 +719,11 @@ public:
 				true);
 			#endif	// MOD-BY-LEETEN 12/25/2012-END
 
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			uNrOfQueries++;
+			size_t uNrOfIORequest = 0;
+			// ADD-BY-LEETEN 12/28/2012-END
+
 			// now find the combination of the coefficients of all dimensions 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
@@ -620,6 +767,8 @@ public:
 				}
 				else
 				{
+					uNrOfIORequest++;	// ADD-BY-LEETEN 12/28/2012
+
 					// DEL-BY-LEETEN 12/26/2012:	size_t uHeaderIndex = UConvertSubToIndex(vuHeaderSub, this->vuCoefLengths);
 					size_t uStart = (size_t)vuHeaderOffset[uHeaderIndex];
 					size_t uCount = (size_t)vusHeaderCount[uHeaderIndex];
@@ -648,6 +797,11 @@ public:
 						vdSums[pCoefBin[i]] += pCoefValue[i] * dWavelet;
 				}
 			}
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			uAccumNrOfIORequest += uNrOfIORequest;
+			uMaxNrOfIORequest = max(uMaxNrOfIORequest, uNrOfIORequest);
+			uMinNrOfIORequest = min(uMinNrOfIORequest, uNrOfIORequest);
+			// ADD-BY-LEETEN 12/28/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= dWaveletDenomiator;
 		}

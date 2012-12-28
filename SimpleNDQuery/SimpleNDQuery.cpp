@@ -150,6 +150,9 @@ main(int argn, char* argv[])
 
 	if(iIsTestingQuery)
 	{
+		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		cSimpleNDFile._SetBoolean(WaveletSAT::CSATSepDWTOutOfCore<double>::RESET_IO_COUNTERS, 0);
+		// ADD-BY-LEETEN 12/28/2012-END
 		////////////////////////////////////////////////////////////////////////////
 		// Now we can start to query SATs
 		// load the data for testing
@@ -190,7 +193,6 @@ main(int argn, char* argv[])
 				vvuOffsets[i][d] = uWinSize * (j % 2);
 		}
 		LIBCLOCK_END(bIsPrintingTiming);
-
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		for(size_t t = 0; t < uNrOfTestingValues; t++)
@@ -255,6 +257,11 @@ main(int argn, char* argv[])
 		}
 
 		LIBCLOCK_END(bIsPrintingTiming);
+		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		long lAccumNrOfIORequests;	cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+		long lMaxNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+		long lMinNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		// ADD-BY-LEETEN 12/28/2012-END
 	}
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);

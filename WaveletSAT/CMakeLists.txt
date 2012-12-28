@@ -11,15 +11,17 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(WaveletSAT)
 # MOD-BY-LEETEN 10/17/2012-END
 
-set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
+# # DEL-BY-LEETEN 12/28/2012-BEGIN
+# set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
-include_directories(
-	${MYLIB_DIR}/include
-)
+# include_directories(
+	# ${MYLIB_DIR}/include
+# )
 
-link_directories(
-	${MYLIB_DIR}/lib
-)
+# link_directories(
+	# ${MYLIB_DIR}/lib
+# )
+# # DEL-BY-LEETEN 12/28/2012-END
 
 # The source codes
 set(HEADER_FILES

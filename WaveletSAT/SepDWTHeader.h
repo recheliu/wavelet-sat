@@ -173,6 +173,35 @@ public:
 			return dWaveletThreshold;
 		}
 
+		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		virtual
+		void
+		_ConvertIndexToLevels
+		(
+			size_t uIndex,
+			vector<size_t>& vuLevel,
+			vector<size_t>& vuSubInLevel,
+			vector<size_t>& vuLevelBase,
+			vector<size_t>& vuLevelSize,
+			void *_Reserved = NULL
+		)
+		{
+			vector<size_t> vuSub;
+			_ConvertIndexToSub(uIndex, vuSub, vuCoefLengths);
+
+			vuLevelBase.resize(UGetNrOfDims());
+			vuLevelSize.resize(UGetNrOfDims());
+			vuSubInLevel.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vuLevel[d] = (!vuSub[d])?0:(size_t)(1 + floor(log( (double)vuSub[d]) / M_LN2));
+				vuLevelBase[d] = (!vuLevel[d])?0:(1 << (vuLevel[d] - 1));
+				vuLevelSize[d] = (!vuLevel[d])?1:(1 << (vuLevel[d] - 1));
+				vuSubInLevel[d] = vuSub[d] - vuLevelBase[d];
+			}
+		}
+		// ADD-BY-LEETEN 12/28/2012-END
+
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		virtual
 		void 
