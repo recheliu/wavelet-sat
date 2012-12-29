@@ -151,7 +151,9 @@ main(int argn, char* argv[])
 	if(iIsTestingQuery)
 	{
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
-		cSimpleNDFile._SetBoolean(WaveletSAT::CSATSepDWTOutOfCore<double>::RESET_IO_COUNTERS, 0);
+		// MOD-BY-LEETEN 12/28/2012-FROM:	cSimpleNDFile._SetBoolean(WaveletSAT::CSATSepDWTOutOfCore<double>::RESET_IO_COUNTERS, 0);
+		cSimpleNDFile._SetBoolean(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+		// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
 		////////////////////////////////////////////////////////////////////////////
 		// Now we can start to query SATs
@@ -258,9 +260,15 @@ main(int argn, char* argv[])
 
 		LIBCLOCK_END(bIsPrintingTiming);
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		#if	0	// MOD-BY-LEETEN 12/28/2012-FROM:
 		long lAccumNrOfIORequests;	cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
 		long lMaxNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
 		long lMinNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		#else	// MOD-BY-LEETEN 12/28/2012-TO:
+		long lAccumNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+		long lMaxNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+		long lMinNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		#endif	// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
 	}
 

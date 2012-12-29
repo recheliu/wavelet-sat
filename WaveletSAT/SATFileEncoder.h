@@ -1,5 +1,12 @@
 #pragma once
 
+// ADD-BY-LEETEN 12/28/2012-BEGIN
+#if	WITH_BOOST
+#include <boost/filesystem/operations.hpp>
+namespace fs = boost::filesystem;
+#endif	// #if	WITH_BOOST
+// ADD-BY-LEETEN 12/28/2012-END
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -340,12 +347,19 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			#if		WITH_BOOST
+			fs::path pathNativePath( szFilepath, fs::native );
+			size_t uFileSize = fs::file_size( pathNativePath );
+			#else	// #if WITH_BOOST
+			// ADD-BY-LEETEN 12/28/2012-END
 		  // ADD-BY-LEETEN 11/09/2012-BEGIN
 		  FILE *fp;
 		  fp = fopen(szNetCdfPathFilename, "rb");
 		  fseek(fp, 0, SEEK_END);
 		  size_t uFileSize = ftell(fp);
 		  fclose(fp);
+			#endif	// #if WITH_BOOST	// ADD-BY-LEETEN 12/28/2012
 		  LOG_VAR(uFileSize);
 		  // ADD-BY-LEETEN 11/09/2012-END
 		}

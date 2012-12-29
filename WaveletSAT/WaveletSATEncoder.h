@@ -456,13 +456,19 @@ public:
 					switch(t)
 					{
 					case DIM_TYPE_DATA:
-						uDimLength = (int)this->vuDimLengths[d];
+						// MOD-BY-LEETEN 12/28/2012-FROM:	uDimLength = (int)this->vuDimLengths[d];
+						uDimLength = (size_t)this->vuDimLengths[d];
+						// MOD-BY-LEETEN 12/28/2012-END
 						break;
 					case DIM_TYPE_LEVEL:
-						uDimLength = (int)this->vuDimLevels[d];
+						// MOD-BY-LEETEN 12/28/2012-FROM:	uDimLength = (int)this->vuDimLevels[d];
+						uDimLength = (size_t)this->vuDimLevels[d];
+						// MOD-BY-LEETEN 12/28/2012-END
 						break;
 					case DIM_TYPE_COEF:
-						uDimLength = (int)1<<(this->vuDimLevels[d]-1);
+						// MOD-BY-LEETEN 12/28/2012-FROM:	uDimLength = (int)1<<(this->vuDimLevels[d]-1);
+						uDimLength = (size_t)((size_t)1<<(this->vuDimLevels[d]-1));
+						// MOD-BY-LEETEN 12/28/2012-END
 						break;
 					}
 
@@ -982,7 +988,9 @@ public:
 				// decide the pool size
 				for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 				{
-					vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:(1<<vuPoolSubs[d] - 1);
+					// MOD-BY-LEETEN 12/28/2012-FROM:	vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:(1<<vuPoolSubs[d] - 1);
+					vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:((size_t)1 << (vuPoolSubs[d] - 1));
+					// MOD-BY-LEETEN 12/28/2012-END
 					// decide whether the array is sparse.
 					if( vuPoolSubs[d] > vuOptimalDimLevel[d] )
 						bIsSparse = true;
