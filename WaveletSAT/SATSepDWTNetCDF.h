@@ -26,17 +26,25 @@
 namespace WaveletSAT
 {
 	//! The class that contains variables for NetCDF
+	/*
+	For each coefficient, the value and ID of all bins are store in a 1D pool. The offset to the pool and the #non-zero bins are store in an D-dim array.
+	*/
 	class CSATSepDWTNetCDF
 	{
 protected:	
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		#if !WITH_NETCDF4
+		#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
 		typedef int	TYPE_HEADER_COUNT;
 		typedef int	TYPE_HEADER_OFFSET;
+		#else	// MOD-BY-LEETEN 12/29/2012-TO:
+		typedef int	TYPE_COEF_COUNT;
+		typedef int	TYPE_COEF_OFFSET;
+		#endif	// MOD-BY-LEETEN 12/29/2012-END
 		typedef int	TYPE_COEF_BIN;
 		#else // #if !WITH_NETCDF4
-		typedef unsigned int 		TYPE_HEADER_COUNT;
-		typedef unsigned long long	TYPE_HEADER_OFFSET;
+		typedef unsigned int 		TYPE_COEF_COUNT;
+		typedef unsigned long long	TYPE_COEF_OFFSET;
 		typedef unsigned int		TYPE_COEF_BIN;
 		#endif // #if !WITH_NETCDF4
 		typedef double TYPE_COEF_VALUE;
@@ -68,6 +76,7 @@ protected:
 		int piCoefDimIds[NC_MAX_DIMS];
 
 		// Variable IDs
+		#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
 		const char* szVarHeaderOffset;
 		int ncVarHeaderOffset;
 		nc_type typeHeaderOffset;
@@ -75,7 +84,15 @@ protected:
 		const char* szVarHeaderCount;
 		int ncVarHeaderCount;
 		nc_type typeHeaderCount;
+		#else	// MOD-BY-LEETEN 12/29/2012-TO:
+		const char* szVarCoefOffset;
+		int ncVarCoefOffset;
+		nc_type typeCoefOffset;
 
+		const char* szVarCoefCount;
+		int ncVarCoefCount;
+		nc_type typeCoefCount;
+		#endif	// MOD-BY-LEETEN 12/29/2012-END
 		const char* szVarCoefBin;
 		int ncVarCoefBin;
 		nc_type typeCoefBin;
@@ -115,12 +132,12 @@ public:
 		iDeflateLevel(0), // ADD-BY-LEETEN 12/16/2012
 			// ADD-BY-LEETEN 12/25/2012-BEGIN
 			#if !WITH_NETCDF4
-			typeHeaderOffset(NC_INT),
-			typeHeaderCount(NC_INT),
+			typeCoefOffset(NC_INT),
+			typeCoefCount(NC_INT),
 			typeCoefBin(NC_INT),
 			#else // #if !WITH_NETCDF4
-			typeHeaderOffset(NC_UINT64),
-			typeHeaderCount(NC_UINT),
+			typeCoefOffset(NC_UINT64),
+			typeCoefCount(NC_UINT),
 			typeCoefBin(NC_UINT),
 			#endif // #if !WITH_NETCDF4
 			typeCoefValue(NC_DOUBLE),
@@ -128,8 +145,13 @@ public:
 			szDimValue("VALUE"),
 			szDimBin("BIN"),
 			szDimDim("DIM"),
-			szVarHeaderOffset("HEADER_OFFSET"),
-			szVarHeaderCount("HEADER_COUNT"),
+			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
+			szVarCoefOffset("HEADER_OFFSET"),
+			szVarCoefCount("HEADER_COUNT"),
+			#else	// MOD-BY-LEETEN 12/29/2012-TO:
+			szVarCoefOffset("COEF_OFFSET"),
+			szVarCoefCount("COEF_COUNT"),
+			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			szVarCoefBin("COEF_BIN"),
 			szVarCoefValue("COEF_VALUE")
 		{

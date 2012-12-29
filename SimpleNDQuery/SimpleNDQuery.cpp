@@ -10,7 +10,9 @@
 double dValueMin = HUGE_VAL;
 double dValueMax = -HUGE_VAL;
 Nrrd *nin;
-CSimpleNDFile<double> cSimpleNDFile;
+// MOD-BY-LEETEN 12/29/2012-FROM:	CSimpleNDFile<double> cSimpleNDFile;
+CSimpleNDFile<double, double> cSimpleNDFile;
+// MOD-BY-LEETEN 12/29/2012-END
 vector<double> vdData;
 
 //! Convert the volume to an array of double type
@@ -140,7 +142,9 @@ main(int argn, char* argv[])
 	// load the WaveletSAT
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
-	cSimpleNDFile._SetLong(CSimpleNDFile<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	// MOD-BY-LEETEN 12/29/2012-FROM:	cSimpleNDFile._SetLong(CSimpleNDFile<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	cSimpleNDFile._SetLong(cSimpleNDFile.SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	// MOD-BY-LEETEN 12/29/2012-END
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 

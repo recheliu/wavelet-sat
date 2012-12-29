@@ -18,7 +18,7 @@ using namespace std;
 
 #include "utils.h"		// ADD-BY-LEETEN 10/29/2012
 #include "SepDWTHeader.h"	
-#include "SepDWTData.h"		// ADD-BY-LEETEN 10/29/2012
+// DEL-BY-LEETEN 12/29/2012:	#include "SepDWTData.h"		// ADD-BY-LEETEN 10/29/2012
 #include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
 #include "EncoderBase.h"	
 #include "SATSepDWTNetCDF.h"	// ADD-BY-LEETEN 12/16/2012
@@ -63,11 +63,20 @@ namespace WaveletSAT
 protected:	
 	  // ADD-BY-LEETEN 12/15/2012-BEGIN
 	  //! Number of non-0 coefficients from all bin SATs.
+	#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
 	  size_t uNrOfNonZeroCoefs;
 
 	  size_t uCountInFullArray;
 
-	  size_t uCountInSparseArray;
+	  size_t uNrOfValuesOnSparseArray;
+	#else	// MOD-BY-LEETEN 12/29/2012-TO:
+	  size_t uNrOfNonZeroValues;
+
+	  size_t uNrOfValuesInFullArray;
+
+	  size_t uNrOfValuesOnSparseArray;
+	#endif	// MOD-BY-LEETEN 12/29/2012-END
+
 	  // ADD-BY-LEETEN 12/15/2012-END
 
 		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
@@ -284,8 +293,10 @@ protected:
 			}
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_COEF_POOL	
-			vector<size_t> vuPoolSubs;
-			vuPoolSubs.resize(UGetNrOfDims());
+			// MOD-BY-LEETEN 12/29/2012-FROM:	vector<size_t> vuPoolSubs;
+			vector<size_t> vuLocalCoefSub;
+			// MOD-BY-LEETEN 12/29/2012-END
+			vuLocalCoefSub.resize(UGetNrOfDims());
 
 			// now find the combination of the coefficients of all dimensions
 			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
@@ -342,12 +353,12 @@ protected:
 				{
 					size_t uLevel = vuCoefDim2Level[p];
 					lWavelet *= vlWavelets[uBase + uLevel];
-					vuPoolSubs[d] = vuSubs[uBase + uLevel];
+					vuLocalCoefSub[d] = vuSubs[uBase + uLevel];
 				}
 
 				double dWavelet = dWeight * (double)lWavelet;
 				
-				this->vcCoefPools[c]._AddAt(uBin, vuPoolSubs, dWavelet);
+				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
 			}
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
@@ -435,7 +446,7 @@ public:
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
 						szDimValue,
-						uNrOfNonZeroCoefs,
+						uNrOfNonZeroValues,
 						&ncDimValue) );
 			// define the dimension for #bins
 			ASSERT_NETCDF(nc_def_dim(
@@ -495,31 +506,31 @@ public:
 
 			#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 			#if !WITH_NETCDF4
-			typeHeaderOffset= NC_INT;
-			typeHeaderCount	= NC_INT;
+			typeCoefOffset= NC_INT;
+			typeCoefCount	= NC_INT;
 			typeCoefBin		= NC_INT;	
 			#else // #if !WITH_NETCDF4
-			typeHeaderOffset= NC_UINT64;
-			typeHeaderCount	= NC_UINT;
+			typeCoefOffset= NC_UINT64;
+			typeCoefCount	= NC_UINT;
 			typeCoefBin		= NC_UINT;	
 			#endif // #if !WITH_NETCDF4
 			typeCoefValue	= NC_DOUBLE;
 			#endif	// DEL-BY-LEETEN 12/25/2012-END
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
-					szVarHeaderCount,
-					typeHeaderCount,
+					szVarCoefCount,
+					typeCoefCount,
 					(int)UGetNrOfDims(),
 					piDimIds,
-					&ncVarHeaderCount));
+					&ncVarCoefCount));
 
 			ASSERT_NETCDF(nc_def_var(
 					iNcId,
-					szVarHeaderOffset, 
-					typeHeaderOffset,
+					szVarCoefOffset, 
+					typeCoefOffset,
 					(int)UGetNrOfDims(),
 					piDimIds,
-					&ncVarHeaderOffset));
+					&ncVarCoefOffset));
 
 			// define the pool of the coefficients
 			piDimIds[0] = this->ncDimValue;
@@ -543,13 +554,13 @@ public:
 			#if WITH_NETCDF4 
 			ASSERT_NETCDF(nc_def_var_deflate(
 				   iNcId,
-				   ncVarHeaderCount, 
+				   ncVarCoefCount, 
 				   0, 
 				   1, 
 				   iDeflateLevel));
 			ASSERT_NETCDF(nc_def_var_deflate(
 				   iNcId,
-				   ncVarHeaderOffset, 
+				   ncVarCoefOffset, 
 				   0, 
 				   1, 
 				   iDeflateLevel));
@@ -572,107 +583,130 @@ public:
 			ASSERT_NETCDF(nc_enddef(iNcId));
 
 			// convert the basis id to its level subscript
-			vector<size_t> vuBasisCoefLengths;
-			vuBasisCoefLengths.resize(UGetNrOfDims());
-			vector<size_t> vuBasisCoefBase;
-			vuBasisCoefBase.resize(UGetNrOfDims());
+			// MOD-BY-LEETEN 12/29/2012-FROM:			vector<size_t> vuBasisCoefLengths;
+			vector<size_t> vuLocalCoefLengths;
+			// MOD-BY-LEETEN 12/29/2012-END
+			vuLocalCoefLengths.resize(UGetNrOfDims());
+			// MOD-BY-LEETEN 12/29/2012-FROM:			vector<size_t> vuBasisCoefBase;
+			vector<size_t> vuGlobalCoefBase;
+			// MOD-BY-LEETEN 12/29/2012-END
+			vuGlobalCoefBase.resize(UGetNrOfDims());
 
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
 
-			size_t uCoefBase = 0;
+			// MOD-BY-LEETEN 12/29/2012-FROM:	size_t uCoefBase = 0;
+			size_t uNrOfWrittenValues = 0;
+			// MOD-BY-LEETEN 12/29/2012-END
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				vector<size_t> vuLevelSub;
 				_ConvertIndexToSub(c, vuLevelSub, this->vuDimMaxLevels);
 
-				size_t uNrOfBasisCoefs = 1;
+				// MOD-BY-LEETEN 12/29/2012-FROM:				size_t uNrOfLocalCoefs = 1;
+				size_t uNrOfLocalCoefs = 1;
+				// MOD-BY-LEETEN 12/29/2012-END
 				for(size_t d = 0; d < vuLevelSub.size(); d++)
 				{
 					// From this subscript, we can get the dim. length in this basis. 
 					size_t uLevel = vuLevelSub[d];
 					size_t uLen = (!uLevel)?1:(1<<(uLevel - 1));
-					vuBasisCoefLengths[d] = uLen;
-					uNrOfBasisCoefs *= uLen;
+					vuLocalCoefLengths[d] = uLen;
+					uNrOfLocalCoefs *= uLen;
 
 					// we can also decide it base in the n-dim. pool
-					vuBasisCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
+					vuGlobalCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
 				}
 
-				vector< pair<size_t, double> > vpairCoefsInBasis;
+				// MOD-BY-LEETEN 12/29/2012-FROM:	vector< pair<size_t, double> > vpairCoefsInBasis;
+				vector< pair<size_t, double> > vpairLocalCoefBinValue;
+				// MOD-BY-LEETEN 12/29/2012-END
 
 				#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
 				#if !WITH_NETCDF4
-				typedef int	TYPE_HEADER_COUNT;
-				typedef int	TYPE_HEADER_OFFSET;
+				typedef int	TYPE_COEF_COUNT;
+				typedef int	TYPE_COEF_OFFSET;
 				typedef int	TYPE_COEF_BIN;
 				#else // #if !WITH_NETCDF4
-				typedef unsigned int 		TYPE_HEADER_COUNT;
-				typedef unsigned long long	TYPE_HEADER_OFFSET;
+				typedef unsigned int 		TYPE_COEF_COUNT;
+				typedef unsigned long long	TYPE_COEF_OFFSET;
 				typedef unsigned int		TYPE_COEF_BIN;
 				#endif // #if !WITH_NETCDF4
 				typedef double TYPE_COEF_VALUE;
 				#endif	// DEL-BY-LEETEN 12/25/2012-END
-				TBuffer<TYPE_HEADER_COUNT>	pHeaderCount;
-				TBuffer<TYPE_HEADER_OFFSET>	pHeaderOffset;
+				#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
+				TBuffer<TYPE_COEF_COUNT>	pHeaderCount;
+				TBuffer<TYPE_COEF_OFFSET>	pHeaderOffset;
+				#else	// MOD-BY-LEETEN 12/29/2012-TO:
+				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
+				TBuffer<TYPE_COEF_OFFSET>	pLocalCoefOffsets;
+				#endif	// MOD-BY-LEETEN 12/29/2012-END
 				
-				pHeaderCount.alloc(uNrOfBasisCoefs);
-				pHeaderOffset.alloc(uNrOfBasisCoefs);
+				pLocalCoefCounts.alloc(uNrOfLocalCoefs);
+				pLocalCoefOffsets.alloc(uNrOfLocalCoefs);
 
-				for(size_t bc = 0; bc < uNrOfBasisCoefs; bc++)
+				for(size_t bc = 0; bc < uNrOfLocalCoefs; bc++)
 				{
-					vector<size_t> vuBasisCoefSub;
-					_ConvertIndexToSub(bc, vuBasisCoefSub, vuBasisCoefLengths);
+					// MOD-BY-LEETEN 12/29/2012-FROM:	vector<size_t> vuBasisCoefSub;
+					vector<size_t> vuLocalCoefSub;
+					// MOD-BY-LEETEN 12/29/2012-END
+					_ConvertIndexToSub(bc, vuLocalCoefSub, vuLocalCoefLengths);
 
-					vector< pair<size_t, double> > vpairCoefs;
+					// MOD-BY-LEETEN 12/29/2012-FROM:	vector< pair<size_t, double> > vpairCoefs;
+					vector< pair<size_t, double> > vpairCoefBinValue;
+					// MOD-BY-LEETEN 12/29/2012-END
 					this->vcCoefPools[c]._GetCoefSparse
 					(
-						vuBasisCoefSub,
-						vpairCoefs
+						vuLocalCoefSub,
+						vpairCoefBinValue
 					);
 
-					pHeaderCount[bc] = (TYPE_HEADER_COUNT)vpairCoefs.size();
-					// MOD-BY-LEETEN 12/25/2012-FROM:	pHeaderOffset[bc] = (TYPE_HEADER_OFFSET)uCoefBase;
-					pHeaderOffset[bc] = (TYPE_HEADER_OFFSET)uCoefBase + vpairCoefsInBasis.size();
+					pLocalCoefCounts[bc] = (TYPE_COEF_COUNT)vpairCoefBinValue.size();
+					// MOD-BY-LEETEN 12/25/2012-FROM:	pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues;
+					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
 					// MOD-BY-LEETEN 12/25/2012-END
-					vpairCoefsInBasis.insert(vpairCoefsInBasis.end(), vpairCoefs.begin(), vpairCoefs.end());
+					vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
 				}
 				// ADD-BY-LEETEN 12/15/2012-BEGIN
 				// write the header
-				for(size_t d = 0; d < vuBasisCoefLengths.size(); d++)
+				for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
 				  {
-				    puStart[d] = vuBasisCoefBase[UGetNrOfDims() - 1 - d];
-				    puCount[d] = vuBasisCoefLengths[UGetNrOfDims() - 1 - d];
+				    puStart[d] = vuGlobalCoefBase[UGetNrOfDims() - 1 - d];
+				    puCount[d] = vuLocalCoefLengths[UGetNrOfDims() - 1 - d];
 				  }
 
 				ASSERT_NETCDF(nc_put_vara(
 							      iNcId,
-							      ncVarHeaderCount,
+							      ncVarCoefCount,
 							      puStart,
 							      puCount,
-							      (void*)&pHeaderCount[0] ));
+							      (void*)&pLocalCoefCounts[0] ));
 
 				ASSERT_NETCDF(nc_put_vara(
 							      iNcId,
-							      ncVarHeaderOffset,
+							      ncVarCoefOffset,
 							      puStart,
 							      puCount,
-							      (void*)&pHeaderOffset[0] ));
+							      (void*)&pLocalCoefOffsets[0] ));
 								  
 				// write the coefficients
-				puStart[0] = uCoefBase;
-				puCount[0] = vpairCoefsInBasis.size();
+				puStart[0] = uNrOfWrittenValues;
+				puCount[0] = vpairLocalCoefBinValue.size();
 
-				TBuffer<TYPE_COEF_BIN> pCoefBins;
-				pCoefBins.alloc(vpairCoefsInBasis.size());
+				// MOD-BY-LEETEN 12/29/2012-FROM:	TBuffer<TYPE_COEF_BIN> pCoefBins;
+				TBuffer<TYPE_COEF_BIN> pLocalCoefBins;
+				// MOD-BY-LEETEN 12/29/2012-END
+				pLocalCoefBins.alloc(vpairLocalCoefBinValue.size());
 
-				TBuffer<TYPE_COEF_VALUE> pCoefValues;
-				pCoefValues.alloc(vpairCoefsInBasis.size());
+				// MOD-BY-LEETEN 12/29/2012-FROM:	TBuffer<TYPE_COEF_VALUE> pLocalCoefValues;
+				TBuffer<TYPE_COEF_VALUE> pLocalCoefValues;
+				// MOD-BY-LEETEN 12/29/2012-END
+				pLocalCoefValues.alloc(vpairLocalCoefBinValue.size());
 
-				for(size_t c = 0; c < vpairCoefsInBasis.size(); c++)
+				for(size_t c = 0; c < vpairLocalCoefBinValue.size(); c++)
 				  {
-				    pCoefBins[c] = (TYPE_COEF_BIN)vpairCoefsInBasis[c].first;
-				    pCoefValues[c] = (TYPE_COEF_VALUE)vpairCoefsInBasis[c].second;
+				    pLocalCoefBins[c] = (TYPE_COEF_BIN)vpairLocalCoefBinValue[c].first;
+				    pLocalCoefValues[c] = (TYPE_COEF_VALUE)vpairLocalCoefBinValue[c].second;
 				  }
 
 				ASSERT_NETCDF(nc_put_vara(
@@ -680,16 +714,16 @@ public:
 							      ncVarCoefBin,
 							      puStart,
 							      puCount,
-							      (void*)&pCoefBins[0]));
+							      (void*)&pLocalCoefBins[0]));
 								  
 				ASSERT_NETCDF(nc_put_vara(
 								 iNcId,
 								 ncVarCoefValue,
 								 puStart,
 								 puCount,
-								 (void*)&pCoefValues[0]));
+								 (void*)&pLocalCoefValues[0]));
 
-				uCoefBase += vpairCoefsInBasis.size();
+				uNrOfWrittenValues += vpairLocalCoefBinValue.size();
 				// ADD-BY-LEETEN 12/15/2012-END
 			}
 
@@ -809,9 +843,11 @@ public:
 			#else	// #if	!WITH_COEF_POOL
 			{
 				for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
-														{
-					vector<size_t> vuPoolSubs;
-					_ConvertIndexToSub(c, vuPoolSubs, this->vuDimMaxLevels);
+				{
+					// MOD-BY-LEETEN 12/29/2012-FROM:	vector<size_t> vuLocalCoefSub;
+					vector<size_t> vuLevels;
+					// MOD-BY-LEETEN 12/29/2012-END
+					_ConvertIndexToSub(c, vuLevels, this->vuDimMaxLevels);
 
 					// decide the wavelet weight
 					double dWavelet = +1.0;
@@ -819,9 +855,9 @@ public:
 					if( !bIsFinalizedWithoutWavelet )	
 					{
 					// ADD-BY-LEETEN 12/16/2012-END
-					for(size_t d = 0; d < vuPoolSubs.size(); d++)
+					for(size_t d = 0; d < vuLevels.size(); d++)
 					{
-						size_t uLevel = vuPoolSubs[d];
+						size_t uLevel = vuLevels[d];
 						if( uLevel >= 1 )
 							dWavelet *= (double)(1 << (uLevel - 1));
 							// Wavelet *= (T)sqrt((double)(1 << (uLevel - 1) ));
@@ -840,16 +876,16 @@ public:
 			_ShowMemoryUsage(false);
 
 			// ADD-BY-LEETEN 12/15/2012-BEGIN
-			uNrOfNonZeroCoefs = 0;
-			uCountInFullArray = 0;
-			uCountInSparseArray = 0;
+			uNrOfNonZeroValues = 0;
+			uNrOfValuesInFullArray = 0;
+			uNrOfValuesOnSparseArray = 0;
 			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 			  {
 			    size_t uF, uS;
 			    this->vcBinCoefs[b]._GetArraySize(uF, uS, dWaveletThreshold);
-			    uCountInFullArray += uF;
-			    uCountInSparseArray += uS;
+			    uNrOfValuesInFullArray += uF;
+			    uNrOfValuesOnSparseArray += uS;
 			  }
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_COEF_POOL
@@ -857,11 +893,11 @@ public:
 			{
 				size_t uF, uS;
 				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
-				uCountInFullArray += uF;
-				uCountInSparseArray += uS;
+				uNrOfValuesInFullArray += uF;
+				uNrOfValuesOnSparseArray += uS;
 			}
 			#endif	// #if	!WITH_COEF_POOL	
-			uNrOfNonZeroCoefs = uCountInFullArray + uCountInSparseArray;
+			uNrOfNonZeroValues = uNrOfValuesInFullArray + uNrOfValuesOnSparseArray;
 			// ADD-BY-LEETEN 12/15/2012-END
 		}
 
@@ -873,16 +909,16 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			LOG_VAR(uCountInFullArray);
-			LOG_VAR(uCountInSparseArray);
-			LOG_VAR(uNrOfNonZeroCoefs);
+			LOG_VAR(uNrOfValuesInFullArray);
+			LOG_VAR(uNrOfValuesOnSparseArray);
+			LOG_VAR(uNrOfNonZeroValues);
 
 			size_t uNrOfDataItems = this->uDataSize;
 
-			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroCoefs;
+			double dCR = (double)(uNrOfDataItems * UGetNrOfBins()) / (double)uNrOfNonZeroValues;
 			LOG_VAR(dCR);
 
-			double dOverhead = (double)uNrOfNonZeroCoefs / (double)uNrOfDataItems;
+			double dOverhead = (double)uNrOfNonZeroValues / (double)uNrOfDataItems;
 			LOG_VAR(dOverhead);
 		}
 
@@ -980,19 +1016,19 @@ public:
 			this->vcCoefPools.resize(this->uNrOfUpdatingCoefs);
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				vector<size_t> vuPoolSubs;
-				_ConvertIndexToSub(c, vuPoolSubs, this->vuDimLevels);
+				vector<size_t> vuLocalCoefSub;
+				_ConvertIndexToSub(c, vuLocalCoefSub, this->vuDimLevels);
 
 				bool bIsSparse = false;
 
 				// decide the pool size
 				for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 				{
-					// MOD-BY-LEETEN 12/28/2012-FROM:	vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:(1<<vuPoolSubs[d] - 1);
-					vuPoolDimLengths[d] = (!vuPoolSubs[d])?1:((size_t)1 << (vuPoolSubs[d] - 1));
+					// MOD-BY-LEETEN 12/28/2012-FROM:	vuPoolDimLengths[d] = (!vuLocalCoefSub[d])?1:(1<<vuLocalCoefSub[d] - 1);
+					vuPoolDimLengths[d] = (!vuLocalCoefSub[d])?1:((size_t)1 << (vuLocalCoefSub[d] - 1));
 					// MOD-BY-LEETEN 12/28/2012-END
 					// decide whether the array is sparse.
-					if( vuPoolSubs[d] > vuOptimalDimLevel[d] )
+					if( vuLocalCoefSub[d] > vuOptimalDimLevel[d] )
 						bIsSparse = true;
 				}
 
@@ -1186,8 +1222,8 @@ public:
 			vector<size_t> vuSubs;
 			vuSubs.resize( this->uNrOfWaveletsFromAllDims );
 
-			vector<size_t> vuPoolSubs;
-			vuPoolSubs.resize( UGetNrOfDims() );
+			vector<size_t> vuLocalCoefSub;
+			vuLocalCoefSub.resize( UGetNrOfDims() );
 
 			// for each dimenion d, based on the posistion, store the corresponding l[d] wavelet basis value
 			for(size_t p = 0, d = 0; d < UGetNrOfDims(); d++)
@@ -1220,8 +1256,8 @@ public:
 			}
 			#else	// MOD-BY-LEETEN 12/25/2012-TO:
 			vdSums.resize(UGetNrOfBins());
-			vector<size_t> vuPoolSubs;
-			vuPoolSubs.resize( UGetNrOfDims() );
+			vector<size_t> vuLocalCoefSub;
+			vuLocalCoefSub.resize( UGetNrOfDims() );
 
 			vector<double> vdWaveletBasis;
 			vector<size_t> vuSubs;
@@ -1241,22 +1277,22 @@ public:
 					d < UGetNrOfDims(); 
 					uBase += vuDimMaxLevels[d], d++, p++)
 				{
-					vuPoolSubs[d] = vuSubs[uBase + vuCoefDim2Level[p]];
+					vuLocalCoefSub[d] = vuSubs[uBase + vuCoefDim2Level[p]];
 					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
 				}
 
 				if( this->vcCoefPools[c].BIsSparse() )
 				{
-					vector< pair<size_t, double> > vpairCoefs;
+					vector< pair<size_t, double> > vpairCoefBinValue;
 					this->vcCoefPools[c]._GetCoefSparse
 					(
-						vuPoolSubs,
-						vpairCoefs
+						vuLocalCoefSub,
+						vpairCoefBinValue
 					);
 
 					for(vector< pair<size_t, double> >::iterator
-						ivpairCoefs = vpairCoefs.begin();
-						ivpairCoefs != vpairCoefs.end();
+						ivpairCoefs = vpairCoefBinValue.begin();
+						ivpairCoefs != vpairCoefBinValue.end();
 						ivpairCoefs++ )
 						vdSums[ivpairCoefs->first] += ivpairCoefs->second * dWavelet;
 				}
@@ -1268,7 +1304,7 @@ public:
 						double dWaveletCoef;
 						this->vcCoefPools[c]._GetAt(
 							b, 
-							( !b )?vuPoolSubs:vuEmpty, 
+							( !b )?vuLocalCoefSub:vuEmpty, 
 							uIndex, dWaveletCoef);
 
 						if( fabs(dWaveletCoef) >= dWaveletThreshold )
