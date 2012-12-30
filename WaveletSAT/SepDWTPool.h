@@ -249,6 +249,40 @@ namespace WaveletSAT
 			}
 		}
 
+		// ADD-BY-LEETEN 12/29/2012-BEGIN
+		void
+		_GetAtOffset
+		(
+			const unsigned short usOffset,
+			const vector<size_t>& vuSubs,
+			size_t& uIndex,
+			IT& Bin,
+			ST& Value,
+			void* _Reserved = NULL
+		)
+		{
+			if( vuSubs.size() )
+				uIndex = UConvertSubToIndex(vuSubs, vuLengths);
+
+			if( !bIsSparse )
+			{
+				// full
+				Bin = usOffset;
+				Value = vvFull[Bin][uIndex];
+			}
+			else
+			{
+				// sparse
+				vector< pair<IT, ST> >& vpair = this->vvpairSparse[uIndex];
+				if( (size_t)usOffset < vpair.size() )
+				{
+					Bin = vpair[usOffset].first;
+					Value = vpair[usOffset].second;
+				}
+			}
+		}
+		// ADD-BY-LEETEN 12/29/2012-END
+
 		void
 		_GetAt
 		(

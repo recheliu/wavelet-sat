@@ -358,7 +358,9 @@ protected:
 
 				double dWavelet = dWeight * (double)lWavelet;
 				
-				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
+				// MOD-BY-LEETEN 12/29/2012-FROM:	this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
+				this->vcCoefPools[c]._AddAt((unsigned short)uBin, vuLocalCoefSub, dWavelet);
+				// MOD-BY-LEETEN 12/29/2012-END
 			}
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
@@ -437,7 +439,7 @@ public:
 			// coef_dim_0, coef_dim_1, ... for the level
 			// level_dim_0, level_dim_1, ... for the level
 			size_t uDimLength;
-			char* szNcDimName;
+			// DEL-BY-LEETEN 12/29/2012:			char* szNcDimName;
 			int iNcDimId;
 			vncDims.clear();
 

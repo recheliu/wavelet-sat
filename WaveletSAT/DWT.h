@@ -35,4 +35,34 @@ namespace WaveletSAT
 			std::copy(vSrc.begin(), ivSrcHalf, vDst.begin());
 		}
 	}	
+
+	// ADD-BY-LEETEN 12/29/2012-BEGIN
+	template<typename T>
+	void
+	_IDWT1D
+	(
+		vector<T>& vSrc,
+		vector<T>& vDst,
+		size_t uLength,
+		size_t uLevel,
+		void* _Reserved = NULL
+	)
+	{
+		size_t uHalfLength = uLength / 2;
+		for(size_t c = 0; c < uHalfLength; c++)
+		{
+			T Src1 = vSrc[c];
+			T Src2 = vSrc[c + uHalfLength];
+			vDst[c * 2]		= (Src1	+ Src2) * M_SQRT1_2;
+			vDst[c * 2 + 1]	= (Src1	- Src2) * M_SQRT1_2;
+		}
+
+		if( uLevel > 0 )
+		{
+			for(size_t c = 0; c < uLength; c++)
+				vSrc[c] = vDst[c];
+			_IDWT1D<T>(vSrc, vDst, uLength * 2, uLevel - 1);
+		}
+	}	
+	// ADD-BY-LEETEN 12/29/2012-END
 }

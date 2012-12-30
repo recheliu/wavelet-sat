@@ -152,6 +152,13 @@ main(int argn, char* argv[])
 	cSimpleNDFile._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	// ADD-By-LEETEN  12/29/2012-BEGIN
+	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	cSimpleNDFile._SetBoolean(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, true);
+	cSimpleNDFile._DecodeSAT();
+	LIBCLOCK_END(bIsPrintingTiming);
+	// ADD-By-LEETEN  12/29/2012-END
+
 	if(iIsTestingQuery)
 	{
 		// ADD-BY-LEETEN 12/28/2012-BEGIN

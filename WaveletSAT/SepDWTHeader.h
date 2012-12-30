@@ -99,6 +99,14 @@ protected:
 		*/
 		size_t uNrOfUpdatingCoefs;
 
+		// ADD-BY-LEETEN 12/29/2012-BEGIN
+		vector< size_t >			vuMapLocalToGlobal;	//!< Map 1D local index to its global index
+		vector< vector<size_t> >	vvuGlobalBase;		//!< D-dim global base foe each Wavelet
+		vector< size_t >			vuGlobalBase;		//!< 1-dim global base foe each Wavelet
+		vector< vector<size_t> >	vvuLocalLengths;	//!< vector of D-dim tuples as the coefficient lengths
+		vector< size_t >			vuNrsOfLocalCoefs;	//!< vector of #coefficients per wavele
+		// ADD-BY-LEETEN 12/29/2012-END
+
 		// ADD-BY-LEETEN 10/18/2012-BEGIN
 		#if	WITH_PRECOMPUTED_WAVELET_BASIS
 		//! The volume to store the wavelet basis for all updating coefficients.
@@ -180,27 +188,84 @@ public:
 		(
 			size_t uIndex,
 			vector<size_t>& vuLevel,
+			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
 			vector<size_t>& vuSubInLevel,
 			vector<size_t>& vuLevelBase,
 			vector<size_t>& vuLevelSize,
+			#else	// MOD-BY-LEETEN 12/29/2012-TO:
+			vector<size_t>& vuLocalCoefSub,
+			vector<size_t>& vuGlobalCoefBase,
+			vector<size_t>& vuLocalCoefLengths,
+			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			void *_Reserved = NULL
 		)
 		{
 			vector<size_t> vuSub;
 			_ConvertIndexToSub(uIndex, vuSub, vuCoefLengths);
 
-			vuLevelBase.resize(UGetNrOfDims());
-			vuLevelSize.resize(UGetNrOfDims());
-			vuSubInLevel.resize(UGetNrOfDims());
+			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
+			vuGlobalCoefBase.resize(UGetNrOfDims());
+			vuLocalCoefLengths.resize(UGetNrOfDims());
+			vuLocalCoefSub.resize(UGetNrOfDims());
+			#else	// MOD-BY-LEETEN 12/29/2012-TO:
+			if( UGetNrOfDims() != vuLevel.size() )				vuLevel.resize(UGetNrOfDims());
+			if( UGetNrOfDims() != vuGlobalCoefBase.size() )		vuGlobalCoefBase.resize(UGetNrOfDims());
+			if( UGetNrOfDims() != vuLocalCoefLengths.size() )	vuLocalCoefLengths.resize(UGetNrOfDims());
+			if( UGetNrOfDims() != vuLocalCoefSub.size() )		vuLocalCoefSub.resize(UGetNrOfDims());
+			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				vuLevel[d] = (!vuSub[d])?0:(size_t)(1 + floor(log( (double)vuSub[d]) / M_LN2));
-				vuLevelBase[d] = (!vuLevel[d])?0:(1 << (vuLevel[d] - 1));
-				vuLevelSize[d] = (!vuLevel[d])?1:(1 << (vuLevel[d] - 1));
-				vuSubInLevel[d] = vuSub[d] - vuLevelBase[d];
+				vuGlobalCoefBase[d] = (!vuLevel[d])?0:(1 << (vuLevel[d] - 1));
+				vuLocalCoefLengths[d] = (!vuLevel[d])?1:(1 << (vuLevel[d] - 1));
+				vuLocalCoefSub[d] = vuSub[d] - vuGlobalCoefBase[d];
 			}
 		}
 		// ADD-BY-LEETEN 12/28/2012-END
+
+		// ADD-BY-LEETEN 12/29/2012-BEGIN
+		virtual
+		void
+		_ConvertWaveletToLevels
+		(
+			size_t	uWavelet,
+			vector<size_t>& vuGlobalCoefBase,
+			vector<size_t>& vuLocalCoefLengths,
+			size_t& uNrOfLocalCoefs,
+			void *_Reserved = NULL
+		)
+		{
+			if( UGetNrOfDims() != vuGlobalCoefBase.size() )
+				vuGlobalCoefBase.resize(UGetNrOfDims());
+			if( UGetNrOfDims() != vuLocalCoefLengths.size() )
+				vuLocalCoefLengths.resize(UGetNrOfDims());
+			copy(this->vvuGlobalBase[uWavelet].begin(), this->vvuGlobalBase[uWavelet].end(), vuGlobalCoefBase.begin());
+			copy(this->vvuLocalLengths[uWavelet].begin(), this->vvuLocalLengths[uWavelet].end(), vuLocalCoefLengths.begin());
+			uNrOfLocalCoefs = vuNrsOfLocalCoefs[uWavelet];
+		}
+
+		virtual
+		void
+		_ConvertWaveletSubToLevels
+		(
+			vector<size_t>	vuWaveletSub,
+			vector<size_t>& vuGlobalCoefBase,
+			vector<size_t>& vuLocalCoefLengths,
+			void *_Reserved = NULL
+		)
+		{
+			if( UGetNrOfDims() != vuGlobalCoefBase.size() )
+				vuGlobalCoefBase.resize(UGetNrOfDims());
+			if( UGetNrOfDims() != vuLocalCoefLengths.size() )
+				vuLocalCoefLengths.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				size_t uLevel = vuWaveletSub[d];
+				vuGlobalCoefBase[d] = (!uLevel)?0:(1 << (uLevel - 1));
+				vuLocalCoefLengths[d] = (!uLevel)?1:(1 << (uLevel - 1));
+			}
+		}
+		// ADD-BY-LEETEN 12/29/2012-END
 
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		virtual
@@ -400,6 +465,41 @@ public:
 				vdWaveletSums[c] = (double)lProd;
 			}
 			#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
+			
+			// ADD-BY-LEETEN 12/29/2012-BEGIN
+			vvuGlobalBase.resize(uNrOfUpdatingCoefs);
+			vuGlobalBase.resize(uNrOfUpdatingCoefs);
+			vvuLocalLengths.resize(uNrOfUpdatingCoefs);
+			vuNrsOfLocalCoefs.resize(uNrOfUpdatingCoefs);
+			vuMapLocalToGlobal.resize(uNrOfCoefs);
+
+			vector<size_t> vuLevel;
+			for(size_t i = 0, w = 0; w < uNrOfUpdatingCoefs; w++)
+			{
+				_ConvertIndexToSub(w, vuLevel, vuDimLevels);
+				vvuGlobalBase[w].resize(vuLevel.size());
+				vvuLocalLengths[w].resize(vuLevel.size());
+				size_t uLength = 1;
+				for(size_t d = 0; d < vuLevel.size(); d++)
+				{
+					size_t uLevel = vuLevel[d];
+					vvuGlobalBase[w][d] = (!uLevel)?0:(1 << (uLevel - 1));
+					vvuLocalLengths[w][d] = (!uLevel)?1:(1 << (uLevel - 1));
+					uLength *= vvuLocalLengths[w][d];
+				}
+				vuNrsOfLocalCoefs[w] = uLength;
+
+				vector<size_t> vuLocalCoef;		vuLocalCoef.resize(UGetNrOfDims());
+				vector<size_t> vuGlobalCoef;	vuGlobalCoef.resize(UGetNrOfDims());
+				for(size_t lc = 0; lc < uLength; lc++, i++)
+				{
+					_ConvertIndexToSub(lc, vuLocalCoef, vvuLocalLengths[w]);
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+						vuGlobalCoef[d] = vvuGlobalBase[w][d] + vuLocalCoef[d];
+					vuMapLocalToGlobal[i] = UConvertSubToIndex(vuGlobalCoef, vuCoefLengths);
+				}
+			}
+			// ADD-BY-LEETEN 12/29/2012-END
 		}
 
 		//! Set up the data dimensions

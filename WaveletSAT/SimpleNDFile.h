@@ -57,5 +57,23 @@ public:
 		this->valueMin = valueMin;
 		this->valueMax = valueMax;
 	}
+
+	// ADD-BY-LEETEN 12/29/2012-BEGIN
+	void
+	_DecodeSAT(
+		void *_Reserved = NULL
+	)
+	{
+		fill(vusCachedNextOffsets.begin(), vusCachedNextOffsets.end(), (unsigned short)0);
+		// fill(vusCachedBins.begin(),	vusCachedBins.end(), (unsigned short)0);
+		// fill(vCachedValues.begin(),	vCachedValues.end(), (WT)0);
+		vector<DT> vSAT;
+		for(size_t b = 0; b < UGetNrOfBins(); b++)
+		{
+			// LOG_VAR(b);
+			_DecodeBin(b, vSAT);
+		}
+	}
+	// ADD-BY-LEETEN 12/29/2012-END
 };
 
