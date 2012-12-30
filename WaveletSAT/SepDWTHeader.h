@@ -55,7 +55,9 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	class CSepDWTHeader:
-		public CHeaderBase	// ADD-BY-LEETEN 09/29/2012
+		// MOD-BY-LEETEN 12/30/2012-FROM:		public CHeaderBase	// ADD-BY-LEETEN 09/29/2012
+		virtual public CHeaderBase	
+		// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -106,6 +108,11 @@ protected:
 		vector< vector<size_t> >	vvuLocalLengths;	//!< vector of D-dim tuples as the coefficient lengths
 		vector< size_t >			vuNrsOfLocalCoefs;	//!< vector of #coefficients per wavele
 		// ADD-BY-LEETEN 12/29/2012-END
+
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		//! The base of all scanlines for all dimensions
+		vector< vector<size_t> > vvuSliceScanlineBase;
+		// ADD-BY-LEETEN 12/30/2012-END
 
 		// ADD-BY-LEETEN 10/18/2012-BEGIN
 		#if	WITH_PRECOMPUTED_WAVELET_BASIS
@@ -500,6 +507,23 @@ public:
 				}
 			}
 			// ADD-BY-LEETEN 12/29/2012-END
+
+			// ADD-BY-LEETEN 12/30/2012-BEGIN
+			vvuSliceScanlineBase.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vector<size_t> vuSliceCoefLengths = vuCoefLengths;
+				vuSliceCoefLengths[d] = 1;
+				size_t uNrOfScanlines = uNrOfCoefs / vuCoefLengths[d];
+				vvuSliceScanlineBase[d].resize(uNrOfScanlines);
+				for(size_t s = 0; s < uNrOfScanlines; s++)
+				{
+					vector<size_t> vuScanlineBase;
+					_ConvertIndexToSub(s, vuScanlineBase, vuSliceCoefLengths);
+					vvuSliceScanlineBase[d][s] = UConvertSubToIndex(vuScanlineBase, vuCoefLengths);
+				}
+			}
+			// ADD-BY-LEETEN 12/30/2012-END
 		}
 
 		//! Set up the data dimensions

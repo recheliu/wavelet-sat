@@ -142,8 +142,8 @@ main(int argn, char* argv[])
 	// load the WaveletSAT
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
-	// MOD-BY-LEETEN 12/29/2012-FROM:	cSimpleNDFile._SetLong(CSimpleNDFile<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
-	cSimpleNDFile._SetLong(cSimpleNDFile.SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	// MOD-BY-LEETEN 12/29/2012-FROM:	cSimpleNDFile._SetInteger(CSimpleNDFile<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	cSimpleNDFile._SetInteger(cSimpleNDFile.SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 	// MOD-BY-LEETEN 12/29/2012-END
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
@@ -154,16 +154,32 @@ main(int argn, char* argv[])
 
 	// ADD-By-LEETEN  12/29/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 	cSimpleNDFile._SetBoolean(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, true);
 	cSimpleNDFile._DecodeSAT();
-	LIBCLOCK_END(bIsPrintingTiming);
+	#else	// MOD-BY-LEETEN 12/30/2012-TO:
+	cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
+	size_t uWinSize = 6;
+	vector<int> viLeft, viRight;
+	for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
+	{
+		viLeft.push_back(-(int)uWinSize);
+		viRight.push_back(+(int)uWinSize);
+	}
+	cSimpleNDFile._ComputeEntropy(viLeft, viRight);
+	#endif	// MOD-BY-LEETEN 12/30/2012-END
+	LIBCLOCK_END(bIsPrintingTiming);	
 	// ADD-By-LEETEN  12/29/2012-END
 
 	if(iIsTestingQuery)
 	{
+		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
 		// MOD-BY-LEETEN 12/28/2012-FROM:	cSimpleNDFile._SetBoolean(WaveletSAT::CSATSepDWTOutOfCore<double>::RESET_IO_COUNTERS, 0);
-		cSimpleNDFile._SetBoolean(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+		// MOD-BY-LEETEN 12/30/2012-FROM:	cSimpleNDFile._SetBoolean(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+		cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+		// MOD-BY-LEETEN 12/30/2012-END
 		// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
 		////////////////////////////////////////////////////////////////////////////
@@ -191,7 +207,7 @@ main(int argn, char* argv[])
 		// decide the threshld to filter numerical error
 		double dThreshold = cSimpleNDFile.DGetThreshold();
 
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		// DEL-BY-LEETEN 12/30/2012:	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 		size_t uNrOfIHs = 1 << uNrOfDims;
 		vector< vector<size_t> > vvuOffsets;
@@ -272,13 +288,13 @@ main(int argn, char* argv[])
 		LIBCLOCK_END(bIsPrintingTiming);
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
 		#if	0	// MOD-BY-LEETEN 12/28/2012-FROM:
-		long lAccumNrOfIORequests;	cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
-		long lMaxNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
-		long lMinNrOfIORequests;		cSimpleNDFile._GetLong(WaveletSAT::CSATSepDWTOutOfCore<double>::MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		long lAccumNrOfIORequests;	cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		#else	// MOD-BY-LEETEN 12/28/2012-TO:
-		long lAccumNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
-		long lMaxNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
-		long lMinNrOfIORequests;		cSimpleNDFile._GetLong(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		#endif	// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
 	}

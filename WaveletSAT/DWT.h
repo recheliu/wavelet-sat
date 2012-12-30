@@ -1,5 +1,7 @@
 #pragma once
 
+#include <valarray>	// ADD-BY-LEETEN 12/30/2012
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 
@@ -41,8 +43,13 @@ namespace WaveletSAT
 	void
 	_IDWT1D
 	(
+		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 		vector<T>& vSrc,
 		vector<T>& vDst,
+		#else	// MOD-BY-LEETEN 12/30/2012-TO:
+		valarray<T>& vSrc,
+		valarray<T>& vDst,
+		#endif	// MOD-BY-LEETEN 12/30/2012-END
 		size_t uLength,
 		size_t uLevel,
 		void* _Reserved = NULL

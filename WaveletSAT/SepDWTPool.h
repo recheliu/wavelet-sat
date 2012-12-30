@@ -32,6 +32,7 @@ namespace WaveletSAT
 	*/
 	template<typename ST, typename IT = size_t>
 	class CSepDWTPool
+		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
 	protected:	
 		// the pool of coefficients 

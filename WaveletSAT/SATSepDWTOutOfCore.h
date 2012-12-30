@@ -46,8 +46,13 @@ namespace WaveletSAT
 	// MOD-BY-LEETEN 12/29/2012-END
 	// The class that access the coefficients from files (in NetCDF format)
 	class CSATSepDWTOutOfCore:
+		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 		public CSATSepDWTNetCDF,
 		public CSepDWTHeader
+		#else	// MOD-BY-LEETEN 12/30/2012-TO:
+		virtual public CSATSepDWTNetCDF,
+		virtual public CSepDWTHeader
+		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
@@ -153,20 +158,35 @@ public:
 
 		virtual	
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL
 		)
 		{
-			CSATSepDWTNetCDF::_SetLong(eName, lValue);
-			CSepDWTHeader::_SetLong(eName, lValue);
+			CSATSepDWTNetCDF::_SetInteger(eName, lValue);
+			CSepDWTHeader::_SetInteger(eName, lValue);
+			// ADD-BY-LEETEN 12/30/2012-BEGIN
+			switch(eName)
+			{
+			case RESET_IO_COUNTERS:
+				uAccumNrOfIORequest = 0;
+				uMaxNrOfIORequest = 0;
+				uMinNrOfIORequest = uNrOfUpdatingCoefs;
+				uNrOfQueries = 0;
+				break;
+
+			case PRINT_DECODE_BIN_TIMING:
+				bIsPrintingDecodeBinTiming = (!lValue)?false:true;
+				break;
+			}
+			// ADD-BY-LEETEN 12/30/2012-END
 		}
 
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
 		virtual	
 		void
-		_GetLong(
+		_GetInteger(
 			int eName,
 			long *plValue,
 			void* _Reserved = NULL
@@ -186,6 +206,7 @@ public:
 			}
 		}
 
+		#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 		virtual
 		void
 		_SetBoolean
@@ -210,6 +231,7 @@ public:
 			// ADD-BY-LEETEN 12/29/2012-END
 			}
 		}
+		#endif	// DEL-BY-LEETEN 12/30/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
 
 		virtual
@@ -994,7 +1016,9 @@ public:
 		_DecodeBin
 		(
 			unsigned short usBin,
-			vector<DT> &vSAT,
+			// MOD-BY-LEETEN 12/30/2012-FROM:			vector<DT> &vSAT,
+			valarray<DT> &vSAT,
+			// MOD-BY-LEETEN 12/30/2012-END
 			void *_Reserved = NULL
 		)
 		{
@@ -1050,6 +1074,7 @@ public:
 					// move the cache bin till it is great than or equal to the given bin
 					if( !this->vbFlagsCoefInCore[gc] )
 					{
+						#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 						if( usCount )
 						{
 							for(; usNextOffset < usCount; usNextOffset++)
@@ -1060,7 +1085,17 @@ public:
 								if( usFetchedBin >= usBin )
 									break;
 							}
-						}	
+						}
+						#else	// MOD-BY-LEETEN 12/30/2012-TO:
+						for(; usNextOffset < usCount; usNextOffset++)
+						{
+							// if( !usNextOffset || usBin < usFetchedBin)  
+							usFetchedBin = pCoefBins[uLocalValueBase + (size_t)usNextOffset];
+							FetchedValue = pCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							if( usFetchedBin >= usBin )
+								break;
+						}
+						#endif	// MOD-BY-LEETEN 12/30/2012-END
 					}
 					else
 					{
@@ -1074,7 +1109,11 @@ public:
 					}
 
 					// if the cached bin is equal to the given bin, the value is the cached one
+					#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 					vSAT[gc] = ( usCount > 0 && usFetchedBin == usBin )?FetchedValue:(WT)0;
+					#else	// MOD-BY-LEETEN 12/30/2012-TO:
+					vSAT[gc] = ( 0 < usCount && usNextOffset < usCount && usFetchedBin == usBin )?FetchedValue:(WT)0;
+					#endif	// MOD-BY-LEETEN 12/30/2012-END
 
 					// update the cache 
 					vusCachedNextOffsets[gc] = usNextOffset;
@@ -1098,10 +1137,14 @@ public:
 				if( 1 == uCoefLength )
 					continue;
 
-				vector<WT> vSrc;
+				// MOD-BY-LEETEN 12/30/2012-FROM:				vector<WT> vSrc;
+				valarray<WT> vSrc;
+				// MOD-BY-LEETEN 12/30/2012-END
 				vSrc.resize(uCoefLength);
 
-				vector<WT> vDst;
+				// MOD-BY-LEETEN 12/30/2012-FROM:				vector<WT> vDst;
+				valarray<WT> vDst;
+				// MOD-BY-LEETEN 12/30/2012-END
 				vDst.resize(uCoefLength);
 
 				/*
@@ -1111,23 +1154,34 @@ public:
 
 				size_t uNrOfLevels = vuDimLevels[d] - 1;
 				size_t uNrOfScanLines = this->uNrOfCoefs / uCoefLength;
-
+				#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 				vuOtherCoefLengths = vuCoefLengths;
 				vuOtherCoefLengths[d] = 1;
+				#endif	// DEL-BY-LEETEN 12/30/2012-END
 
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
+					#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 					_ConvertIndexToSub(i, vuScanLineBase, vuOtherCoefLengths);
 					size_t uScanLineBase = UConvertSubToIndex(vuScanLineBase, vuCoefLengths);
+					#else	// MOD-BY-LEETEN 12/30/2012-TO:
+					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
+					// MOD-BY-LEETEN 12/30/2012-END
+
+					#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 					for(size_t j = 0, uScanLineOffset = uScanLineBase; j < uCoefLength; j++, uScanLineOffset += uOffset)
 						vSrc[j] = vSAT[uScanLineOffset];
-
 					copy(vSrc.begin(), vSrc.end(), vDst.begin());
-
+					#else	// MOD-BY-LEETEN 12/30/2012-TO:
+					vSrc = vSAT[slice(uScanlineBase, uCoefLength, uOffset)];
+					#endif	// MOD-BY-LEETEN 12/30/2012-END
 					_IDWT1D(vSrc, vDst, 2, uNrOfLevels - 1);
-
+					#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 					for(size_t j = 0, uScanLineOffset = uScanLineBase; j < uCoefLength; j++, uScanLineOffset += uOffset)
 						vSAT[uScanLineOffset] = vDst[j];
+					#else	// MOD-BY-LEETEN 12/30/2012-TO:
+					vSAT[slice(uScanlineBase, uCoefLength, uOffset)] = vDst;
+					#endif	// MOD-BY-LEETEN 12/30/2012-END
 				}
 			}
 			LIBCLOCK_END(bIsPrintingDecodeBinTiming);

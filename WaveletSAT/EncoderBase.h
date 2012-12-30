@@ -29,6 +29,7 @@ namespace WaveletSAT
 	*/
 	template<typename DT, typename ST>
 	class CEncoderBase
+		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
 protected:	
 		//! Update the specified bin.

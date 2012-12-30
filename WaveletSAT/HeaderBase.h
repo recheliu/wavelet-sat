@@ -4,7 +4,8 @@
 using namespace std;
 #include <math.h>
 
-#include "utils.h" // ADD-BY-LEETEN 10/30/2012
+#include "Base.h"	// ADD-BY-LEETEN 12/30/2012
+#include "utils.h"	// ADD-BY-LEETEN 10/30/2012
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -28,6 +29,7 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	class CHeaderBase
+		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
 protected:	
 		//! The size of the allocated memory for the coefficients
@@ -102,7 +104,7 @@ public:
 
 		virtual
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL

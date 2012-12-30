@@ -26,8 +26,13 @@ namespace WaveletSAT
 	*/
 	template<typename DT, typename ST = double>
 	class CSATSepDWTEncoder:
+		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 		public CSATEncoder<DT, ST>,
 		public CWaveletSATEncoder<DT>
+		#else	// MOD-BY-LEETEN 12/30/2012-TO:
+		virtual public CSATEncoder<DT, ST>,
+		virtual public CWaveletSATEncoder<DT>
+		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		////////////////////////////////////////////////////////////////////
@@ -60,17 +65,17 @@ public:
 
 		virtual
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL
 		)
 		{
 //			if( CSATEncoder<DT, ST>::PARAMETER_BEGIN <= eName && eName < CSATEncoder<DT, ST>::PARAMETER_END )
-			CSATEncoder<DT, ST>::_SetLong(eName, lValue);
+			CSATEncoder<DT, ST>::_SetInteger(eName, lValue);
 
 //			if( CWaveletSATEncoder<DT>::PARAMETER_BEGIN <= eName && eName < CWaveletSATEncoder<DT>::PARAMETER_END )
-			CWaveletSATEncoder<DT>::_SetLong(eName, lValue);
+			CWaveletSATEncoder<DT>::_SetInteger(eName, lValue);
 		}
 
 		//! Compute statistics of the compressed result.

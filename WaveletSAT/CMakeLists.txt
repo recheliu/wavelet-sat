@@ -25,6 +25,8 @@ PROJECT(WaveletSAT)
 
 # The source codes
 set(HEADER_FILES
+		Base.h			# ADD-BY-LEETEN 12/30/2012
+		
 		HeaderBase.h
 		EncoderBase.h
 		SATEncoder.h

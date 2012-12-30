@@ -45,8 +45,13 @@ namespace WaveletSAT
 	*/
 	template<typename DT, typename ST>
 	class CSATFileEncoder:
+		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 		public CHeaderBase,
 		public CEncoderBase<DT, ST>
+		#else	// MOD-BY-LEETEN 12/30/2012-TO:
+		virtual public CHeaderBase,
+		virtual public CEncoderBase<DT, ST>
+		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		//! The storage to store the original data.
@@ -106,7 +111,7 @@ public:
 		// ADD-BY-LEETEN 11/09/2012-BEGIN
 		virtual
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL
@@ -118,8 +123,8 @@ public:
 				iDeflateLevel = (int)lValue;
 				break;
 			}
-			CHeaderBase::_SetLong(eName, lValue);
-			// CEncoderBase<DT, ST>::_SetLong(eName, lValue);
+			CHeaderBase::_SetInteger(eName, lValue);
+			// CEncoderBase<DT, ST>::_SetInteger(eName, lValue);
 		}
 		// ADD-BY-LEETEN 11/09/2012-END
 

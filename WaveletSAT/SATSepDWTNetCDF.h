@@ -30,6 +30,7 @@ namespace WaveletSAT
 	For each coefficient, the value and ID of all bins are store in a 1D pool. The offset to the pool and the #non-zero bins are store in an D-dim array.
 	*/
 	class CSATSepDWTNetCDF
+		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
 protected:	
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
@@ -113,7 +114,7 @@ public:
 
 		virtual	
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL

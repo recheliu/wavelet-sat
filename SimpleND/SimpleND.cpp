@@ -81,7 +81,7 @@ main(int argn, char* argv[])
 	size_t uWinSize = 1;
 	size_t uNrOfBins = iNrOfBins;
 
-	cSimpleND._SetLong(CSimpleND<int>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
+	cSimpleND._SetInteger(CSimpleND<int>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 
 	// create a lookup table to shuffule the value
 	vector<int> viShuffleTable;

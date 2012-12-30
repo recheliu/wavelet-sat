@@ -56,9 +56,15 @@ namespace WaveletSAT
 	*/
 	template<typename T>
 	class CWaveletSATEncoder:
+		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
 		public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
 		public CSepDWTHeader,
 		public CEncoderBase<T, double>	
+		#else	// MOD-BY-LEETEN 12/30/2012-TO:
+		virtual public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
+		virtual public CSepDWTHeader,
+		virtual public CEncoderBase<T, double>	
+		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 	  // ADD-BY-LEETEN 12/15/2012-BEGIN
@@ -379,17 +385,18 @@ public:
 
 		virtual	
 		void
-		_SetLong(
+		_SetInteger(
 			int eName,
 			long lValue,
 			void* _Reserved = NULL
 		)
 		{
-		  CSATSepDWTNetCDF::_SetLong(eName, lValue);
-		  CSepDWTHeader::_SetLong(eName, lValue);
-		  // CEncoderBase<T, double>::_SetLong(eName, lValue);
+		  CSATSepDWTNetCDF::_SetInteger(eName, lValue);
+		  CSepDWTHeader::_SetInteger(eName, lValue);
+		  // CEncoderBase<T, double>::_SetInteger(eName, lValue);
 		}
 
+		#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 		virtual	
 		void
 		_SetBoolean(
@@ -399,6 +406,7 @@ public:
 		)
 		{
 		}
+		#endif	// DEL-BY-LEETEN 12/30/2012-END
 
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
 		virtual 
