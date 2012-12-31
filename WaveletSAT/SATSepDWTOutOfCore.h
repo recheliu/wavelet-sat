@@ -526,8 +526,12 @@ public:
 			// read the file size
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if		WITH_BOOST
+		  #if 0 // MOD-BY-LEETEN 12/30/2012-FROM:
 			fs::path pathNativePath( szFilepath, fs::native );
 			size_t uFileSize = fs::file_size( pathNativePath );
+			#else // MOD-BY-LEETEN 12/30/2012-TO:
+			size_t uFileSize = fs::file_size( szFilepath );
+			#endif // MOD-BY-LEETEN 12/30/2012-END
 			#else	// #if WITH_BOOST
 			// ADD-BY-LEETEN 12/28/2012-END
 			FILE* fp = fopen(szFilepath, "rb");
@@ -610,7 +614,11 @@ public:
 			// ADD-BY-LEETEN 12/26/2012-END
 
 			vector<size_t> vuDimLengths;
+			#if 0 			// MOD-BY-LEETEN 12/30/2012-FROM:
 			for(size_t t = 0; t < NR_OF_DIM_TYPES; t++)
+			  #else // MOD-BY-LEETEN 12/30/2012-TO:
+			  for(size_t t = 0; t < (size_t)NR_OF_DIM_TYPES; t++)
+			    #endif // MOD-BY-LEETEN 12/30/2012-END
 				for(size_t d = 0; d < uNrOfDims; d++)
 				{
 					char szDimName[NC_MAX_NAME+1];

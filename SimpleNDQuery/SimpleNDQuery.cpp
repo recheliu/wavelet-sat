@@ -158,7 +158,7 @@ main(int argn, char* argv[])
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
-	assert(szVolFilePath);
+	// DEL-BY-LEETEN 12/30/2012: assert(szVolFilePath);
 	assert(szNcFilePath);
 	LOG_VAR(szNcFilePath);	// ADD-BY-LEETEN 12/25/2012
 
@@ -198,6 +198,7 @@ main(int argn, char* argv[])
 
 	if(iIsTestingQuery)
 	{
+	assert(szVolFilePath); // ADD-BY-LEETEN 12/30/2012
 		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
 
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
@@ -322,11 +323,18 @@ main(int argn, char* argv[])
 		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		#endif	// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+	}
 
+	if( szEntropyFilepathPrefix )
+	  {
+	    // ADD-BY-LEETEN 12/30/2012-END
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
 		/////////////////////////////////////////////////////////////
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
+		// MOD-BY-LEETEN 12/31/2012-FROM: cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
+		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, bIsPrintingTiming);
+		// MOD-BY-LEETEN 12/31/2012-END
 		vector<int> viLeft, viRight;
 		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
 		{
@@ -371,8 +379,15 @@ main(int argn, char* argv[])
 		boost::shared_array<size_t> puSize(new size_t[cSimpleNDFile.UGetNrOfDims()]);
 		#endif	// #if	!WITH_SMART_PTR	
 		// ADD-BY-LEETEN 12/30/2012-END
+		#if 0 		// MOD-BY-LEETEN 12/30/2012-FROM:
 		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
 			puSize[d] = nin->axis[d].size;
+		#else // MOD-BY-LEETEN 12/30/2012-TO:
+		vector<size_t> vuDimLengths;
+		cSimpleNDFile._GetDataSize(vuDimLengths);
+		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
+		  puSize[d] = vuDimLengths[d];
+		#endif // MOD-BY-LEETEN 12/30/2012-END
 
 		Nrrd *nrrdOut = nrrdNew();
 		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
@@ -383,10 +398,15 @@ main(int argn, char* argv[])
 
 		// now move the .nhdr and .raw to the destination folder
 		#if		WITH_BOOST
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		if( pathNhdrLeaf != pathNhdr )
+		  {
+		    // ADD-BY-LEETEN 12/30/2012-END
 		remove(pathNhdr);
 		remove(pathRaw);
 		rename(pathNhdrLeaf,	pathNhdr);
 		rename(pathRawLeaf,		pathRaw);
+		  } // ADD-BY-LEETEN 12/30/2012
 		#else	// #if	WITH_BOOST
 		#endif	// #if	WITH_BOOST
 		LOG_VAR(szEntropyNhdrFilepath);	// ADD-BY-LEETEN 12/30/2012

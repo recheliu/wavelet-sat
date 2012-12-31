@@ -89,13 +89,21 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+	  #if 0 	  // MOD-BY-LEETEN 12/30/2012-FROM:
 		fill(vusCachedNextOffsets.begin(), vusCachedNextOffsets.end(), (unsigned short)0);
+		#else // MOD-BY-LEETEN 12/30/2012-TO:
+		fill(this->vusCachedNextOffsets.begin(), this->vusCachedNextOffsets.end(), (unsigned short)0); 
+		#endif // MOD-BY-LEETEN 12/30/2012-END
 		// fill(vusCachedBins.begin(),	vusCachedBins.end(), (unsigned short)0);
 		// fill(vCachedValues.begin(),	vCachedValues.end(), (WT)0);
 		// MOD-BY-LEETEN 12/30/2012-FROM:		vector<DT> vSAT;
 		valarray<DT> vSAT;
 		// MOD-BY-LEETEN 12/30/2012-END
+		#if 0 		// MOD-BY-LEETEN 12/30/2012-FROM:
 		for(size_t b = 0; b < UGetNrOfBins(); b++)
+		  #else // MOD-BY-LEETEN 12/30/2012-TO:
+		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+		  #endif // MOD-BY-LEETEN 12/30/2012-END
 		{
 			// LOG_VAR(b);
 			_DecodeBin(b, vSAT);
@@ -114,23 +122,44 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+	  // ADD-BY-LEETEN 12/30/2012-BEGIN
+		const size_t uDataSize = this->uDataSize;
+		const size_t uNrOfCoefs = this->uNrOfCoefs;
+		const vector<size_t>& vuDimLengths = this->vuDimLengths;
+		const vector<size_t>& vuCoefLengths = this->vuCoefLengths;
+		// ADD-BY-LEETEN 12/30/2012-END
 		////////////////////////////////////////////////////////
 		// decide the offsets
+		#if 0 		// MOD-BY-LEETEN 12/30/2012-FROM:
 		size_t uNrOfCorners = 1<<UGetNrOfDims();
 		vector< size_t > vuCenter;	vuCenter.resize(UGetNrOfDims());
 		for(size_t d = 0; d < UGetNrOfDims(); d++)
 			vuCenter[d] = vuCoefLengths[d]/2;
+		#else // MOD-BY-LEETEN 12/30/2012-TO:
+		size_t uNrOfCorners = (size_t)1<<this->UGetNrOfDims();
+		vector< size_t > vuCenter;	vuCenter.resize(this->UGetNrOfDims());
+		for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+			vuCenter[d] = vuCoefLengths[d]/2;
+		#endif // MOD-BY-LEETEN 12/30/2012-END
 		size_t uCenter = WaveletSAT::UConvertSubToIndex(vuCenter, vuCoefLengths);
 
 		vector< long long > vllOffsets;	vllOffsets.resize(uNrOfCorners);
 		vector< int > viSigns;			viSigns.resize(uNrOfCorners);
 		for(size_t i = 0; i < uNrOfCorners; i++)
 		{
+		  #if 0 		  // MOD-BY-LEETEN 12/30/2012-FROM:
 			vector<size_t> vuSub;	vuSub.resize(UGetNrOfDims());
+			#else // MOD-BY-LEETEN 12/30/2012-TO:
+			vector<size_t> vuSub;	vuSub.resize(this->UGetNrOfDims());
+			#endif // MOD-BY-LEETEN 12/30/2012-END
 			size_t uSign = 0; 
 			for(size_t 
 				d = 0, j = i; 
+			    #if 0 			    // MOD-BY-LEETEN 12/30/2012-FROM:
 				d < UGetNrOfDims(); 
+			    #else // MOD-BY-LEETEN 12/30/2012-TO:
+				d < this->UGetNrOfDims(); 
+			    #endif // MOD-BY-LEETEN 12/30/2012-END
 				d++, j /= 2)
 			{
 				size_t uOffset = (0 == j % 2)?0:1;
@@ -147,7 +176,11 @@ public:
 		valarray<DT> vLocalHist;	vLocalHist.resize(uNrOfCoefs);
 		valarray<DT> vTempEntropyField;	vTempEntropyField.resize(uNrOfCoefs);
 		valarray<DT> vSum;			vSum.resize(uNrOfCoefs);
+		#if 0 		// MOD-BY-LEETEN 12/30/2012-FROM:
 		for(size_t b = 0; b < UGetNrOfBins(); b++)
+		  #else // MOD-BY-LEETEN 12/30/2012-TO:
+		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
+		  #endif // MOD-BY-LEETEN 12/30/2012-END
 		{
 			_DecodeBin(b, vSAT);
 
@@ -176,7 +209,11 @@ public:
 			WaveletSAT::_ConvertIndexToSub(d, vuSub, vuDimLengths);
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			bool bIsNearBorder = false;
+			#if 0 			// MOD-BY-LEETEN 12/30/2012-FROM:
 			for(size_t dim = 0; dim < UGetNrOfDims(); dim++)
+			  #else // MOD-BY-LEETEN 12/30/2012-TO:
+			for(size_t dim = 0; dim < this->UGetNrOfDims(); dim++)
+			  #endif // MOD-BY-LEETEN 12/30/2012-END
 				if( 0 > (int)vuSub[dim] + viLeft[dim] || 
 						(int)vuSub[dim] + viLeft[dim] >= vuDimLengths[dim] ||
 					0 > (int)vuSub[dim] + viRight[dim] || 

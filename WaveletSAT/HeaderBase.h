@@ -56,7 +56,12 @@ public:
 			void *_Reserved = NULL
 		) const
 		{
+		  #if 0  // MOD-BY-LEETEN 12/30/2012-FROM:
 			vuDataSize.clear();
+		        #else // MOD-BY-LEETEN 12/30/2012-TO:
+			if( UGetNrOfDims() != vuDataSize.size() )
+			  vuDataSize.resize(UGetNrOfDims());
+			#endif // MOD-BY-LEETEN 12/30/2012-END
 			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDataSize.begin());
 		}
 		// ADD-BY-LEETEN 12/16/2012-END
