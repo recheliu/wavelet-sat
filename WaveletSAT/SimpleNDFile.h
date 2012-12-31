@@ -108,6 +108,9 @@ public:
 	_ComputeEntropy(
 		vector<int> viLeft,
 		vector<int> viRight,
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		valarray<DT>& vEntropyField,
+		// ADD-BY-LEETEN 12/30/2012-END
 		void *_Reserved = NULL
 	)
 	{
@@ -162,12 +165,33 @@ public:
 		vTempEntropyField /= (DT)log(2.0);
 
 		// only keep the entropy field within the data range
-		valarray<DT> vEntropyField;	vEntropyField.resize(uDataSize);
+		// MOD-BY-LEETEN 12/30/2012-FROM:		valarray<DT> vEntropyField;	vEntropyField.resize(uDataSize);
+		if( uDataSize != vEntropyField.size() )
+			vEntropyField.resize(uDataSize);
+		// MOD-BY-LEETEN 12/30/2012-END
 		vector<size_t> vuSub;
 		for(size_t d = 0; d < uDataSize; d++)
 		{
 			vector<size_t> vuSub;
 			WaveletSAT::_ConvertIndexToSub(d, vuSub, vuDimLengths);
+			// ADD-BY-LEETEN 12/30/2012-BEGIN
+			bool bIsNearBorder = false;
+			for(size_t dim = 0; dim < UGetNrOfDims(); dim++)
+				if( 0 > (int)vuSub[dim] + viLeft[dim] || 
+						(int)vuSub[dim] + viLeft[dim] >= vuDimLengths[dim] ||
+					0 > (int)vuSub[dim] + viRight[dim] || 
+						(int)vuSub[dim] + viRight[dim] >= vuDimLengths[dim] )
+				{
+					bIsNearBorder = true;
+					break;
+				}
+
+			if( bIsNearBorder )
+			{
+				vEntropyField[d] = (DT)0;
+				continue;
+			}
+			// ADD-BY-LEETEN 12/30/2012-END
 			vEntropyField[d] = vTempEntropyField[WaveletSAT::UConvertSubToIndex(vuSub, vuCoefLengths)];
 		}
 	}

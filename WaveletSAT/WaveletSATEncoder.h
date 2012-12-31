@@ -26,7 +26,14 @@ using namespace std;
 #include "liblog.h"	
 
 // ADD-BY-LEETEN 12/12/2012-BEGIN
+#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 #include "libbuf.h"
+// ADD-BY-LEETEN 12/30/2012-BEGIN
+#else	// #if	!WITH_SMART_PTR	
+#include <boost/shared_array.hpp>
+#endif	// #if	!WITH_SMART_PTR	
+// ADD-BY-LEETEN 12/30/2012-END
+
 #if	WITH_NETCDF
 #include <netcdf.h>
 #include "lognc.h"
@@ -648,12 +655,28 @@ public:
 				TBuffer<TYPE_COEF_COUNT>	pHeaderCount;
 				TBuffer<TYPE_COEF_OFFSET>	pHeaderOffset;
 				#else	// MOD-BY-LEETEN 12/29/2012-TO:
+				#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
 				TBuffer<TYPE_COEF_OFFSET>	pLocalCoefOffsets;
+				#endif	// DEL-BY-LEETEN 12/30/2012-END
 				#endif	// MOD-BY-LEETEN 12/29/2012-END
-				
+
+				#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 				pLocalCoefCounts.alloc(uNrOfLocalCoefs);
 				pLocalCoefOffsets.alloc(uNrOfLocalCoefs);
+				#endif	// ADD-BY-LEETEN 12/30/2012-END
+
+				// ADD-BY-LEETEN 12/30/2012-BEGIN
+				#if	!WITH_SMART_PTR
+				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
+				TBuffer<TYPE_COEF_OFFSET>	pLocalCoefOffsets;
+				pLocalCoefCounts.alloc(uNrOfLocalCoefs);
+				pLocalCoefOffsets.alloc(uNrOfLocalCoefs);
+				#else		// #if	!WITH_SMART_PTR
+				boost::shared_array<TYPE_COEF_COUNT>	pLocalCoefCounts(new TYPE_COEF_COUNT[uNrOfLocalCoefs]);
+				boost::shared_array<TYPE_COEF_OFFSET>	pLocalCoefOffsets(new TYPE_COEF_OFFSET[uNrOfLocalCoefs]);
+				#endif		// #if	!WITH_SMART_PTR
+				// ADD-BY-LEETEN 12/30/2012-END
 
 				for(size_t bc = 0; bc < uNrOfLocalCoefs; bc++)
 				{
@@ -703,6 +726,7 @@ public:
 				puStart[0] = uNrOfWrittenValues;
 				puCount[0] = vpairLocalCoefBinValue.size();
 
+				#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 				// MOD-BY-LEETEN 12/29/2012-FROM:	TBuffer<TYPE_COEF_BIN> pCoefBins;
 				TBuffer<TYPE_COEF_BIN> pLocalCoefBins;
 				// MOD-BY-LEETEN 12/29/2012-END
@@ -712,6 +736,12 @@ public:
 				TBuffer<TYPE_COEF_VALUE> pLocalCoefValues;
 				// MOD-BY-LEETEN 12/29/2012-END
 				pLocalCoefValues.alloc(vpairLocalCoefBinValue.size());
+				// ADD-BY-LEETEN 12/30/2012-BEGIN
+				#else	// #if	!WITH_SMART_PTR	
+				boost::shared_array<TYPE_COEF_BIN>		pLocalCoefBins(new TYPE_COEF_BIN[vpairLocalCoefBinValue.size()]);
+				boost::shared_array<TYPE_COEF_VALUE>	pLocalCoefValues(new TYPE_COEF_VALUE[vpairLocalCoefBinValue.size()]);
+				#endif	// #if	!WITH_SMART_PTR	
+				// ADD-BY-LEETEN 12/30/2012-END
 
 				for(size_t c = 0; c < vpairLocalCoefBinValue.size(); c++)
 				  {

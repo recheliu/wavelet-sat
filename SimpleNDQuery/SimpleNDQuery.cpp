@@ -1,3 +1,10 @@
+// ADD-BY-LEETEN 12/30/2012-BEGIN
+#if		WITH_BOOST
+#include <boost/filesystem.hpp>
+using namespace boost::filesystem;
+#endif	//	#if	WITH_BOOST
+// ADD-BY-LEETEN 12/30/2012-END
+
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h> 
@@ -126,6 +133,22 @@ main(int argn, char* argv[])
 	_OPTAddBoolean(
 		"--is-verbose", &iIsVerbose, iIsVerbose);
 
+	// ADD-BY-LEETEN 12/30/2012-BEGIN
+	int iEntropyWinRadius = 1;
+	_OPTAddIntegerVector(
+		"--entropy-win-radius", 1,
+		&iEntropyWinRadius, iEntropyWinRadius);
+	_OPTAddComment("--entropy-win-radius", 
+		"Window Radius for entropy field computation");
+
+	char* szEntropyFilepathPrefix = NULL;
+	_OPTAddStringVector(
+		"--entropy-filepath-prefix", 1,
+		&szEntropyFilepathPrefix, szEntropyFilepathPrefix);
+	_OPTAddComment("--entropy-filepath-prefix", 
+		"Filepath prefix of the entropy field");
+	// ADD-BY-LEETEN 12/30/2012-END
+
 	int iSizeOfFullArrays = 0;
 	_OPTAddIntegerVector(
 		"--size-of-full-arrays", 1,
@@ -152,6 +175,7 @@ main(int argn, char* argv[])
 	cSimpleNDFile._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
 	// ADD-By-LEETEN  12/29/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
@@ -170,6 +194,7 @@ main(int argn, char* argv[])
 	#endif	// MOD-BY-LEETEN 12/30/2012-END
 	LIBCLOCK_END(bIsPrintingTiming);	
 	// ADD-By-LEETEN  12/29/2012-END
+	#endif	// DEL-BY-LEETEN 12/30/2012-END
 
 	if(iIsTestingQuery)
 	{
@@ -297,6 +322,76 @@ main(int argn, char* argv[])
 		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		#endif	// MOD-BY-LEETEN 12/28/2012-END
 		// ADD-BY-LEETEN 12/28/2012-END
+
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		/////////////////////////////////////////////////////////////
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
+		vector<int> viLeft, viRight;
+		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
+		{
+			viLeft.push_back(-iEntropyWinRadius);
+			viRight.push_back(+iEntropyWinRadius);
+		}
+		valarray<double> valEntropyField;
+		cSimpleNDFile._ComputeEntropy(viLeft, viRight, valEntropyField);
+		LIBCLOCK_END(bIsPrintingTiming);	
+
+		/////////////////////////////////////////////////////////////
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		// Setup the file name
+		ASSERT_OR_LOG(NULL != szEntropyFilepathPrefix, "");
+		char szEntropyNhdrFilepath[NC_MAX_NAME+1];		sprintf(szEntropyNhdrFilepath,		"%s.nhdr",			szEntropyFilepathPrefix);
+		char szEntropyRawFilepath[NC_MAX_NAME+1];		sprintf(szEntropyRawFilepath,		"%s.raw",			szEntropyFilepathPrefix);
+		#if		WITH_BOOST
+		path pathNhdr(szEntropyNhdrFilepath);
+		path pathNhdrLeaf = pathNhdr.leaf();
+		path pathNhdrDir =	pathNhdr.branch_path();
+		path pathRaw(szEntropyRawFilepath);
+		path pathRawLeaf = pathRaw.leaf();
+		strcpy(szEntropyNhdrFilepath, pathNhdrLeaf.string().c_str());
+		#else	// #if	WITH_BOOST
+		#endif	// #if	WITH_BOOST
+
+		//////////////////////////////////////////////
+		// save the entropy field in Nrrd format
+		#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
+		TBuffer<float> pfEntropyField;		pfEntropyField.alloc(valEntropyField.size());
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		#else	// #if	!WITH_SMART_PTR
+		boost::shared_array<float> pfEntropyField(new float[valEntropyField.size()]);
+		#endif	// #if	!WITH_SMART_PTR
+		// ADD-BY-LEETEN 12/30/2012-END
+		for(size_t d = 0; d < valEntropyField.size(); d++)
+			pfEntropyField[d] = (float)valEntropyField[d];
+		#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
+		TBuffer<size_t> puSize;				puSize.alloc(cSimpleNDFile.UGetNrOfDims());
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		#else	// #if	!WITH_SMART_PTR	
+		boost::shared_array<size_t> puSize(new size_t[cSimpleNDFile.UGetNrOfDims()]);
+		#endif	// #if	!WITH_SMART_PTR	
+		// ADD-BY-LEETEN 12/30/2012-END
+		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
+			puSize[d] = nin->axis[d].size;
+
+		Nrrd *nrrdOut = nrrdNew();
+		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
+		nrrdSave(szEntropyNhdrFilepath, nrrdOut, NULL);
+
+		// nrrdIoStateNix(nioOut);
+		nrrdNix(nrrdOut);
+
+		// now move the .nhdr and .raw to the destination folder
+		#if		WITH_BOOST
+		remove(pathNhdr);
+		remove(pathRaw);
+		rename(pathNhdrLeaf,	pathNhdr);
+		rename(pathRawLeaf,		pathRaw);
+		#else	// #if	WITH_BOOST
+		#endif	// #if	WITH_BOOST
+		LOG_VAR(szEntropyNhdrFilepath);	// ADD-BY-LEETEN 12/30/2012
+		LIBCLOCK_END(bIsPrintingTiming);
+		// ADD-BY-LEETEN 12/30/2012-END
 	}
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);

@@ -41,6 +41,15 @@ if( WITH_BOOST )
 	link_directories(
 		${BOOST_LIB_DIR}
 	)
+
+	# ADD-BY-LEETEN 12/30/2012-BEGIN
+	set(WITH_SMART_PTR		OFF	CACHE 	BOOL "Is smart ptr used?")	
+	if( WITH_SMART_PTR )
+		add_definitions(
+			-DWITH_SMART_PTR=1
+		)
+	endif()
+	# ADD-BY-LEETEN 12/30/2012-END
 endif()
 # ADD-BY-LEETEN 12/28/2012-END
 

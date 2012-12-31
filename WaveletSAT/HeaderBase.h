@@ -96,6 +96,8 @@ public:
 		{
 			PARAMETER_BEGIN = 0x0000,
 
+			DATA_SIZE,	// ADD-BY-LEETEN 12/30/2012
+
 			//! Total size in MB of all bin SATs.
 			SIZE_OF_FULL_ARRAYS,
 
@@ -119,6 +121,24 @@ public:
 			}
 			// ADD-BY-LEETEN 10/18/2012-END
 		}
+
+		// ADD-BY-LEETEN 12/30/2012-BEGIN
+		virtual
+		void
+		_GetInteger(
+			int eName,
+			long *lValue,
+			void* _Reserved = NULL
+		)
+		{
+			switch(eName)
+			{
+			case DATA_SIZE:
+				*lValue = uDataSize;
+				break;
+			}
+		}
+		// ADD-BY-LEETEN 12/30/2012-END
 
 		virtual
 		double 
