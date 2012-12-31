@@ -154,7 +154,9 @@ public:
 
 		enum EParameter
 		{
-			PARAMETER_BEGIN = 0x0a00,
+			// MOD-BY-LEETEN 12/31/2012-FROM:			PARAMETER_BEGIN = 0x0a00,
+			PARAMETER_BEGIN = 0x0700,
+			// MOD-BY-LEETEN 12/31/2012-END
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			ACCUM_NR_OF_IO_REQUESTS,
 			MAX_NR_OF_IO_REQUESTS,
@@ -1220,10 +1222,16 @@ public:
 			vector<size_t> vuOtherCoefLengths;
 			vuOtherCoefLengths.resize(UGetNrOfDims());
 
-			for(size_t uOffset = 1, d = 0, uCoefLength = this->vuCoefLengths[d]; 
+			#if 0 			// MOD-BY-LEETEN 12/31/2012-FROM:
+			  for(size_t uOffset = 1, d = 0, uCoefLength = this->vuCoefLengths[d]; 
+			#else // MOD-BY-LEETEN 12/31/2012-FROM:
+			      for(size_t uOffset = 1, d = 0, uCoefLength = 1; 
+			#endif // MOD-BY-LEETEN 12/31/2012-TO:
 				d < UGetNrOfDims(); 
 				uOffset *= uCoefLength, d++)
 			{
+			  uCoefLength = this->vuCoefLengths[d]; // ADD-BY-LEETEN 12/31/2012
+
 				if( 1 == uCoefLength )
 					continue;
 

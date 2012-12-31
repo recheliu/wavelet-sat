@@ -134,6 +134,14 @@ main(int argn, char* argv[])
 		"--is-verbose", &iIsVerbose, iIsVerbose);
 
 	// ADD-BY-LEETEN 12/30/2012-BEGIN
+	// ADD-BY-LEETEN 12/31/2012-BEGIN
+	int iIsComputingEntropy = 0; 
+	_OPTAddBoolean(
+		"--is-computing-entropy", &iIsComputingEntropy, iIsComputingEntropy);
+	_OPTAddComment("--is-computing-entropy", 
+		"The flag indicating whether the entropy field is computed or not.");
+	// ADD-BY-LEETEN 12/31/2012-END
+
 	int iEntropyWinRadius = 1;
 	_OPTAddIntegerVector(
 		"--entropy-win-radius", 1,
@@ -326,8 +334,14 @@ main(int argn, char* argv[])
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
 	}
 
+	#if 0 	// MOD-BY-LEETEN 12/31/2012-FROM:
 	if( szEntropyFilepathPrefix )
 	  {
+	    #else // MOD-BY-LEETEN 12/31/2012-TO:
+	    if( iIsComputingEntropy )
+	      {
+		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
+		#endif // MOD-BY-LEETEN 12/31/2012-END
 	    // ADD-BY-LEETEN 12/30/2012-END
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
 		/////////////////////////////////////////////////////////////
