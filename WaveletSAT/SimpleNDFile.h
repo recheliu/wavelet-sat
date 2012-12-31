@@ -182,12 +182,16 @@ public:
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		  #endif // MOD-BY-LEETEN 12/30/2012-END
 		{
-			_DecodeBin(b, vSAT);
+			// MOD-BY-LEETEN 12/31/2012-FROM:			_DecodeBin(b, vSAT);
+			_DecodeBin((unsigned short)b, vSAT);
+			// MOD-BY-LEETEN 12/31/2012-END
 
 			// compute the local sum
 			vLocalHist = (DT)0;
 			for(size_t i = 0; i < uNrOfCorners; i++)
-				vLocalHist += vSAT.shift(vllOffsets[i]) * (DT)viSigns[i];
+				// MOD-BY-LEETEN 12/31/2012-FROM:	vLocalHist += vSAT.shift(vllOffsets[i]) * (DT)viSigns[i];
+				vLocalHist += vSAT.shift((int)vllOffsets[i]) * (DT)viSigns[i];
+				// MOD-BY-LEETEN 12/31/2012-END
 
 			// compute the entropy
 			vLocalHist = vLocalHist.apply(_ClampNegative);

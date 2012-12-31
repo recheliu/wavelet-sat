@@ -1343,7 +1343,9 @@ public:
 					{
 						double dWaveletCoef;
 						this->vcCoefPools[c]._GetAt(
-							b, 
+							// MOD-BY-LEETEN 12/31/2012-FROM:	b, 
+							(unsigned short)b, 
+							// MOD-BY-LEETEN 12/31/2012-END
 							( !b )?vuLocalCoefSub:vuEmpty, 
 							uIndex, dWaveletCoef);
 

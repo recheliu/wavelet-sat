@@ -390,7 +390,11 @@ main(int argn, char* argv[])
 		#endif // MOD-BY-LEETEN 12/30/2012-END
 
 		Nrrd *nrrdOut = nrrdNew();
+		#if	0	// MOD-BY-LEETEN 12/31/2012-FROM:
 		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
+		#else	// TO:
+		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, (unsigned int)cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
+		#endif	// MOD-BY-LEETEN 12/31/2012-END
 		nrrdSave(szEntropyNhdrFilepath, nrrdOut, NULL);
 
 		// nrrdIoStateNix(nioOut);

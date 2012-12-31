@@ -139,7 +139,9 @@ public:
 			switch(eName)
 			{
 			case DATA_SIZE:
-				*lValue = uDataSize;
+				// MOD-BY-LEETEN 12/31/2012-FROM:				*lValue = uDataSize;
+				*lValue = (long)uDataSize;
+				// MOD-BY-LEETEN 12/31/2012-END
 				break;
 			}
 		}
