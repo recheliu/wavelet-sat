@@ -56,12 +56,8 @@ public:
 			void *_Reserved = NULL
 		) const
 		{
-		  #if 0  // MOD-BY-LEETEN 12/30/2012-FROM:
-			vuDataSize.clear();
-		        #else // MOD-BY-LEETEN 12/30/2012-TO:
 			if( UGetNrOfDims() != vuDataSize.size() )
 			  vuDataSize.resize(UGetNrOfDims());
-			#endif // MOD-BY-LEETEN 12/30/2012-END
 			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDataSize.begin());
 		}
 		// ADD-BY-LEETEN 12/16/2012-END
@@ -99,9 +95,7 @@ public:
 
 		enum EParameter
 		{
-			// MOD-BY-LEETEN 12/31/2012-FROM:			PARAMETER_BEGIN = 0x0000,
 			PARAMETER_BEGIN = 0x0900,
-			// MOD-BY-LEETEN 12/31/2012-END
 
 			DATA_SIZE,	// ADD-BY-LEETEN 12/30/2012
 
@@ -141,9 +135,7 @@ public:
 			switch(eName)
 			{
 			case DATA_SIZE:
-				// MOD-BY-LEETEN 12/31/2012-FROM:				*lValue = uDataSize;
 				*lValue = (long)uDataSize;
-				// MOD-BY-LEETEN 12/31/2012-END
 				break;
 			}
 		}

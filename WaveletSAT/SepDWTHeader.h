@@ -55,9 +55,7 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	class CSepDWTHeader:
-		// MOD-BY-LEETEN 12/30/2012-FROM:		public CHeaderBase	// ADD-BY-LEETEN 09/29/2012
 		virtual public CHeaderBase	
-		// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -195,31 +193,19 @@ public:
 		(
 			size_t uIndex,
 			vector<size_t>& vuLevel,
-			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
-			vector<size_t>& vuSubInLevel,
-			vector<size_t>& vuLevelBase,
-			vector<size_t>& vuLevelSize,
-			#else	// MOD-BY-LEETEN 12/29/2012-TO:
 			vector<size_t>& vuLocalCoefSub,
 			vector<size_t>& vuGlobalCoefBase,
 			vector<size_t>& vuLocalCoefLengths,
-			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			void *_Reserved = NULL
 		)
 		{
 			vector<size_t> vuSub;
 			_ConvertIndexToSub(uIndex, vuSub, vuCoefLengths);
 
-			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
-			vuGlobalCoefBase.resize(UGetNrOfDims());
-			vuLocalCoefLengths.resize(UGetNrOfDims());
-			vuLocalCoefSub.resize(UGetNrOfDims());
-			#else	// MOD-BY-LEETEN 12/29/2012-TO:
 			if( UGetNrOfDims() != vuLevel.size() )				vuLevel.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuGlobalCoefBase.size() )		vuGlobalCoefBase.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuLocalCoefLengths.size() )	vuLocalCoefLengths.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuLocalCoefSub.size() )		vuLocalCoefSub.resize(UGetNrOfDims());
-			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				vuLevel[d] = (!vuSub[d])?0:(size_t)(1 + floor(log( (double)vuSub[d]) / M_LN2));

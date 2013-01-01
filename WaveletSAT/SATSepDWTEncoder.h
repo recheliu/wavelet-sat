@@ -26,13 +26,8 @@ namespace WaveletSAT
 	*/
 	template<typename DT, typename ST = double>
 	class CSATSepDWTEncoder:
-		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
-		public CSATEncoder<DT, ST>,
-		public CWaveletSATEncoder<DT>
-		#else	// MOD-BY-LEETEN 12/30/2012-TO:
 		virtual public CSATEncoder<DT, ST>,
 		virtual public CWaveletSATEncoder<DT>
-		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		////////////////////////////////////////////////////////////////////

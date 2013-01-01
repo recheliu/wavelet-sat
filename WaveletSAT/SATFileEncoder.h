@@ -45,13 +45,8 @@ namespace WaveletSAT
 	*/
 	template<typename DT, typename ST>
 	class CSATFileEncoder:
-		#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
-		public CHeaderBase,
-		public CEncoderBase<DT, ST>
-		#else	// MOD-BY-LEETEN 12/30/2012-TO:
 		virtual public CHeaderBase,
 		virtual public CEncoderBase<DT, ST>
-		#endif	// MOD-BY-LEETEN 12/30/2012-END
 	{
 protected:	
 		//! The storage to store the original data.

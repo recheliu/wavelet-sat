@@ -9,9 +9,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(WaveletSAT)
 
 # ADD-BY-LEETEN 09/02/2011-BEGIN
-# MOD-BY-LEETEN 12/22/2012-FROM:
-	#	set(MYLIB_DIR "~/mylib" CACHE PATH "The path to my own libraries")
-# TO:
 set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
@@ -24,7 +21,6 @@ link_directories(
 	${LIB_DIR}/lib
 	${MYLIB_DIR}/lib
 )
-# MOD-BY-LEETEN 12/22/2012-END
 
 # ADD-BY-LEETEN 12/28/2012-BEGIN
 set(WITH_BOOST	OFF	CACHE 	BOOL "Is Boost used?")	
@@ -79,26 +75,19 @@ endif()
 # ADD-BY-LEETEN 10/28/2012-END
 
 include_directories (
-	# MOD-BY-LEETEN 10/27/2012-FROM:	"SAT"
 	"WaveletSAT"
-	# MOD-BY-LEETEN 10/27/2012-END
 	"${MYLIB_DIR}/include" )
 
 link_directories (
 	"${MYLIB_DIR}/lib" )
 
-# DEL-BY-LEETEN 12/16/2012:	add_subdirectory(SAT)
 add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
-# MOD-BY-LEETEN 10/27/2012-FROM:	add_dependencies(SimpleND SAT)
 add_dependencies(SimpleND WaveletSAT)
-# MOD-BY-LEETEN 10/27/2012-END
 
 # ADD-BY-LEETEN 09/30/2012-BEGIN
 add_subdirectory(SimpleNDWithNrrd)
-# MOD-BY-LEETEN 10/27/2012-FROM:	add_dependencies(SimpleNDWithNrrd SAT)
 add_dependencies(SimpleNDWithNrrd WaveletSAT)
-# MOD-BY-LEETEN 10/27/2012-END
 # ADD-BY-LEETEN 09/30/2012-END
 
 # ADD-BY-LEETEN 12/16/2012-BEGIN

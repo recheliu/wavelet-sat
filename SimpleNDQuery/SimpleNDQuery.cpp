@@ -17,9 +17,7 @@ using namespace boost::filesystem;
 double dValueMin = HUGE_VAL;
 double dValueMax = -HUGE_VAL;
 Nrrd *nin;
-// MOD-BY-LEETEN 12/29/2012-FROM:	CSimpleNDFile<double> cSimpleNDFile;
 CSimpleNDFile<double, double> cSimpleNDFile;
-// MOD-BY-LEETEN 12/29/2012-END
 vector<double> vdData;
 
 //! Convert the volume to an array of double type
@@ -166,16 +164,13 @@ main(int argn, char* argv[])
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
-	// DEL-BY-LEETEN 12/30/2012: assert(szVolFilePath);
 	assert(szNcFilePath);
 	LOG_VAR(szNcFilePath);	// ADD-BY-LEETEN 12/25/2012
 
 	// load the WaveletSAT
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
-	// MOD-BY-LEETEN 12/29/2012-FROM:	cSimpleNDFile._SetInteger(CSimpleNDFile<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 	cSimpleNDFile._SetInteger(cSimpleNDFile.SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
-	// MOD-BY-LEETEN 12/29/2012-END
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
@@ -183,39 +178,12 @@ main(int argn, char* argv[])
 	cSimpleNDFile._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	#if	0	// DEL-BY-LEETEN 12/30/2012-BEGIN
-	// ADD-By-LEETEN  12/29/2012-BEGIN
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	#if	0	// MOD-BY-LEETEN 12/30/2012-FROM:
-	cSimpleNDFile._SetBoolean(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, true);
-	cSimpleNDFile._DecodeSAT();
-	#else	// MOD-BY-LEETEN 12/30/2012-TO:
-	cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
-	size_t uWinSize = 6;
-	vector<int> viLeft, viRight;
-	for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
-	{
-		viLeft.push_back(-(int)uWinSize);
-		viRight.push_back(+(int)uWinSize);
-	}
-	cSimpleNDFile._ComputeEntropy(viLeft, viRight);
-	#endif	// MOD-BY-LEETEN 12/30/2012-END
-	LIBCLOCK_END(bIsPrintingTiming);	
-	// ADD-By-LEETEN  12/29/2012-END
-	#endif	// DEL-BY-LEETEN 12/30/2012-END
-
 	if(iIsTestingQuery)
 	{
 	assert(szVolFilePath); // ADD-BY-LEETEN 12/30/2012
 		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
 
-		// ADD-BY-LEETEN 12/28/2012-BEGIN
-		// MOD-BY-LEETEN 12/28/2012-FROM:	cSimpleNDFile._SetBoolean(WaveletSAT::CSATSepDWTOutOfCore<double>::RESET_IO_COUNTERS, 0);
-		// MOD-BY-LEETEN 12/30/2012-FROM:	cSimpleNDFile._SetBoolean(cSimpleNDFile.RESET_IO_COUNTERS, 0);
 		cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
-		// MOD-BY-LEETEN 12/30/2012-END
-		// MOD-BY-LEETEN 12/28/2012-END
-		// ADD-BY-LEETEN 12/28/2012-END
 		////////////////////////////////////////////////////////////////////////////
 		// Now we can start to query SATs
 		// load the data for testing
@@ -240,8 +208,6 @@ main(int argn, char* argv[])
 
 		// decide the threshld to filter numerical error
 		double dThreshold = cSimpleNDFile.DGetThreshold();
-
-		// DEL-BY-LEETEN 12/30/2012:	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 		size_t uNrOfIHs = 1 << uNrOfDims;
 		vector< vector<size_t> > vvuOffsets;
@@ -320,35 +286,18 @@ main(int argn, char* argv[])
 		}
 
 		LIBCLOCK_END(bIsPrintingTiming);
-		// ADD-BY-LEETEN 12/28/2012-BEGIN
-		#if	0	// MOD-BY-LEETEN 12/28/2012-FROM:
-		long lAccumNrOfIORequests;	cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
-		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
-		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(WaveletSAT::CSATSepDWTOutOfCore<double>::MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
-		#else	// MOD-BY-LEETEN 12/28/2012-TO:
 		long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
 		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
 		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
-		#endif	// MOD-BY-LEETEN 12/28/2012-END
-		// ADD-BY-LEETEN 12/28/2012-END
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
 	}
 
-	#if 0 	// MOD-BY-LEETEN 12/31/2012-FROM:
-	if( szEntropyFilepathPrefix )
-	  {
-	    #else // MOD-BY-LEETEN 12/31/2012-TO:
 	    if( iIsComputingEntropy )
 	      {
 		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
-		#endif // MOD-BY-LEETEN 12/31/2012-END
-	    // ADD-BY-LEETEN 12/30/2012-END
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
 		/////////////////////////////////////////////////////////////
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		// MOD-BY-LEETEN 12/31/2012-FROM: cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, false);
 		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, bIsPrintingTiming);
-		// MOD-BY-LEETEN 12/31/2012-END
 		vector<int> viLeft, viRight;
 		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
 		{
@@ -393,22 +342,13 @@ main(int argn, char* argv[])
 		boost::shared_array<size_t> puSize(new size_t[cSimpleNDFile.UGetNrOfDims()]);
 		#endif	// #if	!WITH_SMART_PTR	
 		// ADD-BY-LEETEN 12/30/2012-END
-		#if 0 		// MOD-BY-LEETEN 12/30/2012-FROM:
-		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
-			puSize[d] = nin->axis[d].size;
-		#else // MOD-BY-LEETEN 12/30/2012-TO:
 		vector<size_t> vuDimLengths;
 		cSimpleNDFile._GetDataSize(vuDimLengths);
 		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
 		  puSize[d] = vuDimLengths[d];
-		#endif // MOD-BY-LEETEN 12/30/2012-END
 
 		Nrrd *nrrdOut = nrrdNew();
-		#if	0	// MOD-BY-LEETEN 12/31/2012-FROM:
-		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
-		#else	// TO:
 		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, (unsigned int)cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
-		#endif	// MOD-BY-LEETEN 12/31/2012-END
 		nrrdSave(szEntropyNhdrFilepath, nrrdOut, NULL);
 
 		// nrrdIoStateNix(nioOut);

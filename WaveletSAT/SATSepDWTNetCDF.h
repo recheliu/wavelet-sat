@@ -35,13 +35,8 @@ namespace WaveletSAT
 protected:	
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		#if !WITH_NETCDF4
-		#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
-		typedef int	TYPE_HEADER_COUNT;
-		typedef int	TYPE_HEADER_OFFSET;
-		#else	// MOD-BY-LEETEN 12/29/2012-TO:
 		typedef int	TYPE_COEF_COUNT;
 		typedef int	TYPE_COEF_OFFSET;
-		#endif	// MOD-BY-LEETEN 12/29/2012-END
 		typedef int	TYPE_COEF_BIN;
 		#else // #if !WITH_NETCDF4
 		typedef unsigned int 		TYPE_COEF_COUNT;
@@ -77,15 +72,6 @@ protected:
 		int piCoefDimIds[NC_MAX_DIMS];
 
 		// Variable IDs
-		#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
-		const char* szVarHeaderOffset;
-		int ncVarHeaderOffset;
-		nc_type typeHeaderOffset;
-
-		const char* szVarHeaderCount;
-		int ncVarHeaderCount;
-		nc_type typeHeaderCount;
-		#else	// MOD-BY-LEETEN 12/29/2012-TO:
 		const char* szVarCoefOffset;
 		int ncVarCoefOffset;
 		nc_type typeCoefOffset;
@@ -93,7 +79,7 @@ protected:
 		const char* szVarCoefCount;
 		int ncVarCoefCount;
 		nc_type typeCoefCount;
-		#endif	// MOD-BY-LEETEN 12/29/2012-END
+
 		const char* szVarCoefBin;
 		int ncVarCoefBin;
 		nc_type typeCoefBin;
@@ -146,13 +132,8 @@ public:
 			szDimValue("VALUE"),
 			szDimBin("BIN"),
 			szDimDim("DIM"),
-			#if	0	// MOD-BY-LEETEN 12/29/2012-FROM:
-			szVarCoefOffset("HEADER_OFFSET"),
-			szVarCoefCount("HEADER_COUNT"),
-			#else	// MOD-BY-LEETEN 12/29/2012-TO:
 			szVarCoefOffset("COEF_OFFSET"),
 			szVarCoefCount("COEF_COUNT"),
-			#endif	// MOD-BY-LEETEN 12/29/2012-END
 			szVarCoefBin("COEF_BIN"),
 			szVarCoefValue("COEF_VALUE")
 		{

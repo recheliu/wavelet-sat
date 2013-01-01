@@ -5,23 +5,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 #The name of the project
-# MOD-BY-LEETEN 10/17/2012-FROM:
-	# PROJECT(WaveletSATLib)
-# TO:
 PROJECT(WaveletSAT)
-# MOD-BY-LEETEN 10/17/2012-END
-
-# # DEL-BY-LEETEN 12/28/2012-BEGIN
-# set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
-
-# include_directories(
-	# ${MYLIB_DIR}/include
-# )
-
-# link_directories(
-	# ${MYLIB_DIR}/lib
-# )
-# # DEL-BY-LEETEN 12/28/2012-END
 
 # The source codes
 set(HEADER_FILES
@@ -33,7 +17,6 @@ set(HEADER_FILES
 
 		DWT.h	
 		SepDWTHeader.h
-		# DEL-BY-LEETEN 12/25/2012:	SepDWTData.h	# ADD-BY-LEETEN 10/29/2012
 		SepDWTPool.h	# ADD-BY-LEETEN 11/11/2012
 		WaveletSATEncoder.h
 		SATSepDWTEncoder.h
@@ -42,7 +25,6 @@ set(HEADER_FILES
 
 		# ADD-BY-LEETEN 12/16/2012-BEGIN
 		SATSepDWTNetCDF.h	# The class that contains the information for NetCDF format
-		# DEL-BY-LEETEN 12/25/2012:	SATSepDWTFile.h
 		SimpleNDFile.h
 		# ADD-BY-LEETEN 12/16/2012-END
 

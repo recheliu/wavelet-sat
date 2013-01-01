@@ -103,36 +103,24 @@ _TestType()
 	LIBCLOCK_BEGIN(1);	
 	T Prod;
 	for(size_t t = 0; t < uNrOfTests; t++)
-	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
-		Prod = _DotProduct<T>(v1, v2);	
-	#else	// MOD-BY-LEETEN 01/22/2012-TO:
 		vProds[t] = _DotProduct<T>(v1, v2);	
 	Prod = vProds[0];
-	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Prod);
 
 	T Sum;
 	LIBCLOCK_BEGIN(1);	
 	for(size_t t = 0; t < uNrOfTests; t++)
-	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
-		Sum = _Sum<T>(v1, v2);	
-	#else	// MOD-BY-LEETEN 01/22/2012-TO:
 		vSums[t] = _Sum<T>(v1, v2);	
 	Sum = vSums[0];
-	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Sum);
 
 	T Mul;
 	LIBCLOCK_BEGIN(1);	
 	for(size_t t = 0; t < uNrOfTests; t++)
-	#if	0	// MOD-BY-LEETEN 01/22/2012-FROM:
-		Mul = _Multiply<T>(v1);	
-	#else	// MOD-BY-LEETEN 01/22/2012-TO:
 		vMuls[t] = _Multiply<T>(v1);	
 	Mul = vMuls[0];
-	#endif	// MOD-BY-LEETEN 01/22/2012-END
 	LIBCLOCK_END(1);
 	LOG_VAR(Mul);
 	LIBCLOCK_PRINT(1);	

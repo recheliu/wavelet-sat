@@ -10,9 +10,7 @@
 template<class T>
 class CSimpleND:
 // ADD-BY-LEETEN 10/28/2012-BEGIN
-	// MOD-BY-LEETEN 12/30/2012-FROM:	public WaveletSAT::CWaveletSATEncoder<T>
 	virtual public WaveletSAT::CWaveletSATEncoder<T>
-	// MOD-BY-LEETEN 12/30/2012-END
 {
 	size_t uNrOfBins;
 	T valueMin, valueMax;
