@@ -1,6 +1,7 @@
 #pragma once
 
-#include "SATSepDWTOutOfCore.h"
+#include "SATSepDWTDecoder.h"
+#include "SATFileDecoder.h"	// ADD-BY-LEETEN 01/02/2013
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include <netcdf.h>
 #endif
@@ -9,7 +10,9 @@
 //! Scan the histogra bin to update the entropy
 template<class DT>	//!< Type of the data items
 DT
-_ScanHistogramForEntropy
+// MOD-BY-LEETEN 01/02/2013-FROM:	_ScanHistogramForEntropy
+ScanHistogramForEntropy
+// MOD-BY-LEETEN 01/02/2013-END
 (
 	const DT& v
 )
@@ -33,7 +36,7 @@ template<
 	class WT	//!< Type of the wavelet coefficients.
 >
 class CSimpleNDFile:
-	virtual public WaveletSAT::CSATSepDWTOutOfCore<DT, WT>
+	virtual public WaveletSAT::CSATSepDWTDecoder<DT, WT>
 {
 	size_t uNrOfBins;
 	DT valueMin, valueMax;
@@ -98,19 +101,29 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+		// ADD-BY-LEETEN 01/02/2013-BEGIN
+		LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		// ADD-BY-LEETEN 01/02/2013-END
 	  // ADD-BY-LEETEN 12/30/2012-BEGIN
 		const size_t uDataSize = this->uDataSize;
-		const size_t uNrOfCoefs = this->uNrOfCoefs;
+		// DEL-BY-LEETEN 01/02/2013:	const size_t uNrOfCoefs = this->uNrOfCoefs;
 		const vector<size_t>& vuDimLengths = this->vuDimLengths;
-		const vector<size_t>& vuCoefLengths = this->vuCoefLengths;
+		// DEL-BY-LEETEN 01/02/2013:	const vector<size_t>& vuCoefLengths = this->vuCoefLengths;
 		// ADD-BY-LEETEN 12/30/2012-END
 		////////////////////////////////////////////////////////
 		// decide the offsets
 		size_t uNrOfCorners = (size_t)1<<this->UGetNrOfDims();
 		vector< size_t > vuCenter;	vuCenter.resize(this->UGetNrOfDims());
+		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 		for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 			vuCenter[d] = vuCoefLengths[d]/2;
 		size_t uCenter = WaveletSAT::UConvertSubToIndex(vuCenter, vuCoefLengths);
+		#else	// MOD-BY-LEETEN 01/02/2013-TO:
+		for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+			vuCenter[d] = vuDimLengths[d]/2;
+		size_t uCenter = WaveletSAT::UConvertSubToIndex(vuCenter, vuDimLengths);
+		#endif	// MOD-BY-LEETEN 01/02/2013-END
 
 		vector< long long > vllOffsets;	vllOffsets.resize(uNrOfCorners);
 		vector< int > viSigns;			viSigns.resize(uNrOfCorners);
@@ -129,31 +142,97 @@ public:
 				vuSub[d] = (size_t)iSub;
 			}
 			viSigns[i] = (0 == uSign % 2)?(-1):(+1);
-			vllOffsets[i] = (long long)WaveletSAT::UConvertSubToIndex(vuSub, vuCoefLengths) - (long long)uCenter;
+			// MOD-BY-LEETEN 01/02/2013-FROM:	vllOffsets[i] = (long long)WaveletSAT::UConvertSubToIndex(vuSub, vuCoefLengths) - (long long)uCenter;
+			vllOffsets[i] = (long long)WaveletSAT::UConvertSubToIndex(vuSub, vuDimLengths) - (long long)uCenter;
+			// MOD-BY-LEETEN 01/02/2013-END
 		}
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 
 		/////////////// compute the SAT
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 		valarray<DT> vSAT;
+		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 		valarray<DT> vLocalHist;	vLocalHist.resize(uNrOfCoefs);
 		valarray<DT> vTempEntropyField;	vTempEntropyField.resize(uNrOfCoefs);
 		valarray<DT> vSum;			vSum.resize(uNrOfCoefs);
+		#else	// MOD-BY-LEETEN 01/02/2013-TO:
+		valarray<DT> vLocalHist;	
+		valarray<DT> vTempEntropyField;	
+		valarray<DT> vSum;			
+		#endif	// MOD-BY-LEETEN 01/02/2013-END
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		{
+			// ADD-BY-LEETEN 01/02/2013-BEGIN
+			LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			// ADD-BY-LEETEN 01/02/2013-END
+
 			_DecodeBin((unsigned short)b, vSAT);
+
+			// ADD-BY-LEETEN 01/02/2013-BEGIN
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			if( vSAT.size() != vLocalHist.size() )
+				vLocalHist.resize(vSAT.size());
+			if( vSAT.size() != vTempEntropyField.size() )
+				vTempEntropyField.resize(vSAT.size());
+			if( vSAT.size() != vSum.size() )
+				vSum.resize(vSAT.size());
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+			// ADD-BY-LEETEN 01/02/2013-END
 
 			// compute the local sum
 			vLocalHist = (DT)0;
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			for(size_t i = 0; i < uNrOfCorners; i++)
 				vLocalHist += vSAT.shift((int)vllOffsets[i]) * (DT)viSigns[i];
-
 			// compute the entropy
 			vLocalHist = vLocalHist.apply(_ClampNegative);
 			vTempEntropyField += vLocalHist.apply(_ScanHistogramForEntropy);
 			vSum += vLocalHist;
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
+			for(size_t i = 0; i < uNrOfCorners; i++)
+			{
+				size_t uBegin, uEnd;
+				if( !vllOffsets[i] )
+					continue;
+				if( vllOffsets[i] > 0 )
+				{
+					uBegin = 0;
+					uEnd = vSAT.size() - vllOffsets[i]; 
+				}
+				if( vllOffsets[i] < 0 )
+				{
+					uBegin = (size_t)-vllOffsets[i];
+					uEnd = vSAT.size(); 
+				}
+				for(size_t d = uBegin; d < uEnd; d++)
+					vLocalHist[d] += vSAT[d + vllOffsets[i]] * (DT)viSigns[i];
+			}
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			for(size_t d = 0; d < vLocalHist.size(); d++)
+			{
+				if( vLocalHist[d] <= (DT)0 )
+					continue;
+				vTempEntropyField[d] += ScanHistogramForEntropy(vLocalHist[d]);
+				vSum[d] += vLocalHist[d];
+			}
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
+
+			// ADD-BY-LEETEN 01/02/2013-BEGIN
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+			LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+			// ADD-BY-LEETEN 01/02/2013-END
 		}
 		vTempEntropyField = -vTempEntropyField / vSum + log(vSum);
 		vTempEntropyField /= (DT)log(2.0);
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 
+		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 		// only keep the entropy field within the data range
 		if( uDataSize != vEntropyField.size() )
 			vEntropyField.resize(uDataSize);
@@ -181,7 +260,14 @@ public:
 			}
 			// ADD-BY-LEETEN 12/30/2012-END
 			vEntropyField[d] = vTempEntropyField[WaveletSAT::UConvertSubToIndex(vuSub, vuCoefLengths)];
-		}
+		}	
+		#else	// MOD-BY-LEETEN 01/02/2013-TO:
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		_ClampToDataSize(vTempEntropyField, vEntropyField);
+		_ClampBorder(vEntropyField, viLeft, viRight);
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+		LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+		#endif	// MOD-BY-LEETEN 01/02/2013-END
 	}
 	// ADD-BY-LEETEN 12/30/2012-END
 };

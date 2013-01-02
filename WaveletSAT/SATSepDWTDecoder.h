@@ -17,6 +17,7 @@ using namespace std;
 #include "SepDWTHeader.h"
 #include "SATSepDWTNetCDF.h"
 #include "SepDWTPool.h"
+#include "DecoderBase.h"	// ADD-BY-LEETEN 01/02/2013
 
 #include "liblog.h"	
 #if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
@@ -47,11 +48,13 @@ namespace WaveletSAT
 		typename WT		//!< Type of the wavelet coefficients
 	>
 	// The class that access the coefficients from files (in NetCDF format)
-	class CSATSepDWTOutOfCore:
+	class CSATSepDWTDecoder:
+		virtual public CDecoderBase<DT>,	// ADD-BY-LEETEN 01/02/2013
 		virtual public CSATSepDWTNetCDF,
 		virtual public CSepDWTHeader
 	{
 protected:	
+			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			//! The accumulated #I/O requests since the I/O counters are reset.
 			size_t uAccumNrOfIORequest;
@@ -70,6 +73,7 @@ protected:
 
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
 			bool bIsPrintingDecodeBinTiming;
+			#endif	// DEL-BY-LEETEN 01/02/2013-END
 
 			vector<unsigned short>	vusCachedNextOffsets;
 			// vector<unsigned short>	vusCachedBins;
@@ -127,6 +131,7 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0700,
+			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			ACCUM_NR_OF_IO_REQUESTS,
 			MAX_NR_OF_IO_REQUESTS,
 			MIN_NR_OF_IO_REQUESTS,
@@ -134,6 +139,7 @@ public:
 			
 			//! Parameter specifying whether to print the timing for the method _Decodebin().
 			PRINT_DECODE_BIN_TIMING,
+			#endif	// DEL-BY-LEETEN 01/02/2013-END
 			PARAMETER_END
 		};
 
@@ -145,21 +151,26 @@ public:
 			void* _Reserved = NULL
 		)
 		{
+			CDecoderBase<DT>::_SetInteger(eName, lValue);	// ADD-BY-LEETEN 01/02/2013
 			CSATSepDWTNetCDF::_SetInteger(eName, lValue);
 			CSepDWTHeader::_SetInteger(eName, lValue);
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			switch(eName)
 			{
 			case RESET_IO_COUNTERS:
+				#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 				uAccumNrOfIORequest = 0;
 				uMaxNrOfIORequest = 0;
+				#endif	// DEL-BY-LEETEN 01/02/2013-END
 				uMinNrOfIORequest = uNrOfUpdatingCoefs;
-				uNrOfQueries = 0;
+				// DEL-BY-LEETEN 01/02/2013:	uNrOfQueries = 0;
 				break;
 
+			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			case PRINT_DECODE_BIN_TIMING:
 				bIsPrintingDecodeBinTiming = (!lValue)?false:true;
 				break;
+			#endif	// DEL-BY-LEETEN 01/02/2013-END
 			}
 			// ADD-BY-LEETEN 12/30/2012-END
 		}
@@ -173,6 +184,7 @@ public:
 			void* _Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			switch(eName)
 			{
 			case ACCUM_NR_OF_IO_REQUESTS:
@@ -185,6 +197,9 @@ public:
 				*plValue = (long)uMinNrOfIORequest;
 				break;
 			}
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
+			CDecoderBase<DT>::_GetInteger(eName, plValue);
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			CSATSepDWTNetCDF::_GetInteger(eName, plValue);
 			CSepDWTHeader::_GetInteger(eName, plValue);
@@ -888,23 +903,86 @@ public:
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
 					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
-
 					vSrc = vSAT[slice(uScanlineBase, uCoefLength, uOffset)];
 					_IDWT1D(vSrc, vDst, 2, uNrOfLevels - 1);
 					vSAT[slice(uScanlineBase, uCoefLength, uOffset)] = vDst;
 				}
 			}
 			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
+
 			LIBCLOCK_PRINT(bIsPrintingDecodeBinTiming);
 		}
 		// ADD-BY-LEETEN 12/29/2012-END
 
-		CSATSepDWTOutOfCore()
+		// ADD-BY-LEETEN 01/02/2013-BEGIN
+		virtual
+		void
+		_ClampToDataSize(
+			const valarray<DT>& vCoefField,
+			valarray<DT>& vDataField,
+			void* _Reserved = NULL
+			)
+		{
+			// only keep the entropy field within the data range
+			if( uDataSize != vDataField.size() )
+				vDataField.resize(uDataSize);
+			vector<size_t> vuSub;
+			for(size_t d = 0; d < uDataSize; d++)
+			{
+				vector<size_t> vuSub;
+				_ConvertIndexToSub(d, vuSub, vuDimLengths);
+				vDataField[d] = vCoefField[UConvertSubToIndex(vuSub, vuCoefLengths)];
+			}
+		}
+
+		virtual
+		void
+		_ClampBorder(
+			valarray<DT>& vField,
+			const vector<int>& viLeft, 
+			const vector<int>& viRight, 
+			void* _Reserved = NULL
+			)
+		{
+			vector<size_t> vuSub;
+			for(size_t d = 0; d < uDataSize; d++)
+			{
+				vector<size_t> vuSub;
+				_ConvertIndexToSub(d, vuSub, vuDimLengths);
+				bool bIsNearBorder = false;
+				for(size_t dim = 0; dim < this->UGetNrOfDims(); dim++)
+					if( 0 > (int)vuSub[dim] + viLeft[dim] || 
+							(int)vuSub[dim] + viLeft[dim] >= vuDimLengths[dim] ||
+						0 > (int)vuSub[dim] + viRight[dim] || 
+							(int)vuSub[dim] + viRight[dim] >= vuDimLengths[dim] )
+					{
+						bIsNearBorder = true;
+						break;
+					}
+
+				if( bIsNearBorder )
+				{
+					vField[d] = (DT)0;
+					continue;
+				}
+			}
+		}
+		// ADD-BY-LEETEN 01/02/2013-END
+
+		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
+		CSATSepDWTDecoder()
 			:bIsPrintingDecodeBinTiming(false)	// ADD-BY-LEETEN 12/29/2012-BEGIN
+		#else	// MOD-BY-LEETEN 01/02/2013-TO:
+		CSATSepDWTDecoder():
+			CDecoderBase<DT>(),
+			CSATSepDWTNetCDF(),
+			CSepDWTHeader()
+		#endif	// MOD-BY-LEETEN 01/02/2013-END
 		{
 		}
 
-		~CSATSepDWTOutOfCore()
+		virtual	// ADD-BY-LEETEN 01/02/2013
+		~CSATSepDWTDecoder()
 		{
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 					if(vpcCoefPools[c])

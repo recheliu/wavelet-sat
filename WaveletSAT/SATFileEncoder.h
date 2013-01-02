@@ -29,6 +29,7 @@ using namespace std;
 #include "lognc.h"
 
 #include "EncoderBase.h"
+#include "SATFileNetCDF.h"	// ADD-BY-LEETEN 01/02/2012
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -46,6 +47,7 @@ namespace WaveletSAT
 	template<typename DT, typename ST>
 	class CSATFileEncoder:
 		virtual public CHeaderBase,
+		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2012
 		virtual public CEncoderBase<DT, ST>
 	{
 protected:	
@@ -54,6 +56,7 @@ protected:
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
 
+		#if	0	// DEL-BY-LEETEN 01/02/2012-BEGIN
 		int iNcId;
 
 		int piNcDimIds[NC_MAX_DIMS];
@@ -63,6 +66,7 @@ protected:
 		char *pszNcDimNames[NC_MAX_DIMS];
 
 		int iDeflateLevel; // ADD-BY-LEETEN 11/09/2012
+		#endif	// DEL-BY-LEETEN 01/02/2012-END
 
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -153,6 +157,7 @@ public:
     				&iNcId));
 			#endif	// #if !WITH_NETCDF4 
 
+			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
 			// dimension
 			int piDimLengths[NC_MAX_DIMS];
 			static char* pszDefaultDimNames[] = {"X", "Y", "Z"};
@@ -208,7 +213,57 @@ public:
 				   iDeflateLevel));
 #endif // #if WITH_NETCDF4
 			// ADD-BY-LEETEN 11/09/2012-END
+			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			// define the dimension for #bins
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimBin,
+						(int)this->UGetNrOfBins(),
+						&ncDimBin) );
+			// define the dimension for #bins
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimDim,
+						(int)this->UGetNrOfDims(),
+						&ncDimDim ) );
 
+			size_t uNrOfDims = this->UGetNrOfDims();
+			for(int d = 0; d < uNrOfDims; d++)
+			{
+				size_t uDimLength = (size_t)this->vuDimLengths[d];
+				char szNcDimName[NC_MAX_NAME+1];
+				sprintf(szNcDimName, "DATA_DIM_%d", (unsigned int)d);
+				int iNcDimId;
+				ASSERT_NETCDF(nc_def_dim(
+    							iNcId,
+    							szNcDimName,
+    							(int)uDimLength,
+    							&iNcDimId));
+				vncDimData.push_back(iNcDimId);
+			}
+
+			// now define the variable for the bin SAT
+			int piNcDimIds[NC_MAX_DIMS];
+			piNcDimIds[0] = ncDimBin;
+			for(size_t d = 0; d < uNrOfDims; d++)
+				piNcDimIds[d + 1] = vncDimData[uNrOfDims - 1 - d];
+			ASSERT_NETCDF(nc_def_var(
+				   iNcId,
+				   szVarSAT, 
+				   NC_DOUBLE,
+				   uNrOfDims + 1,
+				   piNcDimIds,
+				   &ncVarSAT));
+
+			#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarSAT, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			#endif // #if WITH_NETCDF4
+			#endif	// MOD-BY-LEETEN 01/02/2012-END
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
 
@@ -265,17 +320,27 @@ public:
 						puCount[d] = this->vuDimLengths[UGetNrOfDims() - d];
 					}
 
+				#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
 				ASSERT_NETCDF(nc_put_vara_double(
 						   iNcId,
 						   iNcVarId,
 						   puStart,
 						   puCount,
 						   &pSAT[0]));
+				#else	// MOD-BY-LEETEN 01/02/2012-TO:
+				ASSERT_NETCDF(nc_put_vara_double(
+						   iNcId,
+						   ncVarSAT,
+						   puStart,
+						   puCount,
+						   &pSAT[0]));
+				#endif	// MOD-BY-LEETEN 01/02/2012-END
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 		
 			delete [] pSAT;
 
+			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
 			/////////////////////////////////////////////
 			// now reopen the file in read-only mode
 			#if !WITH_NETCDF4 
@@ -289,8 +354,16 @@ public:
     				NC_NOWRITE | NC_NETCDF4,
     				&iNcId));
 			#endif // #if !WITH_NETCDF4
+			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
+			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			ASSERT_NETCDF(
+				nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
+			#endif	// MOD-BY-LEETEN 01/02/2012-END
+			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			iNcId = 0;
+			#endif	// MOD-BY-LEETEN 01/02/2012-END
 		}
 
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
@@ -303,6 +376,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			#ifdef		WIN32
 			const char *szCopyCommand = "copy";
 			#else	//	#ifdef WIN32
@@ -315,9 +389,22 @@ public:
 			const char* szFileExt = "nc4";
 			#endif // #if !WITH_NETCDF4
 
+			char szCommandLine[1024];	// ADD-BY-LEETEN 01/02/2013
 			sprintf(szCommandLine, "%s sat.nc %s.%s", szCopyCommand, szFilepathPrefix, szFileExt);
-#endif
+			// DEL-BY-LEETEN 01/02/2013:	#endif
 			system(szCommandLine);
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
+			const char* szExt;
+			#if WITH_NETCDF4
+			szExt = "nc4";
+			#else	// #if WITH_NETCDF4
+			szExt = "nc";
+			#endif	// #if WITH_NETCDF4
+			char szFilepath[NC_MAX_NAME];
+			sprintf(szFilepath, "%s.%s", szFilepathPrefix, szExt);
+			remove(szFilepath);
+			rename("sat.nc", szFilepath);
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 		}
 		// ADD-BY-LEETEN 12/12/2012-END
 
@@ -331,11 +418,13 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			if( uNrOfBins * uDataSize > uSizeOfFullArrays )
 			{
 				LOG_ERROR(cerr<<"Exceed the specified application-side memory capacity.");
 				exit(EXIT_FAILURE);
 			}
+			#endif	// DEL-BY-LEETEN 01/02/2013-END
 			vmapHists.resize(uDataSize);
 		}
 		
@@ -349,8 +438,12 @@ public:
 		{
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if		WITH_BOOST
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			fs::path pathNativePath( szFilepath, fs::native );
 			size_t uFileSize = fs::file_size( pathNativePath );
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
+			size_t uFileSize = fs::file_size( szNetCdfPathFilename );
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			#else	// #if WITH_BOOST
 			// ADD-BY-LEETEN 12/28/2012-END
 		  // ADD-BY-LEETEN 11/09/2012-BEGIN
@@ -374,6 +467,27 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 01/02/2012-BEGIN
+			if( !iNcId )
+			{
+				/////////////////////////////////////////////
+				// now reopen the file in read-only mode
+				#if !WITH_NETCDF4 
+				ASSERT_NETCDF(nc_open(
+    					szNetCdfPathFilename,
+    					NC_NOWRITE,
+    					&iNcId));
+				#else	// #if !WITH_NETCDF4
+				ASSERT_NETCDF(nc_open(
+    					szNetCdfPathFilename,
+    					NC_NOWRITE | NC_NETCDF4,
+    					&iNcId));
+				#endif // #if !WITH_NETCDF4
+				ASSERT_NETCDF(
+					nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
+			}
+			// ADD-BY-LEETEN 01/02/2012-END
+
 			vdSums.resize(UGetNrOfBins());
 
 			double* pdSums = new double[UGetNrOfBins()];
@@ -393,8 +507,13 @@ public:
 					puCounts[d] = 1;
 				}
 			}
+			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
 			ASSERT_NETCDF(
 				nc_get_vara_double(iNcId, iNcVarId, puStarts, puCounts, pdSums) );
+			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			ASSERT_NETCDF(
+				nc_get_vara(iNcId, ncVarSAT, puStarts, puCounts, (void*)&pdSums[0]) );
+			#endif	// MOD-BY-LEETEN 01/02/2012-END
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] = pdSums[b];
@@ -406,12 +525,14 @@ public:
 		{
 		}
 
+		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSATFileEncoder()
 		{
+			#if	0	// DEL-BY-LEETEN 01/02/2012-BEGIN
 			ASSERT_NETCDF(nc_close(iNcId));
-
 			for(size_t d = 0; d < UGetNrOfDims() + 1; d++)
 				free(pszNcDimNames[d]);
+			#endif	// DEL-BY-LEETEN 01/02/2012-END
 		}
 	};
 }

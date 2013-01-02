@@ -604,6 +604,7 @@ namespace WaveletSAT
 		}
 
 		// ADD-BY-LEETEN 11/12/2012-BEGIN
+		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSepDWTPool()
 		{
 			#if	WITH_POINTER_TO_MAP	

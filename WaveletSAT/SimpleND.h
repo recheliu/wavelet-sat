@@ -3,6 +3,7 @@
 #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
 #include "SATSepDWTEncoder.h"
+#include "SATFileEncoder.h"		// ADD-BY-LEETEN 01/02/2013
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include <netcdf.h>
 #endif

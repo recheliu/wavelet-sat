@@ -12,14 +12,22 @@ set(HEADER_FILES
 		Base.h			# ADD-BY-LEETEN 12/30/2012
 		
 		HeaderBase.h
+		DecoderBase.h 	# ADD-BY-LEETEN 01/02/2012
 		EncoderBase.h
-		SATEncoder.h
+		NetCDFBase.h	# ADD-BY-LEETEN 01/02/2012
+		# DEL-BY-LEETEN 01/02/2012:	SATEncoder.h
 
 		DWT.h	
 		SepDWTHeader.h
 		SepDWTPool.h	# ADD-BY-LEETEN 11/11/2012
 		WaveletSATEncoder.h
-		SATSepDWTEncoder.h
+		# DEL-BY-LEETEN 01/02/2012:	SATSepDWTEncoder.h
+
+		# ADD-BY-LEETEN 01/02/2013-BEGIN
+		SATFileNetCDF.h	
+		SATFileDecoder.h
+		SATFileEncoder.h	
+		# ADD-BY-LEETEN 01/02/2013-END
 		
 		SimpleND.h
 
@@ -28,18 +36,28 @@ set(HEADER_FILES
 		SimpleNDFile.h
 		# ADD-BY-LEETEN 12/16/2012-END
 
-		SATSepDWTOutOfCore.h	# ADD-BY-LEETEN 12/25/2012
+		# MOD-BY-LEETEN 01/02/2012-FROM:
+			# SATSepDWTOutOfCore.h	# ADD-BY-LEETEN 12/25/2012
+		# TO:
+		SATSepDWTDecoder.h	# ADD-BY-LEETEN 12/25/2012
+		# MOD-BY-LEETEN 01/02/2012-END
 		
 		utils.h			# ADD-BY-LEETEN 10/29/2012
 	)
 	
-# ADD-BY-LEETEN 10/28/2012-BEGIN
-if( WITH_NETCDF )
-	list(APPEND HEADER_FILES
-		SATFileEncoder.h	
-	)
-endif()
-# ADD-BY-LEETEN 10/28/2012-END
+# # DEL-BY-LEETEN 01/02/2013-BEGIN
+# # ADD-BY-LEETEN 10/28/2012-BEGIN
+# if( WITH_NETCDF )
+	# list(APPEND HEADER_FILES
+		# # ADD-BY-LEETEN 12/16/2012-BEGIN
+		# SATFileNetCDF.h	
+		# SATFileDecoder.h
+		# # ADD-BY-LEETEN 12/16/2012-END
+		# SATFileEncoder.h	
+	# )
+# endif()
+# # ADD-BY-LEETEN 10/28/2012-END
+# # DEL-BY-LEETEN 01/02/2013-END
 			
 add_custom_target (
 	${PROJECT_NAME}
