@@ -25,6 +25,14 @@ else()
     ITKNrrdIO	
     z
     )
+  # ADD-BY-LEETEN 01/02/2013-BEGIN
+  if( WITH_BOOST )
+    target_link_libraries(${PROJECT_NAME}
+      boost_system
+      boost_filesystem
+      )
+  endif()
+  # ADD-BY-LEETEN 01/02/2013-END
 endif()
 
 # ADD-BY-LEETEN 10/28/2012-BEGIN

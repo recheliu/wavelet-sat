@@ -157,6 +157,7 @@ public:
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			switch(eName)
 			{
+			#if 0 			  // MOD-BY-LEETEN 01/03/2012-FROM:
 			case RESET_IO_COUNTERS:
 				#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 				uAccumNrOfIORequest = 0;
@@ -165,7 +166,11 @@ public:
 				uMinNrOfIORequest = uNrOfUpdatingCoefs;
 				// DEL-BY-LEETEN 01/02/2013:	uNrOfQueries = 0;
 				break;
-
+			#else // MOD-BY-LEETEN 01/02/2013-TO:
+			case CDecoderBase<DT>::RESET_IO_COUNTERS:
+				this->uMinNrOfIORequest = uNrOfUpdatingCoefs;
+				break;
+			#endif // MOD-BY-LEETEN 01/02/2013-END
 			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			case PRINT_DECODE_BIN_TIMING:
 				bIsPrintingDecodeBinTiming = (!lValue)?false:true;
@@ -331,6 +336,10 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+		  // ADD-BY-LEETEN 01/02/2013-BEGIN
+		  const char* szFilepath = this->szFilepath;
+		  // ADD-BY-LEETEN 01/02/2013-END
+
 			// read the file size
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if		WITH_BOOST
@@ -686,7 +695,11 @@ public:
 				true);
 
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			#if 0 			// MOD-BY-LEETEN 01/02/2013-FROM:
 			uNrOfQueries++;
+			#else // MOD-BY-LEETEN 01/02/2013-TO:
+			this->uNrOfQueries++;
+			#endif // MOD-BY-LEETEN 01/02/2013-END
 			size_t uNrOfIORequest = 0;
 			// ADD-BY-LEETEN 12/28/2012-END
 
@@ -761,9 +774,15 @@ public:
 				}
 			}
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
+			#if 0 			// MOD-BY-LEETEN 01/02/2013-FROM:
 			uAccumNrOfIORequest += uNrOfIORequest;
 			uMaxNrOfIORequest = max(uMaxNrOfIORequest, uNrOfIORequest);
 			uMinNrOfIORequest = min(uMinNrOfIORequest, uNrOfIORequest);
+			#else // MOD-BY-LEETEN 01/02/2013-TO:
+			this->uAccumNrOfIORequest += uNrOfIORequest;
+			this->uMaxNrOfIORequest = max(this->uMaxNrOfIORequest, uNrOfIORequest);
+			this->uMinNrOfIORequest = min(this->uMinNrOfIORequest, uNrOfIORequest);
+			#endif // MOD-BY-LEETEN 01/02/2013-END
 			// ADD-BY-LEETEN 12/28/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= dWaveletDenomiator;
@@ -779,6 +798,9 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+		  // ADD-BY-LEETEN 01/02/2013-BEGIN
+		  const bool bIsPrintingDecodeBinTiming = this->bIsPrintingDecodeBinTiming;
+		  // ADD-BY-LEETEN 01/02/2013-END
 			if( uNrOfCoefs != vSAT.size() )
 				vSAT.resize(uNrOfCoefs);
 

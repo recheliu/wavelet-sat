@@ -29,7 +29,7 @@ using namespace std;
 #include "lognc.h"
 
 #include "EncoderBase.h"
-#include "SATFileNetCDF.h"	// ADD-BY-LEETEN 01/02/2012
+#include "SATFileNetCDF.h"	// ADD-BY-LEETEN 01/02/2013
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -47,7 +47,7 @@ namespace WaveletSAT
 	template<typename DT, typename ST>
 	class CSATFileEncoder:
 		virtual public CHeaderBase,
-		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2012
+		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2013
 		virtual public CEncoderBase<DT, ST>
 	{
 protected:	
@@ -56,7 +56,7 @@ protected:
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
 
-		#if	0	// DEL-BY-LEETEN 01/02/2012-BEGIN
+		#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 		int iNcId;
 
 		int piNcDimIds[NC_MAX_DIMS];
@@ -66,7 +66,7 @@ protected:
 		char *pszNcDimNames[NC_MAX_DIMS];
 
 		int iDeflateLevel; // ADD-BY-LEETEN 11/09/2012
-		#endif	// DEL-BY-LEETEN 01/02/2012-END
+		#endif	// DEL-BY-LEETEN 01/02/2013-END
 
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -157,7 +157,7 @@ public:
     				&iNcId));
 			#endif	// #if !WITH_NETCDF4 
 
-			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			// dimension
 			int piDimLengths[NC_MAX_DIMS];
 			static char* pszDefaultDimNames[] = {"X", "Y", "Z"};
@@ -213,7 +213,7 @@ public:
 				   iDeflateLevel));
 #endif // #if WITH_NETCDF4
 			// ADD-BY-LEETEN 11/09/2012-END
-			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			// define the dimension for #bins
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
@@ -263,7 +263,7 @@ public:
 				   1, 
 				   iDeflateLevel));
 			#endif // #if WITH_NETCDF4
-			#endif	// MOD-BY-LEETEN 01/02/2012-END
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
 
@@ -320,27 +320,36 @@ public:
 						puCount[d] = this->vuDimLengths[UGetNrOfDims() - d];
 					}
 
-				#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
+				#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 				ASSERT_NETCDF(nc_put_vara_double(
 						   iNcId,
 						   iNcVarId,
 						   puStart,
 						   puCount,
 						   &pSAT[0]));
-				#else	// MOD-BY-LEETEN 01/02/2012-TO:
+				#else	// MOD-BY-LEETEN 01/02/2013-TO:
+				#if 0 				// MOD-BY-LEETEN 01/02/2013-FROM:
 				ASSERT_NETCDF(nc_put_vara_double(
 						   iNcId,
 						   ncVarSAT,
 						   puStart,
 						   puCount,
 						   &pSAT[0]));
-				#endif	// MOD-BY-LEETEN 01/02/2012-END
+				#else // MOD-BY-LEETEN 01/02/2013-TO:
+				ASSERT_NETCDF(nc_put_vara(
+						   iNcId,
+						   ncVarSAT,
+						   puStart,
+						   puCount,
+						   (void*)&pSAT[0]));
+				#endif // MOD-BY-LEETEN 01/02/2013-END
+				#endif	// MOD-BY-LEETEN 01/02/2013-END
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 		
 			delete [] pSAT;
 
-			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			/////////////////////////////////////////////
 			// now reopen the file in read-only mode
 			#if !WITH_NETCDF4 
@@ -354,16 +363,16 @@ public:
     				NC_NOWRITE | NC_NETCDF4,
     				&iNcId));
 			#endif // #if !WITH_NETCDF4
-			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
-			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			ASSERT_NETCDF(
 				nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
-			#endif	// MOD-BY-LEETEN 01/02/2012-END
-			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			iNcId = 0;
-			#endif	// MOD-BY-LEETEN 01/02/2012-END
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 		}
 
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
@@ -467,7 +476,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			// ADD-BY-LEETEN 01/02/2012-BEGIN
+			// ADD-BY-LEETEN 01/02/2013-BEGIN
 			if( !iNcId )
 			{
 				/////////////////////////////////////////////
@@ -486,7 +495,7 @@ public:
 				ASSERT_NETCDF(
 					nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
 			}
-			// ADD-BY-LEETEN 01/02/2012-END
+			// ADD-BY-LEETEN 01/02/2013-END
 
 			vdSums.resize(UGetNrOfBins());
 
@@ -507,13 +516,13 @@ public:
 					puCounts[d] = 1;
 				}
 			}
-			#if	0	// MOD-BY-LEETEN 01/02/2012-FROM:
+			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 			ASSERT_NETCDF(
 				nc_get_vara_double(iNcId, iNcVarId, puStarts, puCounts, pdSums) );
-			#else	// MOD-BY-LEETEN 01/02/2012-TO:
+			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			ASSERT_NETCDF(
 				nc_get_vara(iNcId, ncVarSAT, puStarts, puCounts, (void*)&pdSums[0]) );
-			#endif	// MOD-BY-LEETEN 01/02/2012-END
+			#endif	// MOD-BY-LEETEN 01/02/2013-END
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] = pdSums[b];
@@ -528,11 +537,11 @@ public:
 		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSATFileEncoder()
 		{
-			#if	0	// DEL-BY-LEETEN 01/02/2012-BEGIN
+			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			ASSERT_NETCDF(nc_close(iNcId));
 			for(size_t d = 0; d < UGetNrOfDims() + 1; d++)
 				free(pszNcDimNames[d]);
-			#endif	// DEL-BY-LEETEN 01/02/2012-END
+			#endif	// DEL-BY-LEETEN 01/02/2013-END
 		}
 	};
 }

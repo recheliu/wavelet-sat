@@ -29,6 +29,7 @@ namespace WaveletSAT
 		virtual public CDecoderBase<DT>
 	{
 protected:
+	  bool bIsOutOfCore; // ADD-BY-LEETEN 01/02/2013
 		double* pdSAT;
 public:
 		////////////////////////////////////////////////////////////////////
@@ -54,8 +55,13 @@ public:
 			CDecoderBase<DT>::_SetInteger(eName, lValue);
 			switch(eName)
 			{
+			#if 0 // MOD-BY-LEETEN 01/02/2013-FROM:
 			case RESET_IO_COUNTERS:
 				uMinNrOfIORequest = uDataSize;
+			#else // MOD-BY-LEETEN 01/02/2013-TO:
+			case CDecoderBase<DT>::RESET_IO_COUNTERS:
+				this->uMinNrOfIORequest = uDataSize;
+			#endif // MOD-BY-LEETEN 01/02/2013-END
 				break;
 			}
 		}
@@ -78,6 +84,17 @@ public:
 			void *_Reserved = NULL
 		) 
 		{
+		  // ADD-BY-LEETEN 01/02/2013-BEGIN
+		  size_t uNrOfBins = this->UGetNrOfBins();
+		  bIsOutOfCore = ( uNrOfBins * uDataSize * sizeof(*pdSAT) <= uSizeOfFullArrays )?false:true;
+		  if( !bIsOutOfCore )
+		    {
+			pdSAT = new double[uNrOfBins * uDataSize];
+			ASSERT_NETCDF(
+				nc_get_var(iNcId, ncVarSAT, (void*)&pdSAT[0]) );
+		    }
+		  else
+		    // ADD-BY-LEETEN 01/02/2013-END
 			pdSAT = new double[uDataSize];
 		}
 		
@@ -89,6 +106,9 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+		  // ADD-BY-LEETEN 01/02/2013-BEGIN
+		  const char *szFilepath = this->szFilepath;
+		  // ADD-BY-LEETEN 01/02/2013-END
 			#if		WITH_BOOST
 			size_t uFileSize = fs::file_size( szFilepath );
 			#else	// #if WITH_BOOST
@@ -142,7 +162,6 @@ public:
 				iNcId,
 				ncDimBin,
 				&uNrOfBins));
-
 			vector<size_t> vuDimLengths;
 			for(size_t d = 0; d < uNrOfDims; d++)
 			{
@@ -222,6 +241,14 @@ public:
 			if( uDataSize != vSAT.size() )
 				vSAT.resize(uDataSize);
 
+			// ADD-BY-LEETEN 01/02/2013-BEGIN
+		  if( !bIsOutOfCore )
+		    {
+		      for(size_t d = 0; d < uDataSize; d++)
+			vSAT[d] = (DT)pdSAT[(size_t)usBin * uDataSize + d];
+		      return;
+		    }
+		  // ADD-BY-LEETEN 01/02/2013-END
 			size_t puStarts[NC_MAX_DIMS];
 			size_t puCounts[NC_MAX_DIMS];
 			for(size_t d = 0; d < UGetNrOfDims() + 1; d++)
