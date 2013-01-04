@@ -53,7 +53,9 @@ namespace WaveletSAT
 	// MOD-BY-LEETEN 01/03/2013-END
 	class CSATFileEncoder:
 		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CHeaderBase,
-		virtual public CHeaderBase<ST, BT>,
+		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CHeaderBase<ST, BT>,
+		virtual public CHeaderBase,
+		// MOD-BY-LEETEN 01/04/2013-END
 		// MOD-BY-LEETEN 01/03/2013-END
 		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2013
 		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CEncoderBase<DT, ST>

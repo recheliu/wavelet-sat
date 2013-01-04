@@ -65,7 +65,9 @@ namespace WaveletSAT
 		#else	// MOD-BY-LEETEN 01/03/2013-TO:
 		virtual public CDecoderBase<ST, BT>,
 		virtual public CSATSepDWTNetCDF,
-		virtual public CSepDWTHeader<ST, BT>
+		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CSepDWTHeader<ST, BT>
+		virtual public CSepDWTHeader
+		// MOD-BY-LEETEN 01/04/2013-END
 		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
@@ -178,7 +180,9 @@ public:
 			// MOD-BY-LEETEN 01/03/2013-END
 			CSATSepDWTNetCDF::_SetInteger(eName, lValue);
 			// MOD-BY-LEETEN 01/03/2013-FROM:			CSepDWTHeader::_SetInteger(eName, lValue);
-			CSepDWTHeader<ST, BT>::_SetInteger(eName, lValue);
+			// MOD-BY-LEETEN 01/04/2013-FROM:			CSepDWTHeader<ST, BT>::_SetInteger(eName, lValue);
+			CSepDWTHeader::_SetInteger(eName, lValue);
+			// MOD-BY-LEETEN 01/04/2013-END
 			// MOD-BY-LEETEN 01/03/2013-END
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			switch(eName)
@@ -236,7 +240,9 @@ public:
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			CSATSepDWTNetCDF::_GetInteger(eName, plValue);
 			// MOD-BY-LEETEN 01/03/2013-FROM:			CSepDWTHeader::_GetInteger(eName, plValue);
-			CSepDWTHeader<ST, BT>::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/04/2013-FROM:			CSepDWTHeader<ST, BT>::_GetInteger(eName, plValue);
+			CSepDWTHeader::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/04/2013-END
 			// MOD-BY-LEETEN 01/03/2013-END
 			// ADD-BY-LEETEN 12/30/2012-END
 		}
@@ -1071,7 +1077,9 @@ public:
 			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			CDecoderBase<ST, BT>(),
 			CSATSepDWTNetCDF(),
-			CSepDWTHeader<ST, BT>()
+			// MOD-BY-LEETEN 01/04/2013-FROM:			CSepDWTHeader<ST, BT>()
+			CSepDWTHeader()
+			// MOD-BY-LEETEN 01/04/2013-END
 			#endif	// MOD-BY-LEETEN 01/03/2013-END
 		#endif	// MOD-BY-LEETEN 01/02/2013-END
 		{

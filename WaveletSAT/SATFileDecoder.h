@@ -37,7 +37,9 @@ namespace WaveletSAT
 		virtual public CSATFileNetCDF,
 		virtual public CDecoderBase<DT>
 		#else	// MOD-BY-LEETEN 01/03/2013-TO:
-		virtual public CHeaderBase<ST, BT>,
+		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CHeaderBase<ST, BT>,
+		virtual public CHeaderBase,
+		// MOD-BY-LEETEN 01/04/2013-END
 		virtual public CSATFileNetCDF,
 		virtual public CDecoderBase<ST, BT>
 		#endif	// MOD-BY-LEETEN 01/03/2013-END

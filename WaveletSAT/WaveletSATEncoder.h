@@ -74,7 +74,9 @@ namespace WaveletSAT
 		virtual public CSepDWTHeader,
 		virtual public CEncoderBase<T, double>	
 		#else	// MOD-BY-LEETEN 01/03/2013-TO:
-		virtual public CSepDWTHeader<ST, BT>,
+		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CSepDWTHeader<ST, BT>,
+		virtual public CSepDWTHeader,
+		// MOD-BY-LEETEN 01/04/2013-END
 		virtual public CEncoderBase<DT, ST, BT>	
 		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
