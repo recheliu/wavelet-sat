@@ -1194,7 +1194,11 @@ public:
 					);
 
 					// MOD-BY-LEETEN 01/03/2013-FROM:					for(vector< pair<size_t, double> >::iterator
+					#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 					for(vector< pair<BT, WT> >::iterator
+					      #else // MOD-BY-LEETEN 01/04/2013-TO:
+					for(typename vector< pair<BT, WT> >::iterator
+					      #endif // MOD-BY-LEETEN 01/04/2013-END
 					// MOD-BY-LEETEN 01/03/2013-END
 						ivpairCoefs = vpairCoefBinValue.begin();
 						ivpairCoefs != vpairCoefBinValue.end();

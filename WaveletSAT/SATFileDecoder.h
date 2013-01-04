@@ -352,7 +352,11 @@ public:
 
 				if( bIsNearBorder )
 				{
+				  #if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 					vField[d] = (DT)0;
+					#else // MOD-BY-LEETEN 01/04/2013-TO:
+					vField[d] = (ST)0;
+					#endif // MOD-BY-LEETEN 01/04/2013-END
 					continue;
 				}
 			}

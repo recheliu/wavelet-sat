@@ -1,8 +1,8 @@
 #pragma once
 
-#include "SATEncoder.h"
+// DEL-BY-LEETEN 01/04/2013: #include "SATEncoder.h"
 #include "WaveletSATEncoder.h"
-#include "SATSepDWTEncoder.h"
+   // DEL-BY-LEETEN 01/04/2013: #include "SATSepDWTEncoder.h"
 #include "SATFileEncoder.h"		// ADD-BY-LEETEN 01/02/2013
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include <netcdf.h>
@@ -24,9 +24,11 @@ class CSimpleND:
 	virtual public WaveletSAT::CWaveletSATEncoder<DT, ST, BT, WT>
 #endif	// MOD-BY-LEETEN 01/03/2013-END
 {
+  #if 0   // DEL-BY-LEETEN 01/04/2013-BEGIN
 	// MOD-BY-LEETEN 01/03/2013-FROM:	size_t uNrOfBins;
 	BT uNrOfBins;
 	// MOD-BY-LEETEN 01/03/2013-END
+	#endif // DEL-BY-LEETEN 01/04/2013-END
 	DT valueMin, valueMax;
 public:
 	virtual 
@@ -41,6 +43,8 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+	  const size_t& uNrOfBins = this->uNrOfBins; // ADD-BY-LEETEN 01/04/2013
+
 		DT clampedValue = min(max(value, valueMin), valueMax);
 		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
@@ -48,7 +52,11 @@ public:
 		vpBins.clear();
 		vpBins.push_back(pair<size_t, double>(uBin, 1.0));
 		#else	// MOD-BY-LEETEN 01/03/2013-TO:
+		#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 		BT uBin = (BT)floor((double)(uNrOfBins * (clampedValue - valueMin))/(double)(valueMax - valueMin));
+		#else // MOD-BY-LEETEN 01/04/2013-TO:
+		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
+		#endif // MOD-BY-LEETEN 01/04/2013-END
 		uBin = min(uBin, uNrOfBins - 1);
 		vpBins.clear();
 		vpBins.push_back(pair<BT, WT>(uBin, (WT)1));
@@ -59,14 +67,16 @@ public:
 	void
 	_SetHistogram
 	(
+	 #if 0 	 // DEL-BY-LEETEN 01/04/2013-BEGIN
 		// MOD-BY-LEETEN 01/03/2013-FROM:		size_t uNrOfBins,
 		const BT& uNrOfBins,
 		// MOD-BY-LEETEN 01/03/2013-END
+		#endif // DEL-BY-LEETEN 01/04/2013-END
 		const DT& valueMin, 
 		const DT& valueMax
 	)
 	{
-		this->uNrOfBins = uNrOfBins;
+		// DEL-BY-LEETEN 01/04/2013: this->uNrOfBins = uNrOfBins;
 		this->valueMin = valueMin;
 		this->valueMax = valueMax;
 	}

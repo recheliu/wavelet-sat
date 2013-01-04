@@ -50,7 +50,7 @@ class CSimpleNDFile:
 	// MOD-BY-LEETEN 01/03/2013-END
 {
 	// MOD-BY-LEETEN 01/03/2013-FROM:	size_t uNrOfBins;
-	BT uNrOfBins;
+	// DEL-BY-LEETEN 01/04/2013: BT uNrOfBins;
 	// MOD-BY-LEETEN 01/03/2013-END
 	DT valueMin, valueMax;
 public:
@@ -66,6 +66,8 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+	  const size_t& uNrOfBins = this->uNrOfBins; // ADD-BY-LEETEN 01/03/2013
+
 		DT clampedValue = min(max(value, valueMin), valueMax);
 		// MOD-BY-LEETEN 01/03/2013-FROM:		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
 		size_t uBin = (size_t)floor((double)((double)uNrOfBins * (double)(clampedValue - valueMin))/(double)(valueMax - valueMin));
@@ -81,14 +83,16 @@ public:
 	void
 	_SetHistogram
 	(
+	 #if 0 // DEL-BY-LEETEN 01/04/2013-BEGIN
 		// MOD-BY-LEETEN 01/03/2013-FROM:		size_t uNrOfBins,
 		const BT& uNrOfBins,
 		// MOD-BY-LEETEN 01/03/2013-END
+		#endif // DEL-BY-LEETEN 01/04/2013-END
 		const DT& valueMin, 
 		const DT& valueMax
 	)
 	{
-		this->uNrOfBins = uNrOfBins;
+		// DEL-BY-LEETEN 01/04/2013: this->uNrOfBins = uNrOfBins;
 		this->valueMin = valueMin;
 		this->valueMax = valueMax;
 	}

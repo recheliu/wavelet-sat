@@ -205,7 +205,11 @@ main(int argn, char* argv[])
 		}
 
 		// MOD-BY-LEETEN 01/03/2013-FROM:		cSimpleNDFile._SetHistogram(uNrOfBins, dValueMin, dValueMax);
+		#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 		cSimpleNDFile._SetHistogram((WaveletSAT::typeBin)uNrOfBins, dValueMin, dValueMax);
+		#else // MOD-BY-LEETEN 01/04/2013-TO:
+		cSimpleNDFile._SetHistogram(dValueMin, dValueMax);
+		#endif // MOD-BY-LEETEN 01/04/2013-END
 		// MOD-BY-LEETEN 01/03/2013-END
 
 		// decide the threshld to filter numerical error

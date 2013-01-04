@@ -183,7 +183,11 @@ main(int argn, char* argv[])
 
 	// Step 2: Allocate the needed #SATs
 	// MOD-BY-LEETEN 01/03/2013-FROM:	cSimpleND._SetHistogram(uNrOfBins, dValueMin, dValueMax);
+	#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 	cSimpleND._SetHistogram((WaveletSAT::typeBin)uNrOfBins, dValueMin, dValueMax);
+	#else // MOD-BY-LEETEN 01/04/2013-TO:
+	cSimpleND._SetHistogram(dValueMin, dValueMax);
+	#endif // MOD-BY-LEETEN 01/04/2013-END
 	// MOD-BY-LEETEN 01/03/2013-END
 	cSimpleND._Allocate();
 	LIBCLOCK_END(bIsPrintingTiming);

@@ -7,7 +7,7 @@ using namespace std;
 
 #include "liblog.h"
 
-#include "SATEncoder.h"
+// DEL-BY-LEETEN 01/04/2013: #include "SATEncoder.h"
 #include "SepDWTHeader.h"
 #include "WaveletSATEncoder.h"
 

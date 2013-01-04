@@ -110,7 +110,11 @@ protected:
 				imapHist->second += weight;
 			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			map<BT, ST>& mapHist = vmapHists[uIndex];
+			#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
 			map<BT, ST>::iterator imapHist = mapHist.find(uBin);
+			#else // MOD-BY-LEETEN 01/04/2013-TO:
+			typename map<BT, ST>::iterator imapHist = mapHist.find(uBin);
+			#endif // MOD-BY-LEETEN 01/04/2013-END
 			if(mapHist.end() == imapHist )
 				mapHist.insert(pair<BT, ST>(uBin, weight));
 			else
