@@ -60,11 +60,23 @@ namespace WaveletSAT
 	To query the entry for a certain location:
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
-	template<typename T>
+	// MOD-BY-LEETEN 01/03/2013-FROM:	template<typename T>
+	template<
+		typename DT,	//!< Type of the data
+		typename ST = double,	//!< Type of the sum
+		typename BT = unsigned short,	//!< Type of the bin
+		typename WT = double	//!< Type of the wavelet coefficientsd
+	>
+	// MOD-BY-LEETEN 01/03/2013-END
 	class CWaveletSATEncoder:
 		virtual public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
+		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		virtual public CSepDWTHeader,
 		virtual public CEncoderBase<T, double>	
+		#else	// MOD-BY-LEETEN 01/03/2013-TO:
+		virtual public CSepDWTHeader<ST, BT>,
+		virtual public CEncoderBase<DT, ST, BT>	
+		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 	  // ADD-BY-LEETEN 12/15/2012-BEGIN
@@ -88,19 +100,28 @@ protected:
 		vector< CSepDWTData<double> > vcBinCoefs;
 		// ADD-BY-LEETEN 11/11/2012-BEGIN
 		#else	// #if	!WITH_COEF_POOL	
-		vector< CSepDWTPool<double, unsigned short> > vcCoefPools;
+		// MOD-BY-LEETEN 01/03/2013-FROM:		vector< CSepDWTPool<double, unsigned short> > vcCoefPools;
+		vector< CSepDWTPool<WT, BT> > vcCoefPools;
+		// MOD-BY-LEETEN 01/03/2013-END
 		#endif	// #if	!WITH_COEF_POOL	
 		// ADD-BY-LEETEN 11/11/2012-END
 		// ADD-BY-LEETEN 10/29/2012-END
 
 		//! Update the specified bin.
+		virtual // ADD-BY-LEETEN 01/03/2013
 		void 
 		_UpdateBin
 		(
 			const vector<size_t>& vuPos, 
+			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			const T& value,
 			size_t uBin, 
 			const double& dWeight,
+			#else	// MOD-BY-LEETEN 01/03/2013-TO:
+			const DT& value,
+			const BT& uBin, 
+			const WT& dWeight,
+			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -315,9 +336,13 @@ protected:
 					vuLocalCoefSub[d] = vuSubs[uBase + uLevel];
 				}
 
+				#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 				double dWavelet = dWeight * (double)lWavelet;
-				
 				this->vcCoefPools[c]._AddAt((unsigned short)uBin, vuLocalCoefSub, dWavelet);
+				#else	// MOD-BY-LEETEN 01/03/2013-TO:
+				WT dWavelet = dWeight * (WT)lWavelet;
+				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
+				#endif	// MOD-BY-LEETEN 01/03/2013-END
 			}
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
@@ -540,7 +565,9 @@ public:
 					vuGlobalCoefBase[d] = (!uLevel)?0:(1<<(uLevel - 1));
 				}
 
-				vector< pair<size_t, double> > vpairLocalCoefBinValue;
+				// MOD-BY-LEETEN 01/03/2013-FROM:				vector< pair<size_t, double> > vpairLocalCoefBinValue;
+				vector< pair<BT, WT> > vpairLocalCoefBinValue;
+				// MOD-BY-LEETEN 01/03/2013-END
 
 				// ADD-BY-LEETEN 12/30/2012-BEGIN
 				#if	!WITH_SMART_PTR
@@ -559,7 +586,9 @@ public:
 					vector<size_t> vuLocalCoefSub;
 					_ConvertIndexToSub(bc, vuLocalCoefSub, vuLocalCoefLengths);
 
-					vector< pair<size_t, double> > vpairCoefBinValue;
+					// MOD-BY-LEETEN 01/03/2013-FROM:					vector< pair<size_t, double> > vpairCoefBinValue;
+					vector< pair<BT, WT> > vpairCoefBinValue;
+					// MOD-BY-LEETEN 01/03/2013-END
 					this->vcCoefPools[c]._GetCoefSparse
 					(
 						vuLocalCoefSub,
@@ -770,7 +799,9 @@ public:
 					dWavelet = sqrt(dWavelet);
 					}
 					double dWeight = ( !bIsFinalizedWithoutWavelet )?(dWavelet / dWaveletDenomiator):1.0;
-					this->vcCoefPools[c]._Finalize( dWeight );
+					// MOD-BY-LEETEN 01/03/2013-FROM:					this->vcCoefPools[c]._Finalize( dWeight );
+					this->vcCoefPools[c]._Finalize( (WT)dWeight );
+					// MOD-BY-LEETEN 01/03/2013-END
 					// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
 				}
 			}	
@@ -863,7 +894,7 @@ public:
 			#else	// #if	!WITH_COEF_POOL
 			// compute the #coef in the full array per bin SAT
 			uNrOfCoefsInFullArray = min(
-				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(T))), 
+				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(WT))), 
 				uNrOfCoefs);
 
 			////////////////////////////////////////
@@ -940,7 +971,9 @@ public:
 				// ADD-BY-LEETEN 11/11/2012-END
 
 				this->vcCoefPools[c]._Set(
-					this->UGetNrOfBins(),
+					// MOD-BY-LEETEN 01/03/2013-FROM:					this->UGetNrOfBins(),
+					(BT)this->UGetNrOfBins(),
+					// MOD-BY-LEETEN 01/03/2013-END
 					vuPoolDimLengths,
 					this->vuMaxCounts[c],	// ADD-BY-LEETEN 11/11/2012
 					bIsSparse);
@@ -957,7 +990,9 @@ public:
 		_GetAllSums
 		(
 			const vector<size_t>& vuPos,
-			vector<double>& vdSums,
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double>& vdSums,
+			vector<ST>& vdSums,
+			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -1120,7 +1155,9 @@ public:
 			vector<size_t> vuLocalCoefSub;
 			vuLocalCoefSub.resize( UGetNrOfDims() );
 
-			vector<double> vdWaveletBasis;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double> vdWaveletBasis;
+			vector<WT> vdWaveletBasis;
+			// MOD-BY-LEETEN 01/03/2013-END
 			vector<size_t> vuSubs;
 
 			_GetBackwardWavelet(
@@ -1132,7 +1169,9 @@ public:
 			// now find the combination of the coefficients of all dimensions 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				double dWavelet = 1.0;
+				// MOD-BY-LEETEN 01/03/2013-FROM:				double dWavelet = 1.0;
+				WT dWavelet = (WT)1;
+				// MOD-BY-LEETEN 01/03/2013-END
 				for(size_t d = 0, uBase = 0;
 					d < UGetNrOfDims(); 
 					uBase += vuDimMaxLevels[d], d++, p++)
@@ -1143,14 +1182,18 @@ public:
 
 				if( this->vcCoefPools[c].BIsSparse() )
 				{
-					vector< pair<size_t, double> > vpairCoefBinValue;
+					// MOD-BY-LEETEN 01/03/2013-FROM:					vector< pair<size_t, double> > vpairCoefBinValue;
+					vector< pair<BT, WT> > vpairCoefBinValue;
+					// MOD-BY-LEETEN 01/03/2013-END
 					this->vcCoefPools[c]._GetCoefSparse
 					(
 						vuLocalCoefSub,
 						vpairCoefBinValue
 					);
 
-					for(vector< pair<size_t, double> >::iterator
+					// MOD-BY-LEETEN 01/03/2013-FROM:					for(vector< pair<size_t, double> >::iterator
+					for(vector< pair<BT, WT> >::iterator
+					// MOD-BY-LEETEN 01/03/2013-END
 						ivpairCoefs = vpairCoefBinValue.begin();
 						ivpairCoefs != vpairCoefBinValue.end();
 						ivpairCoefs++ )
@@ -1161,15 +1204,25 @@ public:
 					size_t uIndex;
 					for(size_t b = 0; b < UGetNrOfBins(); b++)
 					{
+						#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 						double dWaveletCoef;
 						this->vcCoefPools[c]._GetAt(
 							(unsigned short)b, 
 							( !b )?vuLocalCoefSub:vuEmpty, 
 							uIndex, dWaveletCoef);
-
 						if( fabs(dWaveletCoef) >= dWaveletThreshold )
 							// update the corresponding wavelet coeffcients
 							vdSums[b] += dWaveletCoef * dWavelet;
+						#else	// MOD-BY-LEETEN 01/03/2013-TO:
+						WT dWaveletCoef;
+						this->vcCoefPools[c]._GetAt(
+							(BT)b, 
+							( !b )?vuLocalCoefSub:vuEmpty, 
+							uIndex, dWaveletCoef);
+						// update the corresponding wavelet coeffcients
+						if( fabs((double)dWaveletCoef) >= (double)dWaveletThreshold )
+							vdSums[b] += (ST)(dWaveletCoef * dWavelet);
+						#endif	// MOD-BY-LEETEN 01/03/2013-END
 					}
 				}
 			}

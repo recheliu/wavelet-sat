@@ -54,8 +54,16 @@ namespace WaveletSAT
 	To query the entry for a certain location:
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
+	// ADD-BY-LEETEN 01/03/2013-BEGIN
+	template<
+		typename ST = typeSum,		//!< Type of the sum
+		typename BT = typeBin		//!< Type of the bin
+	>
+	// MOD-BY-LEETEN 01/03/2013-END
 	class CSepDWTHeader:
-		virtual public CHeaderBase	
+		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CHeaderBase
+		virtual public CHeaderBase<ST, BT>
+		// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 		// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -518,7 +526,9 @@ public:
 		_Set
 		(
 			const vector<size_t>& vuDimLengths,
-			const size_t uNrOfBins,
+			// MOD-BY-LEETEN 01/03/2013-FROM:			const size_t uNrOfBins,
+			const BT& uNrOfBins,
+			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{

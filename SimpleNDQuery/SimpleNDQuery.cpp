@@ -204,7 +204,9 @@ main(int argn, char* argv[])
 			uNrOfValues *= uDimLength;
 		}
 
-		cSimpleNDFile._SetHistogram(uNrOfBins, dValueMin, dValueMax);
+		// MOD-BY-LEETEN 01/03/2013-FROM:		cSimpleNDFile._SetHistogram(uNrOfBins, dValueMin, dValueMax);
+		cSimpleNDFile._SetHistogram((WaveletSAT::typeBin)uNrOfBins, dValueMin, dValueMax);
+		// MOD-BY-LEETEN 01/03/2013-END
 
 		// decide the threshld to filter numerical error
 		double dThreshold = cSimpleNDFile.DGetThreshold();
@@ -243,14 +245,18 @@ main(int argn, char* argv[])
 				if( iIsVerbose )
 					printf("%3d,", (int)uPos);
 			}
-			vector< pair<size_t, double> > vuBins;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, double> > vuBins;
+			vector< pair<WaveletSAT::typeBin, WaveletSAT::typeSum> > vuBins;
+			// MOD-BY-LEETEN 01/03/2013-END
 			cSimpleNDFile._MapValueToBins(vuBase, vdData[uIndex], vuBins);
 
 			size_t uValueBin = vuBins[0].first;
 			if( iIsVerbose )
 				printf(")=\t%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
 
-			vector<double> vdH;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double> vdH;
+			vector<WaveletSAT::typeSum> vdH;
+			// MOD-BY-LEETEN 01/03/2013-END
 			vdH.resize(uNrOfBins);
 			for(size_t i = 0; i < uNrOfIHs; i++)
 			{
@@ -261,11 +267,14 @@ main(int argn, char* argv[])
 					vuPos.push_back(vuBase[d] - vvuOffsets[i][d]);
 					iSign *= (vvuOffsets[i][d])?(-1):(+1);
 				}
-				vector<double> vdIH;
+				// MOD-BY-LEETEN 01/03/2013-FROM:				vector<double> vdIH;
+				vector<WaveletSAT::typeSum> vdIH;
+				// MOD-BY-LEETEN 01/03/2013-END
 				cSimpleNDFile._GetAllSums(vuPos, vdIH);
-
 				for(size_t b = 0; b < uNrOfBins; b++)
-					vdH[b] += iSign * vdIH[b]; 
+					// MOD-BY-LEETEN 01/03/2013-FROM:					vdH[b] += iSign * vdIH[b]; 
+					vdH[b] += (WaveletSAT::typeSum)iSign * vdIH[b]; 
+					// MOD-BY-LEETEN 01/03/2013-END
 			}
 
 			double dError = 0.0;

@@ -23,10 +23,21 @@ namespace WaveletSAT
 	//! The class that creates SAT in core.
 	/*!
 	*/
-	template<typename DT, typename ST>
+	// MOD-BY-LEETEN 01/03/2013-FROM:	template<typename DT, typename ST>
+	template<
+		typename DT,					//!< Type of the data
+		typename ST = typeSum,			//!< Type of the sum
+		typename BT = typeBin			//!< Type of the bin
+	>
+	// MOD-BY-LEETEN 01/03/2013-END
 	class CSATEncoder:
+		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		virtual public CHeaderBase,
 		virtual public CEncoderBase<DT, ST>
+		#else	// MOD-BY-LEETEN 01/03/2013-TO:
+		virtual public CHeaderBase<ST, BT>,
+		virtual public CEncoderBase<DT, ST, BT>
+		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 		//! The storage to store the original data.

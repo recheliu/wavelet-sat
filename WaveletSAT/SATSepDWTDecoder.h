@@ -43,15 +43,30 @@ using namespace std;
 
 namespace WaveletSAT
 {
+	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 	template<
 		typename DT,	//!< Type of the data
 		typename WT		//!< Type of the wavelet coefficients
 	>
+	#else	// MOD-BY-LEETEN 01/03/2013-TO:
+	template<
+		// typename DT,				//!< Type of the data
+		typename ST = typeSum,		//!< Type of the sum
+		typename BT = typeBin,		//!< Type of the bin
+		typename WT = typeWavelet	//!< Type of the wavelet coefficientsd
+	>
+	#endif	// MOD-BY-LEETEN 01/03/2013-END
 	// The class that access the coefficients from files (in NetCDF format)
 	class CSATSepDWTDecoder:
+		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		virtual public CDecoderBase<DT>,	// ADD-BY-LEETEN 01/02/2013
 		virtual public CSATSepDWTNetCDF,
 		virtual public CSepDWTHeader
+		#else	// MOD-BY-LEETEN 01/03/2013-TO:
+		virtual public CDecoderBase<ST, BT>,
+		virtual public CSATSepDWTNetCDF,
+		virtual public CSepDWTHeader<ST, BT>
+		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
@@ -75,7 +90,10 @@ protected:
 			bool bIsPrintingDecodeBinTiming;
 			#endif	// DEL-BY-LEETEN 01/02/2013-END
 
-			vector<unsigned short>	vusCachedNextOffsets;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<unsigned short>	vusCachedNextOffsets;
+			vector<BT>	vusCachedNextOffsets;
+			// MOD-BY-LEETEN 01/03/2013-END
+
 			// vector<unsigned short>	vusCachedBins;
 			// vector<WT>				vCachedValues;
 
@@ -90,7 +108,9 @@ protected:
 			vector<size_t>			vuCoefOffsets;
 
 			//! The D-dim. array of the coefficient counters
-			vector<unsigned short>	vusCoefCounts;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<unsigned short>	vusCoefCounts;
+			vector<BT>	vusCoefCounts;
+			// MOD-BY-LEETEN 01/03/2013-END
 
 			//! #Coef. values stored in full arrays
 			size_t uMaxNrOfValuesInCore;	
@@ -99,7 +119,9 @@ protected:
 			/*!
 			If the poiner is NULL, it means that the coefficients are out of core.
 			*/
-			vector< CSepDWTPool<WT, unsigned short>* > vpcCoefPools;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< CSepDWTPool<WT, unsigned short>* > vpcCoefPools;
+			vector< CSepDWTPool<WT, BT>* > vpcCoefPools;
+			// MOD-BY-LEETEN 01/03/2013-END
 
 			#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
 			//! An array to store the coefficient bins.
@@ -151,13 +173,17 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-			CDecoderBase<DT>::_SetInteger(eName, lValue);	// ADD-BY-LEETEN 01/02/2013
+			// MOD-BY-LEETEN 01/03/2013-FROM:			CDecoderBase<DT>::_SetInteger(eName, lValue);	// ADD-BY-LEETEN 01/02/2013
+			CDecoderBase<ST, BT>::_SetInteger(eName, lValue);	// ADD-BY-LEETEN 01/02/2013
+			// MOD-BY-LEETEN 01/03/2013-END
 			CSATSepDWTNetCDF::_SetInteger(eName, lValue);
-			CSepDWTHeader::_SetInteger(eName, lValue);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			CSepDWTHeader::_SetInteger(eName, lValue);
+			CSepDWTHeader<ST, BT>::_SetInteger(eName, lValue);
+			// MOD-BY-LEETEN 01/03/2013-END
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			switch(eName)
 			{
-			#if 0 			  // MOD-BY-LEETEN 01/03/2012-FROM:
+			#if 0 			  // MOD-BY-LEETEN 01/03/2013-FROM:
 			case RESET_IO_COUNTERS:
 				#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 				uAccumNrOfIORequest = 0;
@@ -167,7 +193,7 @@ public:
 				// DEL-BY-LEETEN 01/02/2013:	uNrOfQueries = 0;
 				break;
 			#else // MOD-BY-LEETEN 01/02/2013-TO:
-			case CDecoderBase<DT>::RESET_IO_COUNTERS:
+			case CDecoderBase<ST, BT>::RESET_IO_COUNTERS:
 				this->uMinNrOfIORequest = uNrOfUpdatingCoefs;
 				break;
 			#endif // MOD-BY-LEETEN 01/02/2013-END
@@ -203,11 +229,15 @@ public:
 				break;
 			}
 			#else	// MOD-BY-LEETEN 01/02/2013-TO:
-			CDecoderBase<DT>::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			CDecoderBase<DT>::_GetInteger(eName, plValue);
+			CDecoderBase<ST, BT>::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/03/2013-END
 			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			CSATSepDWTNetCDF::_GetInteger(eName, plValue);
-			CSepDWTHeader::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			CSepDWTHeader::_GetInteger(eName, plValue);
+			CSepDWTHeader<ST, BT>::_GetInteger(eName, plValue);
+			// MOD-BY-LEETEN 01/03/2013-END
 			// ADD-BY-LEETEN 12/30/2012-END
 		}
 
@@ -237,7 +267,9 @@ public:
 				for(size_t lc = 0; lc < uNrOfLocalCoefs; lc++, c++)
 				{
 					size_t gc = this->vuMapLocalToGlobal[c];
-					uNrOfLocalValues += this->vusCoefCounts[gc];
+					// MOD-BY-LEETEN 01/03/2013-FROM:					uNrOfLocalValues += this->vusCoefCounts[gc];
+					uNrOfLocalValues += (size_t)this->vusCoefCounts[gc];
+					// MOD-BY-LEETEN 01/03/2013-END
 				}
 				vuGlobalValueBase[w] = uValueBase;
 				vuLocalValueCount[w] = uNrOfLocalValues;
@@ -255,7 +287,9 @@ public:
 			#endif	// #if	!WITH_SMART_PTR
 			// ADD-BY-LEETEN 12/30/2012-END
 			// sort the coef. indices by its # coefficients
-			vector< pair<unsigned short, long long> > vpairCoefCountIndex;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<unsigned short, long long> > vpairCoefCountIndex;
+			vector< pair<BT, long long> > vpairCoefCountIndex;
+			// MOD-BY-LEETEN 01/03/2013-END
 			vpairCoefCountIndex.resize(uNrOfCoefs);
 			for(size_t c = 0; c < uNrOfCoefs; c++)
 				vpairCoefCountIndex[c] = make_pair(this->vusCoefCounts[c], -(long long)c);
@@ -455,7 +489,9 @@ public:
 					}
 				}
 
-			_Set(vuDimLengths, uNrOfBins);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			_Set(vuDimLengths, uNrOfBins);
+			_Set(vuDimLengths, (BT)uNrOfBins);
+			// MOD-BY-LEETEN 01/03/2013-END
 
 			//
 			// now define the variable for the coef headers
@@ -522,7 +558,9 @@ public:
 				ncVarCoefCount,
 				(void*)&pCoefCounts[0]));
 			for(size_t h = 0; h < vusCoefCounts.size(); h++)
-				vusCoefCounts[h] = (unsigned short)pCoefCounts[h];
+				// MOD-BY-LEETEN 01/03/2013-FROM:				vusCoefCounts[h] = (unsigned short)pCoefCounts[h];
+				vusCoefCounts[h] = (BT)pCoefCounts[h];
+				// MOD-BY-LEETEN 01/03/2013-END
 			#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 			pCoefCounts.free();
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -641,9 +679,13 @@ public:
 
 					if( !vpcCoefPools[c] )
 					{
-						vpcCoefPools[c]= new CSepDWTPool<WT, unsigned short>;
+						// MOD-BY-LEETEN 01/03/2013-FROM:						vpcCoefPools[c]= new CSepDWTPool<WT, unsigned short>;
+						vpcCoefPools[c]= new CSepDWTPool<WT, BT>;
+						// MOD-BY-LEETEN 01/03/2013-END
 						vpcCoefPools[c]->_Set(
-							UGetNrOfBins(),
+							// MOD-BY-LEETEN 01/03/2013-FROM:							UGetNrOfBins(),
+							(BT)UGetNrOfBins(),
+							// MOD-BY-LEETEN 01/03/2013-END
 							vuLocalCoefLengths,
 							vuMaxCounts[c],
 							true);
@@ -673,7 +715,9 @@ public:
 		_GetAllSums
 		(
 			const vector<size_t>& vuPos,
-			vector<double>& vdSums,
+			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double>& vdSums,
+			vector<ST>& vdSums,
+			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -729,14 +773,18 @@ public:
 				size_t uGlobalCoefIndex = UConvertSubToIndex(vuCoefSub, this->vuCoefLengths);
 				if( this->vbFlagsCoefInCore[uGlobalCoefIndex] )
 				{
-					vector< pair<size_t, WT> > vpairCoefBinValues;
+					// MOD-BY-LEETEN 01/03/2013-FROM:					vector< pair<size_t, WT> > vpairCoefBinValues;
+					vector< pair<BT, WT> > vpairCoefBinValues;
+					// MOD-BY-LEETEN 01/03/2013-END
 					this->vpcCoefPools[c]->_GetCoefSparse
 					(
 						vuLocalCoefSub,
 						vpairCoefBinValues
 					);
 
-					for(vector< pair<size_t, double> >::iterator
+					// MOD-BY-LEETEN 01/03/2013-FROM:					for(vector< pair<size_t, double> >::iterator
+					for(vector< pair<BT, WT> >::iterator
+					// MOD-BY-LEETEN 01/03/2013-END
 						ivpairCoefs = vpairCoefBinValues.begin();
 						ivpairCoefs != vpairCoefBinValues.end();
 						ivpairCoefs++ )
@@ -793,8 +841,13 @@ public:
 		void
 		_DecodeBin
 		(
+			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			unsigned short usBin,
 			valarray<DT> &vSAT,
+			#else	// MOD-BY-LEETEN 01/03/2013-TO:
+			const BT& usBin,
+			valarray<ST> &vSAT,
+			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -853,9 +906,15 @@ public:
 				{
 					gc = vuMapLocalToGlobal[c];
 
+					#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 					unsigned short usCount = vusCoefCounts[gc];
 					unsigned short usNextOffset = vusCachedNextOffsets[gc];
 					unsigned short usFetchedBin; // = vusCachedBins[gc];
+					#else	// MOD-BY-LEETEN 01/03/2013-TO:
+					BT usCount = vusCoefCounts[gc];
+					BT usNextOffset = vusCachedNextOffsets[gc];
+					BT usFetchedBin; // = vusCachedBins[gc];
+					#endif	// MOD-BY-LEETEN 01/03/2013-END
 					WT FetchedValue; // = vCachedValues[gc];
 
 					// move the cache bin till it is great than or equal to the given bin
@@ -940,8 +999,13 @@ public:
 		virtual
 		void
 		_ClampToDataSize(
+			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			const valarray<DT>& vCoefField,
 			valarray<DT>& vDataField,
+			#else	// MOD-BY-LEETEN 01/03/2013-TO:
+			const valarray<ST>& vCoefField,
+			valarray<ST>& vDataField,
+			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 			)
 		{
@@ -960,7 +1024,9 @@ public:
 		virtual
 		void
 		_ClampBorder(
-			valarray<DT>& vField,
+			// MOD-BY-LEETEN 01/03/2013-FROM:			valarray<DT>& vField,
+			valarray<ST>& vField,
+			// MOD-BY-LEETEN 01/03/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL
@@ -984,7 +1050,9 @@ public:
 
 				if( bIsNearBorder )
 				{
-					vField[d] = (DT)0;
+					// MOD-BY-LEETEN 01/03/2013-FROM:					vField[d] = (DT)0;
+					vField[d] = (ST)0;
+					// MOD-BY-LEETEN 01/03/2013-END
 					continue;
 				}
 			}
@@ -996,9 +1064,15 @@ public:
 			:bIsPrintingDecodeBinTiming(false)	// ADD-BY-LEETEN 12/29/2012-BEGIN
 		#else	// MOD-BY-LEETEN 01/02/2013-TO:
 		CSATSepDWTDecoder():
+			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			CDecoderBase<DT>(),
 			CSATSepDWTNetCDF(),
 			CSepDWTHeader()
+			#else	// MOD-BY-LEETEN 01/03/2013-TO:
+			CDecoderBase<ST, BT>(),
+			CSATSepDWTNetCDF(),
+			CSepDWTHeader<ST, BT>()
+			#endif	// MOD-BY-LEETEN 01/03/2013-END
 		#endif	// MOD-BY-LEETEN 01/02/2013-END
 		{
 		}

@@ -28,6 +28,13 @@ namespace WaveletSAT
 	To query the entry for a certain location:
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
+	// ADD-BY-LEETEN 01/03/2013-BEGIN
+	template<
+		// typename DT,				//!< Type of the data
+		typename ST = typeSum,		//!< Type of the sum
+		typename BT = typeBin		//!< Type of the bin
+	>
+	// ADD-BY-LEETEN 01/03/2013-END
 	class CHeaderBase
 		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
@@ -41,8 +48,12 @@ protected:
 		//! The length of the coefficients per dim.
 		vector<size_t> vuDimLengths;
 
+		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		//! The #bins of this SAT
 		size_t uNrOfBins;
+		#else	// MOD-BY-LEETEN 01/03/2013-TO:
+		BT uNrOfBins;
+		#endif	// MOD-BY-LEETEN 01/03/2013-END
 		
 		// ADD-BY-LEETEN 12/16/2012-BEGIN
 public:
@@ -87,7 +98,9 @@ public:
 			void *_Reserved = NULL
 		) const
 		{
-			return uNrOfBins;
+			// MOD-BY-LEETEN 01/03/2013-FROM:			return uNrOfBins;
+			return (size_t)uNrOfBins;
+			// MOD-BY-LEETEN 01/03/2013-END
 		}
 		/*
 		The public interface. 
@@ -157,7 +170,9 @@ public:
 		_Set
 		(
 			const vector<size_t>& vuDimLengths,
-			const size_t uNrOfBins,
+			// MOD-BY-LEETEN 01/03/2013-FROM:			const size_t uNrOfBins,
+			const BT& uNrOfBins,
+			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{

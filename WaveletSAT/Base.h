@@ -16,10 +16,11 @@ Then the user call _Update(vuPos, value) to update the value at the given locati
 */
 namespace WaveletSAT
 {
-	/* usage: 
-	Setup #bins (to allocate #coefficients), dimensions (so the program can pre-compute the SAT of the wavelet basis), 
-	*/
-
+	// ADD-BY-LEETEN 01/03/2013-BEGIN
+	typedef unsigned short	typeBin;
+	typedef double			typeWavelet;
+	typedef double			typeSum;
+	// ADD-BY-LEETEN 01/03/2013-END
 	//! The base class of all classes
 	class CBase
 	{

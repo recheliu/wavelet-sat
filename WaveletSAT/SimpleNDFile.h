@@ -31,14 +31,27 @@ _ClampNegative
 	return max(v, (DT)0);
 }
 // ADD-BY-LEETEN 12/30/2012-END
+#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 template<
 	class DT,	//!< Type of the data items
 	class WT	//!< Type of the wavelet coefficients.
 >
+#else	// MOD-BY-LEETEN 01/03/2013-TO:
+template<
+	typename DT,							//!< Type of the data
+	typename ST = WaveletSAT::typeSum,		//!< Type of the sum
+	typename BT = WaveletSAT::typeBin,		//!< Type of the bin
+	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
+>
+#endif	// MOD-BY-LEETEN 01/03/2013-END
 class CSimpleNDFile:
-	virtual public WaveletSAT::CSATSepDWTDecoder<DT, WT>
+	// MOD-BY-LEETEN 01/03/2013-FROM:	virtual public WaveletSAT::CSATSepDWTDecoder<DT, WT>
+	virtual public WaveletSAT::CSATSepDWTDecoder<ST, BT, WT>
+	// MOD-BY-LEETEN 01/03/2013-END
 {
-	size_t uNrOfBins;
+	// MOD-BY-LEETEN 01/03/2013-FROM:	size_t uNrOfBins;
+	BT uNrOfBins;
+	// MOD-BY-LEETEN 01/03/2013-END
 	DT valueMin, valueMax;
 public:
 	virtual 
@@ -47,22 +60,30 @@ public:
 	(
 		const vector<size_t>& vuPos,
 		const DT& value, 
-		vector< pair<size_t, double> >& vpBins,
+		// MOD-BY-LEETEN 01/03/2013-FROM:		vector< pair<size_t, double> >& vpBins,
+		vector< pair<BT, ST> >& vpBins,
+		// MOD-BY-LEETEN 01/03/2013-END
 		void *_Reserved = NULL
 	)
 	{
 		DT clampedValue = min(max(value, valueMin), valueMax);
-		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
+		// MOD-BY-LEETEN 01/03/2013-FROM:		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
+		size_t uBin = (size_t)floor((double)((double)uNrOfBins * (double)(clampedValue - valueMin))/(double)(valueMax - valueMin));
+		// MOD-BY-LEETEN 01/03/2013-END
 		uBin = min(uBin, uNrOfBins - 1);
 		vpBins.clear();
-		vpBins.push_back(pair<size_t, double>(uBin, 1.0));
+		// MOD-BY-LEETEN 01/03/2013-FROM:		vpBins.push_back(pair<size_t, double>(uBin, 1.0));
+		vpBins.push_back(pair<BT, ST>((BT)uBin, (ST)1));
+		// MOD-BY-LEETEN 01/03/2013-END
 	}
 
 	////////////////////////////////////////////////////////////
 	void
 	_SetHistogram
 	(
-		size_t uNrOfBins,
+		// MOD-BY-LEETEN 01/03/2013-FROM:		size_t uNrOfBins,
+		const BT& uNrOfBins,
+		// MOD-BY-LEETEN 01/03/2013-END
 		const DT& valueMin, 
 		const DT& valueMax
 	)
@@ -78,14 +99,20 @@ public:
 		void *_Reserved = NULL
 	)
 	{
-		fill(this->vusCachedNextOffsets.begin(), this->vusCachedNextOffsets.end(), (unsigned short)0); 
+		// MOD-BY-LEETEN 01/03/2013-FROM:		fill(this->vusCachedNextOffsets.begin(), this->vusCachedNextOffsets.end(), (unsigned short)0); 
+		fill(this->vusCachedNextOffsets.begin(), this->vusCachedNextOffsets.end(), (BT)0); 
+		// MOD-BY-LEETEN 01/03/2013-END
 		// fill(vusCachedBins.begin(),	vusCachedBins.end(), (unsigned short)0);
 		// fill(vCachedValues.begin(),	vCachedValues.end(), (WT)0);
-		valarray<DT> vSAT;
+		// MOD-BY-LEETEN 01/03/2013-FROM:		valarray<DT> vSAT;
+		valarray<ST> vSAT;
+		// MOD-BY-LEETEN 01/03/2013-END
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		{
 			// LOG_VAR(b);
-			_DecodeBin(b, vSAT);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			_DecodeBin(b, vSAT);
+			_DecodeBin((WaveletSAT::typeBin)b, vSAT);
+			// MOD-BY-LEETEN 01/03/2013-END
 		}
 	}
 	// ADD-BY-LEETEN 12/29/2012-END
@@ -96,7 +123,9 @@ public:
 		vector<int> viLeft,
 		vector<int> viRight,
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		valarray<DT>& vEntropyField,
+		// MOD-BY-LEETEN 01/03/2013-FROM:		valarray<DT>& vEntropyField,
+		valarray<ST>& vEntropyField,
+		// MOD-BY-LEETEN 01/03/2013-END
 		// ADD-BY-LEETEN 12/30/2012-END
 		void *_Reserved = NULL
 	)
@@ -150,15 +179,22 @@ public:
 
 		/////////////// compute the SAT
 		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
-		valarray<DT> vSAT;
+		// MOD-BY-LEETEN 01/03/2013-FROM:		valarray<DT> vSAT;
+		valarray<ST> vSAT;
+		// MOD-BY-LEETEN 01/03/2013-END
 		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
 		valarray<DT> vLocalHist;	vLocalHist.resize(uNrOfCoefs);
 		valarray<DT> vTempEntropyField;	vTempEntropyField.resize(uNrOfCoefs);
 		valarray<DT> vSum;			vSum.resize(uNrOfCoefs);
 		#else	// MOD-BY-LEETEN 01/02/2013-TO:
-		valarray<DT> vLocalHist;	
+		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:		valarray<DT> vLocalHist;	
 		valarray<DT> vTempEntropyField;	
 		valarray<DT> vSum;			
+		#else	// MOD-BY-LEETEN 01/03/2013-END
+		valarray<ST> vLocalHist;	
+		valarray<ST> vTempEntropyField;	
+		valarray<ST> vSum;			
+		#endif
 		#endif	// MOD-BY-LEETEN 01/02/2013-END
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		{
@@ -167,7 +203,9 @@ public:
 			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
 			// ADD-BY-LEETEN 01/02/2013-END
 
-			_DecodeBin((unsigned short)b, vSAT);
+			// MOD-BY-LEETEN 01/03/2013-FROM:			_DecodeBin((unsigned short)b, vSAT);
+			_DecodeBin((BT)b, vSAT);
+			// MOD-BY-LEETEN 01/03/2013-END
 
 			// ADD-BY-LEETEN 01/02/2013-BEGIN
 			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
@@ -229,7 +267,9 @@ public:
 			// ADD-BY-LEETEN 01/02/2013-END
 		}
 		vTempEntropyField = -vTempEntropyField / vSum + log(vSum);
-		vTempEntropyField /= (DT)log(2.0);
+		// MOD-BY-LEETEN 01/03/2013-FROM:		vTempEntropyField /= (DT)log(2.0);
+		vTempEntropyField /= (ST)M_LN2;
+		// MOD-BY-LEETEN 01/03/2013-END
 		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 
 		#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:

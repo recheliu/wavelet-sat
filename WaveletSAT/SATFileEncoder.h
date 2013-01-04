@@ -44,15 +44,27 @@ namespace WaveletSAT
 	//! The class that creates SAT in NetCDF files.
 	/*!
 	*/
-	template<typename DT, typename ST>
+	// MOD-BY-LEETEN 01/03/2013-FROM:	template<typename DT, typename ST>
+	template<
+		typename DT,				//!< Type of the data
+		typename ST = typeSum,		//!< Type of the sum
+		typename BT = typeBin		//!< Type of the bin
+	>
+	// MOD-BY-LEETEN 01/03/2013-END
 	class CSATFileEncoder:
-		virtual public CHeaderBase,
+		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CHeaderBase,
+		virtual public CHeaderBase<ST, BT>,
+		// MOD-BY-LEETEN 01/03/2013-END
 		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2013
-		virtual public CEncoderBase<DT, ST>
+		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CEncoderBase<DT, ST>
+		virtual public CEncoderBase<DT, ST, BT>
+		// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 		//! The storage to store the original data.
-		vector< map<size_t, ST> > vmapHists;
+		// MOD-BY-LEETEN 01/03/2013-FROM:		vector< map<size_t, ST> > vmapHists;
+		vector< map<BT, ST> > vmapHists;
+		// MOD-BY-LEETEN 01/03/2013-END
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
 
@@ -79,18 +91,29 @@ protected:
 		(
 			const vector<size_t>& vuPos, 
 			const DT& value,
-			size_t uBin, 
+			// MOD-BY-LEETEN 01/03/2013-FROM:			size_t uBin, 
+			const BT& uBin, 
+			// MOD-BY-LEETEN 01/03/2013-END
 			const ST& weight,
 			void *_Reserved = NULL
 		)
 		{
 			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
+			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			map<size_t, ST>& mapHist = vmapHists[uIndex];
 			map<size_t, double>::iterator imapHist = mapHist.find(uBin);
 			if(mapHist.end() == imapHist )
 				mapHist.insert(pair<size_t, ST>(uBin, weight));
 			else
 				imapHist->second += weight;
+			#else	// MOD-BY-LEETEN 01/03/2013-TO:
+			map<BT, ST>& mapHist = vmapHists[uIndex];
+			map<BT, ST>::iterator imapHist = mapHist.find(uBin);
+			if(mapHist.end() == imapHist )
+				mapHist.insert(pair<BT, ST>(uBin, weight));
+			else
+				imapHist->second += weight;
+			#endif	// MOD-BY-LEETEN 01/03/2013-END
 		}
 
 public:
@@ -283,8 +306,13 @@ public:
 			{
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
+					#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 					const map<size_t, ST>& mapHist = vmapHists[i];
 					typename map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
+					#else	// MOD-BY-LEETEN 01/03/2013-TO:
+					const map<BT, ST>& mapHist = vmapHists[i];
+					typename map<BT, ST>::const_iterator imapHist = mapHist.find(b);
+					#endif	// MOD-BY-LEETEN 01/03/2013-END
 					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
