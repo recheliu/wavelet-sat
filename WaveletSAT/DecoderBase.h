@@ -149,6 +149,19 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		) = 0;
 
+		// ADD-BY-LEETEN 01/05/2013-BEGIN
+		//! Return the sum of all bins at the given position
+		virtual	
+		void
+		_GetRegionSums
+		(
+			const vector<size_t>& vuLeft,
+			const vector<size_t>& vuRight,
+			vector<ST>& vdSums,
+			void *_Reserved = NULL
+		) = 0;
+		// ADD-BY-LEETEN 01/05/2013-END
+
 		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		virtual
 		void

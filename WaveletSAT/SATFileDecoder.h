@@ -73,6 +73,7 @@ public:
 			// MOD-BY-LEETEN 01/03/2013-END
 			switch(eName)
 			{
+			#if	0	// DEL-BY-LEETEN 01/05/2012-BEGIN
 			#if 0 // MOD-BY-LEETEN 01/02/2013-FROM:
 			case RESET_IO_COUNTERS:
 				uMinNrOfIORequest = uDataSize;
@@ -81,6 +82,7 @@ public:
 				this->uMinNrOfIORequest = uDataSize;
 			#endif // MOD-BY-LEETEN 01/02/2013-END
 				break;
+			#endif	// DEL-BY-LEETEN 01/05/2012-END
 			}
 		}
 
@@ -252,6 +254,39 @@ public:
 
 			delete [] pdSums;
 		}
+
+		// ADD-BY-LEETEN 01/05/2013-BEGIN
+		//! Return the sum of all bins at the given position
+		virtual	
+		void
+		_GetRegionSums
+		(
+			const vector<size_t>& vuLeft,
+			const vector<size_t>& vuRight,
+			vector<ST>& vdSums,
+			void *_Reserved = NULL
+		)
+		{
+			vdSums.assign(UGetNrOfBins(), (ST)0);
+
+			size_t uNrOfQueries = (size_t)1 << this->UGetNrOfDims();
+			vector<size_t> vuQueryPos;
+			vuQueryPos.resize(this->UGetNrOfDims());
+			vector<ST> vQuerySums;
+			for(size_t q = 0; q < uNrOfQueries; q++)
+			{
+				int iSign = 1;
+				for(size_t d = 0, j = q; d < this->UGetNrOfDims(); d++, j /= 2)
+				{
+					vuQueryPos[d] = (j % 2)?vuLeft[d]:vuRight[d];
+					iSign *= (j % 2)?(-1):(+1);
+				}
+				_GetAllSums(vuQueryPos, vQuerySums);
+				for(size_t b = 0; b < vdSums.size(); b++)
+					vdSums[b] += (ST)iSign * vQuerySums[b];
+			}
+		}
+		// ADD-BY-LEETEN 01/05/2013-END
 
 		virtual
 		void

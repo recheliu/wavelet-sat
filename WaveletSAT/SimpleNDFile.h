@@ -45,9 +45,15 @@ template<
 >
 #endif	// MOD-BY-LEETEN 01/03/2013-END
 class CSimpleNDFile:
+	#if	!WITH_SAT_FILE	// ADD-BY-LEETEN 01/05/2013
 	// MOD-BY-LEETEN 01/03/2013-FROM:	virtual public WaveletSAT::CSATSepDWTDecoder<DT, WT>
 	virtual public WaveletSAT::CSATSepDWTDecoder<ST, BT, WT>
 	// MOD-BY-LEETEN 01/03/2013-END
+	// ADD-BY-LEETEN 01/05/2013-BEGIN
+	#else	// #if	!WITH_SAT_FILE	
+	virtual public WaveletSAT::CSATFileDecoder<ST, BT>
+	#endif	// #if	!WITH_SAT_FILE	
+	// ADD-BY-LEETEN 01/05/2013-END
 {
 	// MOD-BY-LEETEN 01/03/2013-FROM:	size_t uNrOfBins;
 	// DEL-BY-LEETEN 01/04/2013: BT uNrOfBins;

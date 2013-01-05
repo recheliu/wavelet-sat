@@ -174,9 +174,11 @@ main(int argn, char* argv[])
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	#if	0	// DEL-BY-LEETEN 01/05/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleNDFile._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
+	#endif	// DEL-BY-LEETEN 01/05/2012-END
 
 	if(iIsTestingQuery)
 	{
@@ -215,6 +217,7 @@ main(int argn, char* argv[])
 		// decide the threshld to filter numerical error
 		double dThreshold = cSimpleNDFile.DGetThreshold();
 
+		#if	0	// DEL-BY-LEETEN 01/05/2013-BEGIN
 		size_t uNrOfIHs = 1 << uNrOfDims;
 		vector< vector<size_t> > vvuOffsets;
 		vvuOffsets.resize(uNrOfIHs);
@@ -227,6 +230,7 @@ main(int argn, char* argv[])
 				d++, j /= 2)
 				vvuOffsets[i][d] = uWinSize * (j % 2);
 		}
+		#endif	// DEL-BY-LEETEN 01/05/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -261,6 +265,8 @@ main(int argn, char* argv[])
 			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double> vdH;
 			vector<WaveletSAT::typeSum> vdH;
 			// MOD-BY-LEETEN 01/03/2013-END
+
+			#if	0	// MOD-BY-LEETEN 01/05/2013-FROM:
 			vdH.resize(uNrOfBins);
 			for(size_t i = 0; i < uNrOfIHs; i++)
 			{
@@ -280,6 +286,15 @@ main(int argn, char* argv[])
 					vdH[b] += (WaveletSAT::typeSum)iSign * vdIH[b]; 
 					// MOD-BY-LEETEN 01/03/2013-END
 			}
+			#else	// MOD-BY-LEETEN 01/05/2013-TO:
+			vdH.resize(uNrOfBins);
+
+			vector<size_t> vuOffset;
+			vuOffset.resize(uNrOfDims);
+			for(size_t d = 0; d < uNrOfDims; d++)
+				vuOffset[d] = vuBase[d] - uWinSize;
+			cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
+			#endif	// MOD-BY-LEETEN 01/05/2013-END
 
 			double dError = 0.0;
 			for(size_t b = 0; b < uNrOfBins; b++)
@@ -384,6 +399,12 @@ main(int argn, char* argv[])
 		LIBCLOCK_END(bIsPrintingTiming);
 		// ADD-BY-LEETEN 12/30/2012-END
 	}
+
+	// ADD-BY-LEETEN 01/05/2012-BEGIN
+	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	cSimpleNDFile._ShowStatistics();
+	LIBCLOCK_END(bIsPrintingTiming);
+	// ADD-BY-LEETEN 01/05/2012-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;

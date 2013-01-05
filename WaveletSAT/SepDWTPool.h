@@ -562,14 +562,16 @@ namespace WaveletSAT
 		void
 		_GetCoefSparse
 		(
-			const vector<size_t> vuSubs,
+			// MOD-BY-LEETEN 01/05/2013-FROM:			const vector<size_t> vuSubs,
+			size_t uIndex,
+			// MOD-BY-LEETEN 01/05/2013-END
 			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, ST> >& vpairCoefs,
 			vector< pair<BT, WT> >& vpairCoefs,
 			// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 		) const
 		{
-			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
+			// DEL-BY-LEETEN 01/05/2013:	size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 
 			// ADD-BY-LEETEN 11/12/2012-BEGIN
 			vpairCoefs.clear();
@@ -623,6 +625,25 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-END
 			}	// ADD-BY-LEETEN 11/12/2012
 		}
+		
+		// ADD-BY-LEETEN 01/05/2013-BEGIN
+		virtual
+		void
+		_GetCoefSparse
+		(
+			const vector<size_t> vuSubs,
+			vector< pair<BT, WT> >& vpairCoefs,
+			void* _Reserved = NULL
+		) const
+		{
+			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
+			_GetCoefSparse
+			(
+				uIndex,
+				vpairCoefs
+				);
+		}
+		// ADD-BY-LEETEN 01/05/2013-END
 
 		CSepDWTPool()
 		{

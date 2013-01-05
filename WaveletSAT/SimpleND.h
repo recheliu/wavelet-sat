@@ -21,7 +21,13 @@ template<
 	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
 >
 class CSimpleND:
+	#if	!WITH_SAT_FILE	// ADD-BY-LEETEN 01/05/2013
 	virtual public WaveletSAT::CWaveletSATEncoder<DT, ST, BT, WT>
+	// ADD-BY-LEETEN 01/05/2013-BEGIN
+	#else	// #if	!WITH_SAT_FILE	
+	virtual public WaveletSAT::CSATFileEncoder<DT, ST, BT>
+	#endif	// #if	!WITH_SAT_FILE	
+	// ADD-BY-LEETEN 01/05/2013-END
 #endif	// MOD-BY-LEETEN 01/03/2013-END
 {
   #if 0   // DEL-BY-LEETEN 01/04/2013-BEGIN

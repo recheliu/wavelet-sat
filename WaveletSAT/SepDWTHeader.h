@@ -345,7 +345,7 @@ public:
 						dWaveletBasis = 1.0;
 					else
 						dWaveletBasis = -1.0;
-						
+
 					if( l >= 2 )
 						dWaveletBasis *= sqrt( (double)(1 << (l - 1)) );
 					vdWaveletBasis[p] = dWaveletBasis;

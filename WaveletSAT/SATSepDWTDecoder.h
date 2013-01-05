@@ -41,6 +41,11 @@ using namespace std;
 #define IS_SELECTING_THE_SAME_WAVELET			1
 // ADD-BY-LEETEN 12/28/2012-END
 
+// ADD-BY-LEETEN 01/05/2013-BEGIN
+// If this is non-0, the coefficient for a region query will be merged to gether to reduce the access of coefficients
+#define MERGE_COEFFICIENTS_PER_REGION			1
+// ADD-BY-LEETEN 01/05/2013-END
+
 namespace WaveletSAT
 {
 	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
@@ -91,6 +96,13 @@ protected:
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
 			bool bIsPrintingDecodeBinTiming;
 			#endif	// DEL-BY-LEETEN 01/02/2013-END
+
+			// ADD-BY-LEETEN 01/05/2012-BEGIN
+			size_t uMinNrOfCoefQueries;
+			size_t uMaxNrOfCoefQueries;
+			size_t uAccumNrOfCoefQueries;
+			size_t uNrOfRangeQueries;
+			// ADD-BY-LEETEN 01/05/2012-END
 
 			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<unsigned short>	vusCachedNextOffsets;
 			vector<BT>	vusCachedNextOffsets;
@@ -197,9 +209,11 @@ public:
 				// DEL-BY-LEETEN 01/02/2013:	uNrOfQueries = 0;
 				break;
 			#else // MOD-BY-LEETEN 01/02/2013-TO:
+			#if	0	// DEL-BY-LEETEN 01/05/2012-BEGIN
 			case CDecoderBase<ST, BT>::RESET_IO_COUNTERS:
 				this->uMinNrOfIORequest = uNrOfUpdatingCoefs;
 				break;
+			#endif	// DEL-BY-LEETEN 01/05/2012-END
 			#endif // MOD-BY-LEETEN 01/02/2013-END
 			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
 			case PRINT_DECODE_BIN_TIMING:
@@ -404,6 +418,15 @@ public:
 			LOG_VAR(dCR);
 
 			_ShowMemoryUsage(false);
+
+			// ADD-BY-LEETEN 01/05/2012-BEGIN
+			if(uNrOfRangeQueries)
+			{
+				LOG_VAR(uMinNrOfCoefQueries);
+				LOG_VAR(uMaxNrOfCoefQueries);
+				LOG_VAR(uAccumNrOfCoefQueries/uNrOfRangeQueries);
+			}
+			// ADD-BY-LEETEN 01/05/2012-END
 		}
 		// ADD-BY-LEETEN 12/23/2012-END
 
@@ -728,8 +751,9 @@ public:
 		)
 		{
 			vector<size_t> vuEmpty;	// this empty vector is used to speed up the access of elements
-
-			vdSums.resize(UGetNrOfBins());
+			// MOD-BY-LEETEN 01/05/2013-FROM:			vdSums.resize(UGetNrOfBins());
+			vdSums.assign(UGetNrOfBins(), (ST)0);
+			// MOD-BY-LEETEN 01/05/2013-END
 
 			vector<size_t> vuLevels;			vuLevels.resize( UGetNrOfDims() );
 			vector<size_t> vuGlobalCoefBase;	vuGlobalCoefBase.resize( UGetNrOfDims() );
@@ -839,12 +863,178 @@ public:
 			#else // MOD-BY-LEETEN 01/02/2013-TO:
 			this->uAccumNrOfIORequest += uNrOfIORequest;
 			this->uMaxNrOfIORequest = max(this->uMaxNrOfIORequest, uNrOfIORequest);
+			#if	0	// MOD-BY-LEETEN 01/05/2012-FROM:
 			this->uMinNrOfIORequest = min(this->uMinNrOfIORequest, uNrOfIORequest);
+			#else	// ADD-BY-LEETEN 01/05/2012-TO:
+			if( uNrOfIORequest )
+			{
+				if( !this->uMinNrOfIORequest )
+					this->uMinNrOfIORequest = uNrOfIORequest;
+				else
+					this->uMinNrOfIORequest = min(this->uMinNrOfIORequest, uNrOfIORequest);
+			}
+			#endif	// ADD-BY-LEETEN 01/05/2012-END
 			#endif // MOD-BY-LEETEN 01/02/2013-END
 			// ADD-BY-LEETEN 12/28/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= dWaveletDenomiator;
 		}
+
+		// ADD-BY-LEETEN 01/05/2013-BEGIN
+		//! Return the sum of all bins at the given position
+		virtual	
+		void
+		_GetRegionSums
+		(
+			const vector<size_t>& vuLeft,
+			const vector<size_t>& vuRight,
+			vector<ST>& vdSums,
+			void *_Reserved = NULL
+		)
+		{
+			vdSums.assign(UGetNrOfBins(), (ST)0);
+
+			size_t  uNrOfCoefQueries = 0;
+			#if	!MERGE_COEFFICIENTS_PER_REGION
+			size_t uNrOfQueries = (size_t)1 << this->UGetNrOfDims();
+			vector<size_t> vuQueryPos;
+			vuQueryPos.resize(this->UGetNrOfDims());
+			vector<ST> vQuerySums;
+			for(size_t q = 0; q < uNrOfQueries; q++)
+			{
+				int iSign = 1;
+				for(size_t d = 0, j = q; d < this->UGetNrOfDims(); d++, j /= 2)
+				{
+					vuQueryPos[d] = (j % 2)?vuLeft[d]:vuRight[d];
+					iSign *= (j % 2)?(-1):(+1);
+				}
+				_GetAllSums(vuQueryPos, vQuerySums);
+				for(size_t b = 0; b < vdSums.size(); b++)
+					vdSums[b] += (ST)iSign * vQuerySums[b];
+			}
+			uNrOfCoefQueries = uNrOfQueries * this->uNrOfUpdatingCoefs;
+			#else	// #if	!MERGE_COEFFICIENTS_PER_REGION
+			vector< map< size_t, WT> > vmapLocalWavelet;
+			vmapLocalWavelet.resize(uNrOfUpdatingCoefs);
+
+			size_t uNrOfQueries = (size_t)1 << this->UGetNrOfDims();
+			vector<size_t> vuQueryPos;
+			vuQueryPos.resize(this->UGetNrOfDims());
+			vector<size_t> vuLocalCoefSub;
+			vuLocalCoefSub.resize(this->UGetNrOfDims());
+			for(size_t q = 0; q < uNrOfQueries; q++)
+			{
+				int iSign = 1;
+				for(size_t d = 0, j = q; d < this->UGetNrOfDims(); d++, j /= 2)
+				{
+					vuQueryPos[d] = (j % 2)?vuLeft[d]:vuRight[d];
+					iSign *= (j % 2)?(-1):(+1);
+				}
+
+				// find the corresponding wavelet coefficient
+				vector<double> vdWaveletBasis;
+				vector<size_t> vuSubs;
+				_GetBackwardWavelet(
+					vuQueryPos, 
+					vuSubs, 
+					vdWaveletBasis, 
+					true);
+
+				// now find the combination of the coefficients of all dimensions 
+				for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+				{
+					double dWavelet = 1.0;
+					for(size_t d = 0, uBase = 0;
+						d < UGetNrOfDims(); 
+						uBase += vuDimMaxLevels[d], d++, p++)
+					{
+						// compute the wavelet
+						dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+
+						// compute the subscript and size for the current basis
+						vuLocalCoefSub[d] = vuSubs[uBase + vuCoefDim2Level[p]];
+					}
+					size_t uLocalCoef = UConvertSubToIndex(vuLocalCoefSub, vvuLocalLengths[c]);
+
+					typename map<size_t, WT>::iterator ivmapLocalWavelet = vmapLocalWavelet[c].find(uLocalCoef);
+					if(vmapLocalWavelet[c].end() == ivmapLocalWavelet)
+						vmapLocalWavelet[c].insert(pair<size_t, WT>(uLocalCoef, (WT)iSign * (WT)dWavelet));
+					else
+						ivmapLocalWavelet->second += (WT)iSign * (WT)dWavelet;
+				}
+			}
+
+			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				for(typename map<size_t, WT>::iterator 
+					ivmapLocalWavelet = vmapLocalWavelet[c].begin();
+					ivmapLocalWavelet != vmapLocalWavelet[c].end();
+					ivmapLocalWavelet++)
+				{
+					if( this->vpcCoefPools[c] )
+					{
+						vector< pair<BT, WT> > vpairCoefBinValues;
+						this->vpcCoefPools[c]->_GetCoefSparse
+						(
+							ivmapLocalWavelet->first,
+							vpairCoefBinValues
+						);
+
+						for(typename vector< pair<BT, WT> >::iterator
+							ivpairCoefs = vpairCoefBinValues.begin();
+							ivpairCoefs != vpairCoefBinValues.end();
+							ivpairCoefs++ )
+							vdSums[ivpairCoefs->first] += ivpairCoefs->second * ivmapLocalWavelet->second;
+					}
+					else
+					{
+						vector<size_t> vuLocalCoef;
+						_ConvertIndexToSub(ivmapLocalWavelet->first, vuLocalCoef, this->vvuLocalLengths[c]);
+						vector<size_t> vuGlobalCoef;
+						vuGlobalCoef.resize(UGetNrOfDims());
+						for(size_t d = 0; d < vuGlobalCoef.size(); d++)
+							vuGlobalCoef[d] = this->vvuGlobalBase[c][d] + vuLocalCoef[d];
+						size_t uGlobalCoefIndex = UConvertSubToIndex(vuGlobalCoef, this->vuCoefLengths);
+
+						size_t uStart = (size_t)vuCoefOffsets[uGlobalCoefIndex];
+						size_t uCount = (size_t)vusCoefCounts[uGlobalCoefIndex];
+
+						if( uCount )
+						{
+							ASSERT_NETCDF(nc_get_vara(
+								iNcId,
+								ncVarCoefBin,
+								&uStart,
+								&uCount,
+								(void*)&pCoefBins[0]));
+	
+							ASSERT_NETCDF(nc_get_vara(
+								iNcId,
+								ncVarCoefValue,
+								&uStart,
+								&uCount,
+								(void*)&pCoefValues[0]));
+						}	
+
+						for(size_t i = 0; i < uCount; i++)
+							vdSums[pCoefBins[i]] += pCoefValues[i] * ivmapLocalWavelet->second;
+					}
+					uNrOfCoefQueries++;
+				}
+			}
+			for(size_t b = 0; b < UGetNrOfBins(); b++)
+				vdSums[b] /= dWaveletDenomiator;
+			#endif	// #if	!MERGE_COEFFICIENTS_PER_REGION
+			// LOG_VAR();
+			// ADD-BY-LEETEN 01/05/2012-BEGIN
+			if( uNrOfCoefQueries )
+				uMinNrOfCoefQueries = ( !uMinNrOfCoefQueries )?uNrOfCoefQueries:min(uMinNrOfCoefQueries, uNrOfCoefQueries);
+			uMaxNrOfCoefQueries = max(uMaxNrOfCoefQueries, uNrOfCoefQueries);
+			uAccumNrOfCoefQueries += uNrOfCoefQueries;
+			uNrOfRangeQueries++;
+			// ADD-BY-LEETEN 01/05/2012-END
+		}
+		// ADD-BY-LEETEN 01/05/2013-END
 
 		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		virtual
@@ -962,12 +1152,13 @@ public:
 			//////////////////////////////////////////////////
 			// now apply IDWT
 			LIBCLOCK_BEGIN(bIsPrintingDecodeBinTiming);
+			#if	0	// DEL-BY-LEETEN 01/05/2013-BEGIN
 			vector<size_t> vuScanLineBase;
 			vuScanLineBase.resize(UGetNrOfDims());
 
 			vector<size_t> vuOtherCoefLengths;
 			vuOtherCoefLengths.resize(UGetNrOfDims());
-
+			#endif	// DEL-BY-LEETEN 01/05/2013-END
 			      for(size_t uOffset = 1, d = 0, uCoefLength = 1; 
 				d < UGetNrOfDims(); 
 				uOffset *= uCoefLength, d++)
@@ -1074,6 +1265,12 @@ public:
 			:bIsPrintingDecodeBinTiming(false)	// ADD-BY-LEETEN 12/29/2012-BEGIN
 		#else	// MOD-BY-LEETEN 01/02/2013-TO:
 		CSATSepDWTDecoder():
+			// ADD-BY-LEETEN 01/05/2012-BEGIN
+			uMinNrOfCoefQueries(0),
+			uMaxNrOfCoefQueries(0),
+			uAccumNrOfCoefQueries(0),
+			uNrOfRangeQueries(0),
+			// ADD-BY-LEETEN 01/05/2012-END
 			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 			CDecoderBase<DT>(),
 			CSATSepDWTNetCDF(),
