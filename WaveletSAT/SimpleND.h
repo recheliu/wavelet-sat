@@ -59,7 +59,9 @@ public:
 		#endif // MOD-BY-LEETEN 01/04/2013-END
 		uBin = min(uBin, uNrOfBins - 1);
 		vpBins.clear();
-		vpBins.push_back(pair<BT, WT>(uBin, (WT)1));
+		// MOD-BY-LEETEN 01/04/2013-FROM:		vpBins.push_back(pair<BT, WT>(uBin, (WT)1));
+		vpBins.push_back(pair<BT, WT>((BT)uBin, (ST)1));
+		// MOD-BY-LEETEN 01/04/2013-END
 		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	}
 	

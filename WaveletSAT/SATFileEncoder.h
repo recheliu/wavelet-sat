@@ -276,6 +276,7 @@ public:
 			piNcDimIds[0] = ncDimBin;
 			for(size_t d = 0; d < uNrOfDims; d++)
 				piNcDimIds[d + 1] = vncDimData[uNrOfDims - 1 - d];
+			#if	0	// MOD-BY-LEETEN 01/04/2013-FROM:
 			ASSERT_NETCDF(nc_def_var(
 				   iNcId,
 				   szVarSAT, 
@@ -283,6 +284,15 @@ public:
 				   uNrOfDims + 1,
 				   piNcDimIds,
 				   &ncVarSAT));
+			#else	// MOD-BY-LEETEN 01/04/2013-TO:
+			ASSERT_NETCDF(nc_def_var(
+				   iNcId,
+				   szVarSAT, 
+				   NC_DOUBLE,
+				   (int)(uNrOfDims + 1),
+				   piNcDimIds,
+				   &ncVarSAT));
+			#endif	// MOD-BY-LEETEN 01/04/2013-END
 
 			#if WITH_NETCDF4 
 			ASSERT_NETCDF(nc_def_var_deflate(
@@ -317,7 +327,9 @@ public:
 					typename map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
 					#else	// MOD-BY-LEETEN 01/03/2013-TO:
 					const map<BT, ST>& mapHist = vmapHists[i];
-					typename map<BT, ST>::const_iterator imapHist = mapHist.find(b);
+					// MOD-BY-LEETEN 01/04/2013-FROM:					typename map<BT, ST>::const_iterator imapHist = mapHist.find(b);
+					typename map<BT, ST>::const_iterator imapHist = mapHist.find((BT)b);
+					// MOD-BY-LEETEN 01/04/2013-END
 					#endif	// MOD-BY-LEETEN 01/03/2013-END
 					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 				}
