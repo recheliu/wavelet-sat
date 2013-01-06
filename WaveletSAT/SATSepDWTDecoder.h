@@ -46,6 +46,13 @@ using namespace std;
 #define MERGE_COEFFICIENTS_PER_REGION			1
 // ADD-BY-LEETEN 01/05/2013-END
 
+// ADD-BY-LEETEN 01/05/2013-BEGIN
+#if		MERGE_COEFFICIENTS_PER_REGION	
+// If this is non-0, the queue to hold the coefficient will be pre-allocated, whose size is (log n)^d * 2^d.
+#define WITH_PRE_ALLOCATED_QUEUES				1
+#endif	// #if		MERGE_COEFFICIENTS_PER_REGION	
+// ADD-BY-LEETEN 01/05/2013-END
+
 namespace WaveletSAT
 {
 	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
@@ -96,6 +103,12 @@ protected:
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
 			bool bIsPrintingDecodeBinTiming;
 			#endif	// DEL-BY-LEETEN 01/02/2013-END
+
+			// ADD-BY-LEETEN 01/05/2013-BEGIN
+			#if		WITH_PRE_ALLOCATED_QUEUES	
+			vector< pair<size_t, WT> > vpairLocalWaveletQueues; 
+			#endif	// #if	WITH_PRE_ALLOCATED_QUEUES
+			// ADD-BY-LEETEN 01/05/2013-END
 
 			// ADD-BY-LEETEN 01/05/2012-BEGIN
 			size_t uMinNrOfCoefQueries;
@@ -378,6 +391,13 @@ public:
 			LOG_VAR(uNrOfValuesInCore);
 
 			this->vpcCoefPools.resize(this->uNrOfUpdatingCoefs);	// allocate the pools
+
+			// ADD-BY-LEETEN 01/05/2013-BEGIN
+			#if		WITH_PRE_ALLOCATED_QUEUES
+			size_t uNrOfQueries = (size_t) 1 << UGetNrOfDims();
+			vpairLocalWaveletQueues.resize(uNrOfQueries * this->uNrOfUpdatingCoefs);
+			#endif	// #if	WITH_PRE_ALLOCATED_QUEUES
+			// ADD-BY-LEETEN 01/05/2013-END
 		}
 
 		
@@ -738,6 +758,61 @@ public:
 			// #endif	// #if WITH_NETCDF 
 		}
 
+		// ADD-BY-LEETEN 01/05/2013-BEGIN
+		virtual
+		void
+		_GetCoefSparse
+		(
+			size_t uWavelet,
+			size_t uLocalCoef,
+			vector< pair<BT, WT> >& vpairCoefBinValues,
+			void* _Reserved = NULL
+		)
+		{
+			if( this->vpcCoefPools[uWavelet] )
+			{
+				this->vpcCoefPools[uWavelet]->_GetCoefSparse
+				(
+					uLocalCoef,
+					vpairCoefBinValues
+				);
+			}
+			else
+			{
+				vector<size_t> vuLocalCoef;
+				_ConvertIndexToSub(uLocalCoef, vuLocalCoef, this->vvuLocalLengths[uWavelet]);
+				vector<size_t> vuGlobalCoef;
+				vuGlobalCoef.resize(UGetNrOfDims());
+				for(size_t d = 0; d < vuGlobalCoef.size(); d++)
+					vuGlobalCoef[d] = this->vvuGlobalBase[uWavelet][d] + vuLocalCoef[d];
+				size_t uGlobalCoefIndex = UConvertSubToIndex(vuGlobalCoef, this->vuCoefLengths);
+
+				size_t uStart = (size_t)vuCoefOffsets[uGlobalCoefIndex];
+				size_t uCount = (size_t)vusCoefCounts[uGlobalCoefIndex];
+
+				vpairCoefBinValues.clear();
+				if( uCount )
+				{
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefBin,
+						&uStart,
+						&uCount,
+						(void*)&pCoefBins[0]));
+	
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefValue,
+						&uStart,
+						&uCount,
+						(void*)&pCoefValues[0]));
+					for(size_t i = 0; i < uCount; i++)
+						vpairCoefBinValues.push_back(pair<BT, WT>((BT)pCoefBins[i], (WT)pCoefValues[i]));
+				}	
+			}
+		}
+		// ADD-BY-LEETEN 01/05/2013-END
+
 		//! Return the sum of all bins at the given position
 		virtual	
 		void
@@ -800,6 +875,7 @@ public:
 					vuCoefSub[d] = vuGlobalCoefBase[d] + vuLocalCoefSub[d];
 				}
 
+				#if	0	// MOD-BY-LEETEN 01/05/2013-FROM:
 				size_t uGlobalCoefIndex = UConvertSubToIndex(vuCoefSub, this->vuCoefLengths);
 				if( this->vbFlagsCoefInCore[uGlobalCoefIndex] )
 				{
@@ -854,6 +930,21 @@ public:
 					for(size_t i = 0; i < uCount; i++)
 						vdSums[pCoefBins[i]] += pCoefValues[i] * dWavelet;
 				}
+				#else	// MOD-BY-LEETEN 01/05/2013-TO:
+				vector< pair<BT, WT> > vpairCoefBinValues;
+				size_t uLocalCoef = UConvertSubToIndex(vuLocalCoefSub, this->vvuLocalLengths[c]);
+				this->_GetCoefSparse
+				(
+					c,
+					uLocalCoef,
+					vpairCoefBinValues
+				);
+				for(typename vector< pair<BT, WT> >::iterator
+					ivpairCoefs = vpairCoefBinValues.begin();
+					ivpairCoefs != vpairCoefBinValues.end();
+					ivpairCoefs++ )
+					vdSums[ivpairCoefs->first] += ivpairCoefs->second * dWavelet;
+				#endif	// MOD-BY-LEETEN 01/05/2013-END
 			}
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if 0 			// MOD-BY-LEETEN 01/02/2013-FROM:
@@ -914,8 +1005,10 @@ public:
 			}
 			uNrOfCoefQueries = uNrOfQueries * this->uNrOfUpdatingCoefs;
 			#else	// #if	!MERGE_COEFFICIENTS_PER_REGION
+			#if	!WITH_PRE_ALLOCATED_QUEUES				// ADD-BY-LEETEN 01/05/2013
 			vector< map< size_t, WT> > vmapLocalWavelet;
 			vmapLocalWavelet.resize(uNrOfUpdatingCoefs);
+			#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
 
 			size_t uNrOfQueries = (size_t)1 << this->UGetNrOfDims();
 			vector<size_t> vuQueryPos;
@@ -956,14 +1049,21 @@ public:
 					}
 					size_t uLocalCoef = UConvertSubToIndex(vuLocalCoefSub, vvuLocalLengths[c]);
 
+					#if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
 					typename map<size_t, WT>::iterator ivmapLocalWavelet = vmapLocalWavelet[c].find(uLocalCoef);
 					if(vmapLocalWavelet[c].end() == ivmapLocalWavelet)
 						vmapLocalWavelet[c].insert(pair<size_t, WT>(uLocalCoef, (WT)iSign * (WT)dWavelet));
 					else
 						ivmapLocalWavelet->second += (WT)iSign * (WT)dWavelet;
+					// ADD-BY-LEETEN 01/05/2013-BEGIN
+					#else	// #if	!WITH_PRE_ALLOCATED_QUEUES	
+					this->vpairLocalWaveletQueues[c * uNrOfQueries + q] = pair<size_t, WT>(uLocalCoef, (WT)iSign * (WT)dWavelet);
+					#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES	
+					// ADD-BY-LEETEN 01/05/2013-END
 				}
 			}
 
+			#if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				for(typename map<size_t, WT>::iterator 
@@ -971,6 +1071,7 @@ public:
 					ivmapLocalWavelet != vmapLocalWavelet[c].end();
 					ivmapLocalWavelet++)
 				{
+					#if	0	// MOD-BY-LEETEN 01/05/2013-FROM:
 					if( this->vpcCoefPools[c] )
 					{
 						vector< pair<BT, WT> > vpairCoefBinValues;
@@ -1020,8 +1121,75 @@ public:
 							vdSums[pCoefBins[i]] += pCoefValues[i] * ivmapLocalWavelet->second;
 					}
 					uNrOfCoefQueries++;
+					#else	// MOD-BY-LEETEN 01/05/2013-TO:
+					vector< pair<BT, WT> > vpairCoefBinValues;
+					if(	this->dWaveletThreshold < fabs((double)ivmapLocalWavelet->second) )
+					{
+						this->_GetCoefSparse
+						(
+							c,
+							ivmapLocalWavelet->first,
+							vpairCoefBinValues
+						);
+						for(typename vector< pair<BT, WT> >::iterator
+							ivpairCoefs = vpairCoefBinValues.begin();
+							ivpairCoefs != vpairCoefBinValues.end();
+							ivpairCoefs++ )
+								vdSums[ivpairCoefs->first] += ivpairCoefs->second * ivmapLocalWavelet->second;
+						uNrOfCoefQueries++;
+					}
+					#endif	// MOD-BY-LEETEN 01/05/2013-END
 				}
 			}
+			// ADD-BY-LEETEN 01/05/2013-BEGIN
+			#else	// #if	!WITH_PRE_ALLOCATED_QUEUES	
+			for(size_t i = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				sort(	vpairLocalWaveletQueues.begin() + i,
+						vpairLocalWaveletQueues.begin() + i + uNrOfQueries);
+				pair<size_t, WT> vpairPrevLocalCoefQueues = pair<size_t, WT>(vpairLocalWaveletQueues[i].first, (WT)0);
+				for(size_t q = 0; q < uNrOfQueries + 1; i += (q < uNrOfQueries)?1:0, q++)
+				{
+					bool bIsNew = false;
+					if( q == uNrOfQueries )
+						bIsNew = true;
+					else 
+					{
+						// LOG(printf("q(%d): %d %f", q, vpairLocalWaveletQueues[i].first, vpairLocalWaveletQueues[i].second));
+						if( vpairPrevLocalCoefQueues.first	== vpairLocalWaveletQueues[i].first )
+						{
+							vpairPrevLocalCoefQueues.second += vpairLocalWaveletQueues[i].second;
+							// LOG_VAR(vpairPrevLocalCoefQueues.second);
+						}
+						else
+							bIsNew = true;
+					}
+
+					if( bIsNew )
+					{
+						if(	this->dWaveletThreshold < fabs((double)vpairPrevLocalCoefQueues.second) )
+						{
+							vector< pair<BT, WT> > vpairCoefBinValues;
+							this->_GetCoefSparse
+							(
+								c,
+								vpairPrevLocalCoefQueues.first,
+								vpairCoefBinValues
+							);
+							for(typename vector< pair<BT, WT> >::iterator
+								ivpairCoefs = vpairCoefBinValues.begin();
+								ivpairCoefs != vpairCoefBinValues.end();
+								ivpairCoefs++ )
+								vdSums[ivpairCoefs->first] += ivpairCoefs->second * vpairPrevLocalCoefQueues.second;
+
+							uNrOfCoefQueries++;
+						}
+						vpairPrevLocalCoefQueues = vpairLocalWaveletQueues[i];
+					}
+				}
+			}
+			#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES
+			// ADD-BY-LEETEN 01/05/2013-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= dWaveletDenomiator;
 			#endif	// #if	!MERGE_COEFFICIENTS_PER_REGION

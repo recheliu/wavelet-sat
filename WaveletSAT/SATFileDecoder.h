@@ -227,6 +227,16 @@ public:
 			if( UGetNrOfBins() != vSums.size() )
 				vSums.resize(UGetNrOfBins());
 
+			// ADD-BY-LEETEN 01/05/2012-BEGIN
+			if( !bIsOutOfCore )
+			{
+				size_t uIndex = UConvertSubToIndex(vuPos, this->vuDimLengths);
+				for(size_t offset = uIndex, b = 0; b < this->UGetNrOfBins(); b++, offset += uDataSize)
+					vSums[b] = pdSAT[offset];
+				return;
+			}
+			// ADD-BY-LEETEN 01/05/2012-END
+
 			double* pdSums = new double[UGetNrOfBins()];
 
 			size_t puStarts[NC_MAX_DIMS];
