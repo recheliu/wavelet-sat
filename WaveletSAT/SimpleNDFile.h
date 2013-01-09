@@ -145,6 +145,7 @@ public:
 
 		/////////////// compute the SAT
 		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
+		valarray<ST> vSAT;	// ADD-BY-LEETEN 01/09/2013
 		valarray<ST> vLocalHist;	
 		valarray<ST> vTempEntropyField;	
 		valarray<ST> vSum;			
