@@ -26,20 +26,11 @@ namespace WaveletSAT
 	*/
 
 	//! SepDWT coefficients per basis of all bins
-	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-	/*!
-	ST: Type of the wavelet coefficients
-	IT: Type of the bin index
-	*/
-	template<typename ST, typename IT = size_t>
-	class CSepDWTPool
-	#else	// MOD-BY-LEETEN 01/03/2013-TO:
 	template<
 		typename WT = typeWavelet,	//!< Type of the wavelet coefficientsd
 		typename BT = typeBin		//!< Type of the bin
 	>
 	class CSepDWTPool
-	#endif	// MOD-BY-LEETEN 01/03/2013-END
 		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
 	protected:	
@@ -100,9 +91,7 @@ namespace WaveletSAT
 		void
 		_Set
 		(
-			// MOD-BY-LEETEN 01/03/2013-FROM:			const size_t uNrOfBins,
 			const BT& uNrOfBins,
-			// MOD-BY-LEETEN 01/03/2013-END
 			const vector<size_t>& vuLengths,
 			size_t uMaxCount,	// ADD-BY-LEETEN 11/11/2012
 			bool bIsSparse,
@@ -121,9 +110,7 @@ namespace WaveletSAT
 			if( !bIsSparse )
 			{
 				vvFull.resize(uNrOfBins);
-				// MOD-BY-LEETEN 01/03/2013-FROM:				for(size_t b = 0; b < uNrOfBins; b++)
 				for(size_t b = 0; b < (size_t)uNrOfBins; b++)
-				// MOD-BY-LEETEN 01/03/2013-END
 					vvFull[b].resize(this->uSize);
 			}
 			else
@@ -153,9 +140,7 @@ namespace WaveletSAT
 		(
 			size_t& uCountInFullArray,
 			size_t& uCountInSparseArray,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			ST Threshold,
 			const WT& Threshold,
-			// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 		)
 		{
@@ -240,33 +225,15 @@ namespace WaveletSAT
 		void
 		_AddEntryToSparseArray
 		(
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			map<IT, ST>& mapSparse,
-			IT Bin,
-			const ST& Value,
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			map<BT, WT>& mapSparse,
 			const BT& Bin,
 			const WT& Value,
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 		)
 		{
 			if( Value )
 			{
 				mapSparse.insert(pair<BT, WT>(Bin, Value));
-
-				#if	0	// DEL-BY-LEETEN 12/25/2012-BEGIN
-				// estimate the current memory usage
-				static size_t uCount;
-				const size_t uMaxCount = 100000;
-				if( 0 == uCount % uMaxCount )
-				{
-					LOG_VAR_TO_ERROR(uCount);
-					_ShowMemoryUsage(true);
-				}
-				uCount++;
-				#endif	// DEL-BY-LEETEN 12/25/2012-END
 			}
 		}
 
@@ -274,9 +241,7 @@ namespace WaveletSAT
 		void
 		_GetAtOffset
 		(
-			// MOD-BY-LEETEN 01/03/2013-FROM:			const unsigned short usOffset,
 			const BT& usOffset,
-			// MOD-BY-LEETEN 01/03/2013-END
 			const vector<size_t>& vuSubs,
 			size_t& uIndex,
 			BT& Bin,
@@ -562,17 +527,11 @@ namespace WaveletSAT
 		void
 		_GetCoefSparse
 		(
-			// MOD-BY-LEETEN 01/05/2013-FROM:			const vector<size_t> vuSubs,
 			size_t uIndex,
-			// MOD-BY-LEETEN 01/05/2013-END
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, ST> >& vpairCoefs,
 			vector< pair<BT, WT> >& vpairCoefs,
-			// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 		) const
 		{
-			// DEL-BY-LEETEN 01/05/2013:	size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
-
 			// ADD-BY-LEETEN 11/12/2012-BEGIN
 			vpairCoefs.clear();
 			if( !bIsSparse )
@@ -581,9 +540,7 @@ namespace WaveletSAT
 				{
 					WT Coef = vvFull[b][uIndex];
 					if( Coef )
-						// MOD-BY-LEETEN 01/03/2013-FROM:						vpairCoefs.push_back(pair<size_t, ST>(b, Coef));
 						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
-						// MOD-BY-LEETEN 01/03/2013-END
 				}
 			}
 			else
@@ -611,16 +568,8 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 			#else	// #if	!WITH_SPARSE_AS_VECTOR	
 			const vector< pair<BT, WT> >& vpairSparse = this->vvpairSparse[uIndex];
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			for(typename vector< pair<BT, WT> >::const_iterator 
-							ipair = vpairSparse.begin();
-				ipair != vpairSparse.end();
-				ipair++)
-				vpairCoefs.push_back(pair<size_t, ST>((size_t)ipair->first, ipair->second));
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			vpairCoefs.resize(vpairSparse.size());
 			copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			#endif	// #if	!WITH_SPARSE_AS_VECTOR	
 			// ADD-BY-LEETEN 11/11/2012-END
 			}	// ADD-BY-LEETEN 11/12/2012

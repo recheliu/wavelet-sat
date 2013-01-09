@@ -18,17 +18,11 @@ using namespace std;
 
 namespace WaveletSAT
 {
-	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-	template<
-		typename DT	//!< Type of the data
-	>
-	#else	// MOD-BY-LEETEN 01/03/2013-TO:
 	template<
 		// typename DT,				//!< Type of the data
 		typename ST = typeSum,		//!< Type of the sum
 		typename BT = typeBin		//!< Type of the bin
 	>
-	#endif	// MOD-BY-LEETEN 01/03/2013-END
 	class CDecoderBase:
 		virtual public CBase
 	{
@@ -143,9 +137,7 @@ namespace WaveletSAT
 		_GetAllSums
 		(
 			const vector<size_t>& vuPos,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<DT>& vdSums,
 			vector<ST>& vdSums,
-			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		) = 0;
 
@@ -167,35 +159,23 @@ namespace WaveletSAT
 		void
 		_DecodeBin
 		(
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			unsigned short usBin,
-			valarray<DT> &vSAT,
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			const BT& usBin,
 			valarray<ST> &vSAT,
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		) = 0;
 
 		virtual
 		void
 		_ClampToDataSize(
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			const valarray<DT>& vCoefField,
-			valarray<DT>& vDataField,
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			const valarray<ST>& vCoefField,
 			valarray<ST>& vDataField,
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 			) = 0;
 
 		virtual
 		void
 		_ClampBorder(
-			// MOD-BY-LEETEN 01/03/2013-FROM:			valarray<DT>& vField,
 			valarray<ST>& vField,
-			// MOD-BY-LEETEN 01/03/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL

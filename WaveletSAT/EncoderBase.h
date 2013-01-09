@@ -27,13 +27,11 @@ namespace WaveletSAT
 	To query the entry for a certain location:
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
-	// MOD-BY-LEETEN 01/03/2013-FROM:	template<typename DT, typename ST>
 	template<
 		typename DT,	//!< Type of the data
 		typename ST = typeSum,	//!< Type of the sum
 		typename BT = typeBin	//!< Type of the bin
 	>
-	// MOD-BY-LEETEN 01/03/2013-END
 	class CEncoderBase
 		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
 	{
@@ -45,9 +43,7 @@ protected:
 		(
 			const vector<size_t>& vuPos, 
 			const DT& value,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			size_t uBin, 
 			const BT& uBin, 
-			// MOD-BY-LEETEN 01/03/2013-END
 			const ST& weight,
 			void *_Reserved = NULL
 		) = 0;
@@ -58,9 +54,7 @@ protected:
 		(
 			const vector<size_t>& vuPos,
 			const DT& value, 
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, ST> >& vpBins,
 			vector< pair<BT, ST> >& vpBins,
-			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		) = 0;
 
@@ -73,13 +67,9 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, ST> > vpBins;
 			vector< pair<BT, ST> > vpBins;
-			// MOD-BY-LEETEN 01/03/2013-END
 			_MapValueToBins(vuPos, value, vpBins);
-			// MOD-BY-LEETEN 01/03/2013-FROM:			for(typename vector< pair<size_t, ST> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
 			for(typename vector< pair<BT, ST> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
-			// MOD-BY-LEETEN 01/03/2013-END
 				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
 		}
 

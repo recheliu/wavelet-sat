@@ -55,19 +55,8 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	// ADD-BY-LEETEN 01/03/2013-BEGIN
-	#if	0	// DEL-BY-LEETEN 01/04/2013-BEGIN
-	template<
-		typename ST = typeSum,		//!< Type of the sum
-		typename BT = typeBin		//!< Type of the bin
-	>
-	#endif	// DEL-BY-LEETEN 01/04/2013-END
-	// MOD-BY-LEETEN 01/03/2013-END
 	class CSepDWTHeader:
-		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CHeaderBase
-		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CHeaderBase<ST, BT>
 		virtual public CHeaderBase
-		// MOD-BY-LEETEN 01/04/2013-END
-		// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 		// ADD-BY-LEETEN 10/19/2012-BEGIN
@@ -530,11 +519,7 @@ public:
 		_Set
 		(
 			const vector<size_t>& vuDimLengths,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			const size_t uNrOfBins,
-			// MOD-BY-LEETEN 01/04/2013-FROM:			const BT& uNrOfBins,
 			size_t uNrOfBins,
-			// MOD-BY-LEETEN 01/04/2013-END
-			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{

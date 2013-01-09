@@ -104,26 +104,16 @@ main(int argn, char* argv[])
 		vuDimLengths.push_back(uDimLength);
 		uNrOfValues *= uDimLength;
 	}
-	// MOD-BY-LEETEN 01/03/2013-FROM:	cSimpleND._Set(vuDimLengths, uNrOfBins);
 	cSimpleND._Set(vuDimLengths, (WaveletSAT::typeBin)uNrOfBins);
-	// MOD-BY-LEETEN 01/03/2013-END
 
 	// Step 2: Allocate the needed #SATs
-	// MOD-BY-LEETEN 01/03/2013-FROM:	cSimpleND._SetHistogram(uNrOfBins, 0, iValueMax);
-	#if 0 	// MOD-BY-LEETEN 01/04/2013-FROM:
-	cSimpleND._SetHistogram((WaveletSAT::typeBin)uNrOfBins, 0, iValueMax);
-	#else // MOD-BY-LEETEN 01/04/2013-TO:
 	cSimpleND._SetHistogram(0, iValueMax);
-	#endif // MOD-BY-LEETEN 01/04/2013-END
-	// MOD-BY-LEETEN 01/03/2013-END
 	cSimpleND._Allocate();
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	// Step 3: Add the value to the SAT
-	// MOD-BY-LEETEN 01/03/2013-FROM:	vector<size_t> vuValueBins;
 	vector<WaveletSAT::typeBin> vuValueBins;
-	// MOD-BY-LEETEN 01/03/2013-END
 	for(size_t i = 0; i < uNrOfValues; i++)
 	{
 		vector<size_t> vuPos;
@@ -173,9 +163,7 @@ main(int argn, char* argv[])
 
 		cSimpleND._AddValue(vuPos, iValue);
 
-		// MOD-BY-LEETEN 01/03/2013-FROM:		vector< pair<size_t, double> > vuBins;
 		vector< pair<WaveletSAT::typeBin, double> > vuBins;
-		// MOD-BY-LEETEN 01/03/2013-END
 		cSimpleND._MapValueToBins(vuPos, iValue, vuBins);
 		vuValueBins.push_back(vuBins[0].first);
 		//		printf("%d\n", iValue);

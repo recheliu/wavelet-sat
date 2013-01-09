@@ -20,29 +20,15 @@ using namespace std;
 namespace WaveletSAT
 {
 	//! The class that load SAT from NetCDF files .
-	#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-	template<
-		typename DT	//!< Type of the data
-	>
-	#else	// MOD-BY-LEETEN 01/03/2013-TO:
 	template<
 		// typename DT,				//!< Type of the data
 		typename ST = typeSum,		//!< Type of the sum
 		typename BT = typeBin		//!< Type of the bin
 	>
-	#endif	// MOD-BY-LEETEN 01/03/2013-END
 	class CSATFileDecoder:
-		#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
 		virtual public CHeaderBase,
-		virtual public CSATFileNetCDF,
-		virtual public CDecoderBase<DT>
-		#else	// MOD-BY-LEETEN 01/03/2013-TO:
-		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CHeaderBase<ST, BT>,
-		virtual public CHeaderBase,
-		// MOD-BY-LEETEN 01/04/2013-END
 		virtual public CSATFileNetCDF,
 		virtual public CDecoderBase<ST, BT>
-		#endif	// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:
 	  bool bIsOutOfCore; // ADD-BY-LEETEN 01/02/2013
@@ -68,21 +54,9 @@ public:
 		)
 		{
 			CHeaderBase::_SetInteger(eName, lValue);
-			// MOD-BY-LEETEN 01/03/2013-FROM:			CDecoderBase<DT>::_SetInteger(eName, lValue);
 			CDecoderBase<ST, BT>::_SetInteger(eName, lValue);
-			// MOD-BY-LEETEN 01/03/2013-END
 			switch(eName)
 			{
-			#if	0	// DEL-BY-LEETEN 01/05/2012-BEGIN
-			#if 0 // MOD-BY-LEETEN 01/02/2013-FROM:
-			case RESET_IO_COUNTERS:
-				uMinNrOfIORequest = uDataSize;
-			#else // MOD-BY-LEETEN 01/02/2013-TO:
-			case CDecoderBase<ST, BT>::RESET_IO_COUNTERS:
-				this->uMinNrOfIORequest = uDataSize;
-			#endif // MOD-BY-LEETEN 01/02/2013-END
-				break;
-			#endif	// DEL-BY-LEETEN 01/05/2012-END
 			}
 		}
 
@@ -95,9 +69,7 @@ public:
 		)
 		{
 			CHeaderBase::_GetInteger(eName, plValue);
-			// MOD-BY-LEETEN 01/03/2013-FROM:			CDecoderBase<DT>::_GetInteger(eName, plValue);
 			CDecoderBase<ST, BT>::_GetInteger(eName, plValue);
-			// MOD-BY-LEETEN 01/03/2013-END
 		}
 
 		virtual
@@ -218,9 +190,7 @@ public:
 		_GetAllSums
 		(
 			const vector<size_t>& vuPos,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<DT>& vSums,
 			vector<ST>& vSums,
-			// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -258,9 +228,7 @@ public:
 				nc_get_vara_double(iNcId, ncVarSAT, puStarts, puCounts, pdSums) );
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
-				// MOD-BY-LEETEN 01/03/2013-FROM:				vSums[b] = (DT)pdSums[b];
 				vSums[b] = (ST)pdSums[b];
-				// MOD-BY-LEETEN 01/03/2013-END
 
 			delete [] pdSums;
 		}
@@ -302,13 +270,8 @@ public:
 		void
 		_DecodeBin
 		(
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			unsigned short usBin,
-			valarray<DT> &vSAT,
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			const BT& usBin,
 			valarray<ST> &vSAT,
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -319,9 +282,7 @@ public:
 		  if( !bIsOutOfCore )
 		    {
 		      for(size_t d = 0; d < uDataSize; d++)
-				// MOD-BY-LEETEN 01/03/2013-FROM:			vSAT[d] = (DT)pdSAT[(size_t)usBin * uDataSize + d];
 				vSAT[d] = (ST)pdSAT[(size_t)usBin * uDataSize + d];
-				// MOD-BY-LEETEN 01/03/2013-END
 		      return;
 		    }
 		  // ADD-BY-LEETEN 01/02/2013-END
@@ -344,21 +305,14 @@ public:
 				nc_get_vara(iNcId, ncVarSAT, puStarts, puCounts, (void*)&pdSAT[0]) );
 
 			for(size_t d = 0; d < uDataSize; d++)
-				// MOD-BY-LEETEN 01/03/2013-FROM:				vSAT[d] = (DT)pdSAT[d];
 				vSAT[d] = (ST)pdSAT[d];
-				// MOD-BY-LEETEN 01/03/2013-END
 		}
 
 		virtual
 		void
 		_ClampToDataSize(
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			const valarray<DT>& vCoefField,
-			valarray<DT>& vDataField,
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			const valarray<ST>& vCoefField,
 			valarray<ST>& vDataField,
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 			void* _Reserved = NULL
 			)
 		{
@@ -371,9 +325,7 @@ public:
 		virtual
 		void
 		_ClampBorder(
-			// MOD-BY-LEETEN 01/03/2013-FROM:			valarray<DT>& vField,
 			valarray<ST>& vField,
-			// MOD-BY-LEETEN 01/03/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL
@@ -397,11 +349,7 @@ public:
 
 				if( bIsNearBorder )
 				{
-				  #if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
-					vField[d] = (DT)0;
-					#else // MOD-BY-LEETEN 01/04/2013-TO:
 					vField[d] = (ST)0;
-					#endif // MOD-BY-LEETEN 01/04/2013-END
 					continue;
 				}
 			}

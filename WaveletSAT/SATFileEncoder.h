@@ -46,43 +46,21 @@ namespace WaveletSAT
 	//! The class that creates SAT in NetCDF files.
 	/*!
 	*/
-	// MOD-BY-LEETEN 01/03/2013-FROM:	template<typename DT, typename ST>
 	template<
 		typename DT,				//!< Type of the data
 		typename ST = typeSum,		//!< Type of the sum
 		typename BT = typeBin		//!< Type of the bin
 	>
-	// MOD-BY-LEETEN 01/03/2013-END
 	class CSATFileEncoder:
-		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CHeaderBase,
-		// MOD-BY-LEETEN 01/04/2013-FROM:		virtual public CHeaderBase<ST, BT>,
 		virtual public CHeaderBase,
-		// MOD-BY-LEETEN 01/04/2013-END
-		// MOD-BY-LEETEN 01/03/2013-END
 		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2013
-		// MOD-BY-LEETEN 01/03/2013-FROM:		virtual public CEncoderBase<DT, ST>
 		virtual public CEncoderBase<DT, ST, BT>
-		// MOD-BY-LEETEN 01/03/2013-END
 	{
 protected:	
 		//! The storage to store the original data.
-		// MOD-BY-LEETEN 01/03/2013-FROM:		vector< map<size_t, ST> > vmapHists;
 		vector< map<BT, ST> > vmapHists;
-		// MOD-BY-LEETEN 01/03/2013-END
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
-
-		#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
-		int iNcId;
-
-		int piNcDimIds[NC_MAX_DIMS];
-
-		int iNcVarId;
-		
-		char *pszNcDimNames[NC_MAX_DIMS];
-
-		int iDeflateLevel; // ADD-BY-LEETEN 11/09/2012
-		#endif	// DEL-BY-LEETEN 01/02/2013-END
 
 		// ADD-BY-LEETEN 01/09/2013-BEGIN
 		#if		WITH_PRECOMPUTED_SCANLINE_BASE
@@ -102,33 +80,18 @@ protected:
 		(
 			const vector<size_t>& vuPos, 
 			const DT& value,
-			// MOD-BY-LEETEN 01/03/2013-FROM:			size_t uBin, 
 			const BT& uBin, 
-			// MOD-BY-LEETEN 01/03/2013-END
 			const ST& weight,
 			void *_Reserved = NULL
 		)
 		{
 			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
-			#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-			map<size_t, ST>& mapHist = vmapHists[uIndex];
-			map<size_t, double>::iterator imapHist = mapHist.find(uBin);
-			if(mapHist.end() == imapHist )
-				mapHist.insert(pair<size_t, ST>(uBin, weight));
-			else
-				imapHist->second += weight;
-			#else	// MOD-BY-LEETEN 01/03/2013-TO:
 			map<BT, ST>& mapHist = vmapHists[uIndex];
-			#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
-			map<BT, ST>::iterator imapHist = mapHist.find(uBin);
-			#else // MOD-BY-LEETEN 01/04/2013-TO:
 			typename map<BT, ST>::iterator imapHist = mapHist.find(uBin);
-			#endif // MOD-BY-LEETEN 01/04/2013-END
 			if(mapHist.end() == imapHist )
 				mapHist.insert(pair<BT, ST>(uBin, weight));
 			else
 				imapHist->second += weight;
-			#endif	// MOD-BY-LEETEN 01/03/2013-END
 		}
 
 public:
@@ -195,63 +158,6 @@ public:
     				&iNcId));
 			#endif	// #if !WITH_NETCDF4 
 
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			// dimension
-			int piDimLengths[NC_MAX_DIMS];
-			static char* pszDefaultDimNames[] = {"X", "Y", "Z"};
-			static size_t uNrOfDefaultDimNames = sizeof(pszDefaultDimNames)/sizeof(pszDefaultDimNames[0]);
-
-			for(int d = 0; d < UGetNrOfDims() + 1; d++)
-			{
-				size_t uDimLength;
-				char* szNcDimName;
-				if( 0 == d )
-				{
-					uDimLength = UGetNrOfBins();
-					szNcDimName = strdup("Bin");
-				}
-				else
-				{
-					size_t uDimDiff = UGetNrOfDims() - d;
-					uDimLength = (int)this->vuDimLengths[uDimDiff];
-					if( d < uNrOfDefaultDimNames )
-						szNcDimName = strdup(pszDefaultDimNames[uDimDiff]);
-					else
-					{
-						szNcDimName = (char*)calloc(8, 1);
-						sprintf(szNcDimName, "DIM%d", (unsigned int)uDimDiff);
-					}
-				}
-
-				piDimLengths[d] = (int)uDimLength;
-				pszNcDimNames[d] = szNcDimName;
-				ASSERT_NETCDF(nc_def_dim(
-    							iNcId,
-    							pszNcDimNames[d],
-    							piDimLengths[d],
-    							&piNcDimIds[d]));
-			}
-
-			// now define the variable for the bin SAT
-			ASSERT_NETCDF(nc_def_var(
-				   iNcId,
-				   "SAT", 
-				   NC_DOUBLE,
-				   UGetNrOfDims() + 1,
-				   piNcDimIds,
-				   &iNcVarId));
-
-			// ADD-BY-LEETEN 11/09/2012-BEGIN
-#if WITH_NETCDF4 
-			ASSERT_NETCDF(nc_def_var_deflate(
-				   iNcId,
-				   iNcVarId, 
-				   0, 
-				   1, 
-				   iDeflateLevel));
-#endif // #if WITH_NETCDF4
-			// ADD-BY-LEETEN 11/09/2012-END
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			// define the dimension for #bins
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
@@ -285,15 +191,6 @@ public:
 			piNcDimIds[0] = ncDimBin;
 			for(size_t d = 0; d < uNrOfDims; d++)
 				piNcDimIds[d + 1] = vncDimData[uNrOfDims - 1 - d];
-			#if	0	// MOD-BY-LEETEN 01/04/2013-FROM:
-			ASSERT_NETCDF(nc_def_var(
-				   iNcId,
-				   szVarSAT, 
-				   NC_DOUBLE,
-				   uNrOfDims + 1,
-				   piNcDimIds,
-				   &ncVarSAT));
-			#else	// MOD-BY-LEETEN 01/04/2013-TO:
 			ASSERT_NETCDF(nc_def_var(
 				   iNcId,
 				   szVarSAT, 
@@ -301,7 +198,6 @@ public:
 				   (int)(uNrOfDims + 1),
 				   piNcDimIds,
 				   &ncVarSAT));
-			#endif	// MOD-BY-LEETEN 01/04/2013-END
 
 			#if WITH_NETCDF4 
 			ASSERT_NETCDF(nc_def_var_deflate(
@@ -311,7 +207,6 @@ public:
 				   1, 
 				   iDeflateLevel));
 			#endif // #if WITH_NETCDF4
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
 
@@ -331,15 +226,8 @@ public:
 			{
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
-					#if	0	// MOD-BY-LEETEN 01/03/2013-FROM:
-					const map<size_t, ST>& mapHist = vmapHists[i];
-					typename map<size_t, ST>::const_iterator imapHist = mapHist.find(b);
-					#else	// MOD-BY-LEETEN 01/03/2013-TO:
 					const map<BT, ST>& mapHist = vmapHists[i];
-					// MOD-BY-LEETEN 01/04/2013-FROM:					typename map<BT, ST>::const_iterator imapHist = mapHist.find(b);
 					typename map<BT, ST>::const_iterator imapHist = mapHist.find((BT)b);
-					// MOD-BY-LEETEN 01/04/2013-END
-					#endif	// MOD-BY-LEETEN 01/03/2013-END
 					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
@@ -381,59 +269,18 @@ public:
 						puCount[d] = this->vuDimLengths[UGetNrOfDims() - d];
 					}
 
-				#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-				ASSERT_NETCDF(nc_put_vara_double(
-						   iNcId,
-						   iNcVarId,
-						   puStart,
-						   puCount,
-						   &pSAT[0]));
-				#else	// MOD-BY-LEETEN 01/02/2013-TO:
-				#if 0 				// MOD-BY-LEETEN 01/02/2013-FROM:
-				ASSERT_NETCDF(nc_put_vara_double(
-						   iNcId,
-						   ncVarSAT,
-						   puStart,
-						   puCount,
-						   &pSAT[0]));
-				#else // MOD-BY-LEETEN 01/02/2013-TO:
 				ASSERT_NETCDF(nc_put_vara(
 						   iNcId,
 						   ncVarSAT,
 						   puStart,
 						   puCount,
 						   (void*)&pSAT[0]));
-				#endif // MOD-BY-LEETEN 01/02/2013-END
-				#endif	// MOD-BY-LEETEN 01/02/2013-END
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 		
 			delete [] pSAT;
 
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			/////////////////////////////////////////////
-			// now reopen the file in read-only mode
-			#if !WITH_NETCDF4 
-			ASSERT_NETCDF(nc_open(
-    				szNetCdfPathFilename,
-    				NC_NOWRITE,
-    				&iNcId));
-			#else	// #if !WITH_NETCDF4
-			ASSERT_NETCDF(nc_open(
-    				szNetCdfPathFilename,
-    				NC_NOWRITE | NC_NETCDF4,
-    				&iNcId));
-			#endif // #if !WITH_NETCDF4
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			ASSERT_NETCDF(
-				nc_inq_varid(iNcId, "SAT", &iNcVarId) );
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
-			ASSERT_NETCDF(
-				nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			iNcId = 0;
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
 		}
 
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
@@ -446,24 +293,6 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			#ifdef		WIN32
-			const char *szCopyCommand = "copy";
-			#else	//	#ifdef WIN32
-			const char *szCopyCommand = "cp";
-			#endif	//	#ifdef WIN32
-
-			#if !WITH_NETCDF4
-			const char* szFileExt = "nc";
-			#else // #if !WITH_NETCDF4
-			const char* szFileExt = "nc4";
-			#endif // #if !WITH_NETCDF4
-
-			char szCommandLine[1024];	// ADD-BY-LEETEN 01/02/2013
-			sprintf(szCommandLine, "%s sat.nc %s.%s", szCopyCommand, szFilepathPrefix, szFileExt);
-			// DEL-BY-LEETEN 01/02/2013:	#endif
-			system(szCommandLine);
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			const char* szExt;
 			#if WITH_NETCDF4
 			szExt = "nc4";
@@ -474,7 +303,6 @@ public:
 			sprintf(szFilepath, "%s.%s", szFilepathPrefix, szExt);
 			remove(szFilepath);
 			rename("sat.nc", szFilepath);
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
 		}
 		// ADD-BY-LEETEN 12/12/2012-END
 
@@ -488,13 +316,6 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
-			if( uNrOfBins * uDataSize > uSizeOfFullArrays )
-			{
-				LOG_ERROR(cerr<<"Exceed the specified application-side memory capacity.");
-				exit(EXIT_FAILURE);
-			}
-			#endif	// DEL-BY-LEETEN 01/02/2013-END
 			vmapHists.resize(uDataSize);
 
 			// ADD-BY-LEETEN 01/09/2013-BEGIN
@@ -526,12 +347,7 @@ public:
 		{
 			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if		WITH_BOOST
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			fs::path pathNativePath( szFilepath, fs::native );
-			size_t uFileSize = fs::file_size( pathNativePath );
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			size_t uFileSize = fs::file_size( szNetCdfPathFilename );
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
 			#else	// #if WITH_BOOST
 			// ADD-BY-LEETEN 12/28/2012-END
 		  // ADD-BY-LEETEN 11/09/2012-BEGIN
@@ -595,13 +411,8 @@ public:
 					puCounts[d] = 1;
 				}
 			}
-			#if	0	// MOD-BY-LEETEN 01/02/2013-FROM:
-			ASSERT_NETCDF(
-				nc_get_vara_double(iNcId, iNcVarId, puStarts, puCounts, pdSums) );
-			#else	// MOD-BY-LEETEN 01/02/2013-TO:
 			ASSERT_NETCDF(
 				nc_get_vara(iNcId, ncVarSAT, puStarts, puCounts, (void*)&pdSums[0]) );
-			#endif	// MOD-BY-LEETEN 01/02/2013-END
 
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] = pdSums[b];
@@ -616,11 +427,6 @@ public:
 		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSATFileEncoder()
 		{
-			#if	0	// DEL-BY-LEETEN 01/02/2013-BEGIN
-			ASSERT_NETCDF(nc_close(iNcId));
-			for(size_t d = 0; d < UGetNrOfDims() + 1; d++)
-				free(pszNcDimNames[d]);
-			#endif	// DEL-BY-LEETEN 01/02/2013-END
 		}
 	};
 }

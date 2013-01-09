@@ -181,12 +181,6 @@ main(int argn, char* argv[])
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	#if	0	// DEL-BY-LEETEN 01/05/2012-BEGIN
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	cSimpleNDFile._ShowStatistics();
-	LIBCLOCK_END(bIsPrintingTiming);
-	#endif	// DEL-BY-LEETEN 01/05/2012-END
-
 	if(iIsTestingQuery)
 	{
 	assert(szVolFilePath); // ADD-BY-LEETEN 12/30/2012
@@ -201,9 +195,7 @@ main(int argn, char* argv[])
 
 		size_t uNrOfDims = (size_t)nin->dim;
 		size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
-		// MOD-BY-LEETEN 01/09/2013-FROM:		size_t uWinSize = 1;
 		size_t uWinSize = iQueryWinLength;
-		// MOD-BY-LEETEN 01/09/2013-END
 		size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
 
 		vector<size_t> vuDimLengths;
@@ -215,31 +207,11 @@ main(int argn, char* argv[])
 			uNrOfValues *= uDimLength;
 		}
 
-		// MOD-BY-LEETEN 01/03/2013-FROM:		cSimpleNDFile._SetHistogram(uNrOfBins, dValueMin, dValueMax);
-		#if 0 // MOD-BY-LEETEN 01/04/2013-FROM:
-		cSimpleNDFile._SetHistogram((WaveletSAT::typeBin)uNrOfBins, dValueMin, dValueMax);
-		#else // MOD-BY-LEETEN 01/04/2013-TO:
 		cSimpleNDFile._SetHistogram(dValueMin, dValueMax);
-		#endif // MOD-BY-LEETEN 01/04/2013-END
-		// MOD-BY-LEETEN 01/03/2013-END
 
 		// decide the threshld to filter numerical error
 		double dThreshold = cSimpleNDFile.DGetThreshold();
 
-		#if	0	// DEL-BY-LEETEN 01/05/2013-BEGIN
-		size_t uNrOfIHs = 1 << uNrOfDims;
-		vector< vector<size_t> > vvuOffsets;
-		vvuOffsets.resize(uNrOfIHs);
-		for(size_t i = 0; i < uNrOfIHs; i++)
-		{
-			vvuOffsets[i].resize(uNrOfDims);
-			for(size_t 
-				d = 0, j = i; 
-				d < uNrOfDims; 
-				d++, j /= 2)
-				vvuOffsets[i][d] = uWinSize * (j % 2);
-		}
-		#endif	// DEL-BY-LEETEN 01/05/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -262,40 +234,15 @@ main(int argn, char* argv[])
 				if( iIsVerbose )
 					printf("%3d,", (int)uPos);
 			}
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector< pair<size_t, double> > vuBins;
 			vector< pair<WaveletSAT::typeBin, WaveletSAT::typeSum> > vuBins;
-			// MOD-BY-LEETEN 01/03/2013-END
 			cSimpleNDFile._MapValueToBins(vuBase, vdData[uIndex], vuBins);
 
 			size_t uValueBin = vuBins[0].first;
 			if( iIsVerbose )
 				printf(")=\t%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
 
-			// MOD-BY-LEETEN 01/03/2013-FROM:			vector<double> vdH;
 			vector<WaveletSAT::typeSum> vdH;
-			// MOD-BY-LEETEN 01/03/2013-END
 
-			#if	0	// MOD-BY-LEETEN 01/05/2013-FROM:
-			vdH.resize(uNrOfBins);
-			for(size_t i = 0; i < uNrOfIHs; i++)
-			{
-				vector<size_t> vuPos;
-				int iSign = 1;
-				for(size_t d = 0; d < uNrOfDims; d++)
-				{
-					vuPos.push_back(vuBase[d] - vvuOffsets[i][d]);
-					iSign *= (vvuOffsets[i][d])?(-1):(+1);
-				}
-				// MOD-BY-LEETEN 01/03/2013-FROM:				vector<double> vdIH;
-				vector<WaveletSAT::typeSum> vdIH;
-				// MOD-BY-LEETEN 01/03/2013-END
-				cSimpleNDFile._GetAllSums(vuPos, vdIH);
-				for(size_t b = 0; b < uNrOfBins; b++)
-					// MOD-BY-LEETEN 01/03/2013-FROM:					vdH[b] += iSign * vdIH[b]; 
-					vdH[b] += (WaveletSAT::typeSum)iSign * vdIH[b]; 
-					// MOD-BY-LEETEN 01/03/2013-END
-			}
-			#else	// MOD-BY-LEETEN 01/05/2013-TO:
 			vdH.resize(uNrOfBins);
 
 			vector<size_t> vuOffset;
@@ -303,7 +250,6 @@ main(int argn, char* argv[])
 			for(size_t d = 0; d < uNrOfDims; d++)
 				vuOffset[d] = vuBase[d] - uWinSize;
 			cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
-			#endif	// MOD-BY-LEETEN 01/05/2013-END
 
 			double dError = 0.0;
 			for(size_t b = 0; b < uNrOfBins; b++)
