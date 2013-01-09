@@ -1,5 +1,7 @@
 #pragma once
 
+#define	WITH_PRECOMPUTED_SCANLINE_BASE	1	// ADD-BY-LEETEN 01/09/2013
+
 // ADD-BY-LEETEN 12/28/2012-BEGIN
 #if	WITH_BOOST
 #include <boost/filesystem/operations.hpp>
@@ -81,6 +83,13 @@ protected:
 
 		int iDeflateLevel; // ADD-BY-LEETEN 11/09/2012
 		#endif	// DEL-BY-LEETEN 01/02/2013-END
+
+		// ADD-BY-LEETEN 01/09/2013-BEGIN
+		#if		WITH_PRECOMPUTED_SCANLINE_BASE
+		//! The base of all scanlines for all dimensions
+		vector< vector<size_t> > vvuSliceScanlineBase;
+		#endif	//	#if WITH_PRECOMPUTED_SCANLINE_BASE
+		// ADD-BY-LEETEN 01/09/2013-END
 
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -342,8 +351,14 @@ public:
 
 					for(size_t i = 0; i < uNrOfScanLines; i++)
 					{
+						#if	!WITH_PRECOMPUTED_SCANLINE_BASE	// ADD-BY-LEETEN 01/09/2013
 						_ConvertIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
 						size_t uScanLineBase = UConvertSubToIndex(vuScanLineBase, vuDimLengths);
+						// ADD-BY-LEETEN 01/09/2013-BEGIN
+						#else	// #if !WITH_PRECOMPUTED_SCANLINE_BASE
+						size_t uScanLineBase = vvuSliceScanlineBase[d][i];
+						#endif	// #if !WITH_PRECOMPUTED_SCANLINE_BASE
+						// ADD-BY-LEETEN 01/09/2013-END
 						for(size_t 	j = 1, uIndex = uScanLineBase; 
 								j < vuDimLengths[d]; 
 								j++, uIndex += uOffset)
@@ -481,6 +496,24 @@ public:
 			}
 			#endif	// DEL-BY-LEETEN 01/02/2013-END
 			vmapHists.resize(uDataSize);
+
+			// ADD-BY-LEETEN 01/09/2013-BEGIN
+			vvuSliceScanlineBase.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vector<size_t> vuSliceLengths = vuDimLengths;
+				vuSliceLengths[d] = 1;
+				size_t uNrOfScanlines = uDataSize / vuDimLengths[d];
+				vvuSliceScanlineBase[d].resize(uNrOfScanlines);
+				for(size_t s = 0; s < uNrOfScanlines; s++)
+				{
+					vector<size_t> vuScanlineBase;
+					_ConvertIndexToSub(s, vuScanlineBase, vuSliceLengths);
+					vvuSliceScanlineBase[d][s] = UConvertSubToIndex(vuScanlineBase, vuDimLengths);
+				}
+			}
+			// ADD-BY-LEETEN 12/30/2012-END
+			// ADD-BY-LEETEN 01/09/2013-END
 		}
 		
 		//! Compute and display statistics for the computed wavelet coefficients.

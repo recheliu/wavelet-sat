@@ -123,6 +123,13 @@ main(int argn, char* argv[])
 		"--n-testing-values", 1,
 		&iNrOfTestingValues, iNrOfTestingValues);
 	
+	// ADD-BY-LEETEN 01/09/2013-BEGIN
+	int iQueryWinLength = 1;
+	_OPTAddIntegerVector(
+		"--query-win-length", 1,
+		&iQueryWinLength, iQueryWinLength);
+	// ADD-BY-LEETEN 01/09/2013-END
+
 	int iIsTestingQuery = 0; 
 	_OPTAddBoolean(
 		"--is-testing-query", &iIsTestingQuery, iIsTestingQuery);
@@ -194,7 +201,9 @@ main(int argn, char* argv[])
 
 		size_t uNrOfDims = (size_t)nin->dim;
 		size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
-		size_t uWinSize = 1;
+		// MOD-BY-LEETEN 01/09/2013-FROM:		size_t uWinSize = 1;
+		size_t uWinSize = iQueryWinLength;
+		// MOD-BY-LEETEN 01/09/2013-END
 		size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
 
 		vector<size_t> vuDimLengths;
