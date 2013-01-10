@@ -1,6 +1,11 @@
 #pragma once
 
 #include "WaveletSATEncoder.h"
+// ADD-BY-LEETEN 01/10/2012-BEGIN
+#if	WITH_CUDA
+#include "WaveletSATGPUEncoder.h"	
+#endif	// #if	WITH_CUDA
+// ADD-BY-LEETEN 01/10/2012-END
 #include "SATFileEncoder.h"		// ADD-BY-LEETEN 01/02/2013
 #if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
 #include <netcdf.h>
@@ -14,7 +19,13 @@ template<
 >
 class CSimpleND:
 	#if	!WITH_SAT_FILE	// ADD-BY-LEETEN 01/05/2013
+	#if	!WITH_CUDA		// ADD-BY-LEETEN 01/10/2012
 	virtual public WaveletSAT::CWaveletSATEncoder<DT, ST, BT, WT>
+	// ADD-BY-LEETEN 01/10/2012-BEGIN
+	#else	// #if	!WITH_CUDA	
+	virtual public WaveletSAT::CWaveletSATGPUEncoder<DT, ST, BT, WT>
+	#endif	// #if	!WITH_CUDA	
+	// ADD-BY-LEETEN 01/10/2012-END
 	// ADD-BY-LEETEN 01/05/2013-BEGIN
 	#else	// #if	!WITH_SAT_FILE	
 	virtual public WaveletSAT::CSATFileEncoder<DT, ST, BT>

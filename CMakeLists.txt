@@ -83,21 +83,63 @@ include_directories (
 link_directories (
 	"${MYLIB_DIR}/lib" )
 
+# ADD-BY-LEETEN 01/10/2012-BEGIN
+set(WITH_CUDA	OFF	CACHE 	BOOL "Is CUDA used?")	
+if( WITH_CUDA )
+	add_definitions(-DWITH_CUDA)
+	
+	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
+
+	FIND_PACKAGE(CUDA)
+	include_directories(
+		${CUDA_TOOLKIT_ROOT_DIR}/include
+		${CUDPP_DIR}/include
+		)
+	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		add_definitions(-DWIN64)
+		link_directories(
+			${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
+	else()
+		link_directories(
+			${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
+    endif()	
+	link_directories(
+		${CUDPP_DIR}/lib
+		)
+
+	add_subdirectory(CudaDWT)
+	include_directories(
+		CudaDWT
+		)
+		
+	link_directories(
+		${PROJECT_BINARY_DIR}/CudaDWT
+		)
+endif()
+# ADD-BY-LEETEN 01/10/2012-END
+
 add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
-add_dependencies(SimpleND WaveletSAT)
+# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleND WaveletSAT)
 
 # ADD-BY-LEETEN 09/30/2012-BEGIN
 add_subdirectory(SimpleNDWithNrrd)
-add_dependencies(SimpleNDWithNrrd WaveletSAT)
+# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDWithNrrd WaveletSAT)
 # ADD-BY-LEETEN 09/30/2012-END
 
 # ADD-BY-LEETEN 12/16/2012-BEGIN
 add_subdirectory(SimpleNDEncoder)
-add_dependencies(SimpleNDEncoder WaveletSAT)
+# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDEncoder WaveletSAT)
 add_subdirectory(SimpleNDQuery)
-add_dependencies(SimpleNDQuery WaveletSAT)
+# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDQuery WaveletSAT)
 # ADD-BY-LEETEN 12/16/2012-END
 
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 
+# ADD-BY-LEETEN 01/10/2012-BEGIN
+if( WITH_CUDA )
+	add_dependencies(SimpleND 			CudaDWT)
+	add_dependencies(SimpleNDWithNrrd 	CudaDWT)
+	add_dependencies(SimpleNDEncoder 	CudaDWT)
+endif()
+# ADD-BY-LEETEN 01/10/2012-END

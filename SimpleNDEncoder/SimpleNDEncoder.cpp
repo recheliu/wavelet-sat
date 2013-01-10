@@ -136,6 +136,12 @@ main(int argn, char* argv[])
 	_OPTAddComment("--netcdf-deflate-level",
 		"Deflate level for NetCDF file. The value is between 0 (store only) and 9 (maximal).");
 
+	// ADD-BY-LEETEN 01/10/2013-BEGIN
+	int iIsUsingGPUs = 0;
+	_OPTAddBoolean("--is-using-gpus", &iIsUsingGPUs, iIsUsingGPUs);
+	_OPTAddComment("--is-using-gpus",
+		"The flag whether GPUs are used.");
+	// ADD-BY-LEETEN 01/10/2013-END
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	/*
@@ -186,6 +192,12 @@ main(int argn, char* argv[])
 	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
 	cSimpleND._SetInteger(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);
         #endif // #if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+
+	// ADD-BY-LEETEN 01/10/2012-BEGIN
+	#if	WITH_CUDA
+	cSimpleND._SetInteger(cSimpleND.IS_USING_GPUS, (long)iIsUsingGPUs);
+	#endif	// #if	WITH_CUDA
+	// ADD-BY-LEETEN 01/10/2012-END
 
 	// Step 1: Setup up the data size
 	vector<size_t> vuDimLengths;
