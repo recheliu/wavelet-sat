@@ -1,0 +1,8 @@
+simulated	nucleon
+simulated	fuel
+simulated	neghip
+simulated	silicium
+simulated	shockwave
+simulated	hydrogenAtom
+simulated	Spheres
+medical		foot

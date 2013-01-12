@@ -97,10 +97,11 @@ _ReadVolume
 int
 main(int argn, char* argv[])
 {
+	#if	0	// DEL-BY-LEETEN 01/11/2013-BEGIN
 	bool bIsPrintingTiming = true;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
-
+	#endif	// DEL-BY-LEETEN 01/11/2013-END
 	_OPTInit();			// initialize the option parser
 
 	char *szVolFilePath = NULL;
@@ -150,6 +151,14 @@ main(int argn, char* argv[])
 	_OPTAddComment("--max-n-entries-on-gpus",
 		"Max #Entries to be executed per GPU call. The unit is 1024.");
 	// ADD-BY-LEETEN 01/11/2013-END
+	// ADD-BY-LEETEN 01/11/2013-BEGIN
+	int iTimingPrintingLevel = 1;
+	_OPTAddIntegerVector(
+		"--timing-printing-level", 1,
+		&iTimingPrintingLevel, iTimingPrintingLevel);
+	_OPTAddComment("--timing-printing-level",
+		"The level to print the performance timing.");
+	// ADD-BY-LEETEN 01/11/2013-END
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	/*
@@ -186,6 +195,12 @@ main(int argn, char* argv[])
 	assert(szVolFilePath);
 	assert(szNcFilePathPrefix);
 
+	// ADD-BY-LEETEN 01/11/2013-BEGIN
+	bool bIsPrintingTiming = (iTimingPrintingLevel>0)?true:false;
+	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
+	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	// ADD-BY-LEETEN 01/11/2013-END
+
 	LOG_VAR(szVolFilePath);
 	_ReadVolume(szVolFilePath);
 
@@ -204,6 +219,7 @@ main(int argn, char* argv[])
 	// ADD-BY-LEETEN 01/10/2012-BEGIN
 	#if	WITH_CUDA
 	cSimpleND._SetInteger(cSimpleND.IS_USING_GPUS, (long)iIsUsingGPUs);
+	cSimpleND._SetInteger(cSimpleND.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	// ADD-BY-LEETEN 01/11/2013
 	// ADD-BY-LEETEN 01/11/2013-BEGIN
 	cSimpleND._SetInteger(cSimpleND.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
 	// ADD-BY-LEETEN 01/11/2013-END
@@ -250,10 +266,11 @@ main(int argn, char* argv[])
 	cSimpleND._Finalize();
 	LIBCLOCK_END(bIsPrintingTiming);
 
+#if	0	// TMP-DEL
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleND._SaveFile(szNcFilePathPrefix);
 	LIBCLOCK_END(bIsPrintingTiming);
-
+#endif
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;
 }

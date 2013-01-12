@@ -1,5 +1,9 @@
 #pragma once
 
+// ADD-BY-LEETEN 01/11/2013-BEGIN
+#define WITH_CUDA_MALLOC_HOST	0
+// ADD-BY-LEETEN 01/11/2013-END
+
 #include <cuda_runtime_api.h>
 #include <cudpp.h>
 
@@ -28,7 +32,9 @@ namespace CudaDWT
 		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x0400,
 		#else	// #if	defined(_DEBUG)	
 		// MOD-BY-LEETEN 01/11/2013-FROM:		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x0400000,
-		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x1000000,
+		// MOD-BY-LEETEN 01/11/2013-FROM:		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x1000000,
+		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x8000000,
+		// MOD-BY-LEETEN 01/11/2013-END
 		// MOD-BY-LEETEN 01/11/2013-END
 		#endif	// #if	defined(_DEBUG)	
 
@@ -38,6 +44,12 @@ namespace CudaDWT
 	class CCudaDWT
 	{
 	protected:
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		dim3 v3Blk;
+
+		dim3 v3Grid;
+		// ADD-BY-LEETEN 01/11/2013-END
+
 		// CUDPP handles
 		CUDPPHandle theCudpp;
 
@@ -65,11 +77,20 @@ namespace CudaDWT
 		float* pfCompactedCoefs_device;
 		unsigned int* puCompactedKeys_device;
 
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#if	WITH_CUDA_MALLOC_HOST 
+		size_t *puNrOfCompactedKeys_host;
+		size_t *puNrOfCompactedCoefs_host;
+		unsigned int* puKeys_host;
+		float*	pfCoefs_host;
+		#endif	// #if	WITH_CUDA_MALLOC_HOST 
+		// ADD-BY-LEETEN 01/11/2013-END
+
 		bool bIsInitialized;
-		bool bIsPrintingTiming;
+		// DEL-BY-LEETEN 01/11/2013:	bool bIsPrintingTiming;
 	public:
 		CCudaDWT():
-			bIsPrintingTiming(false),
+			// DEL-BY-LEETEN 01/11/2013:	bIsPrintingTiming(false),
 			bIsInitialized(false)
 		{
 		}
@@ -102,8 +123,16 @@ namespace CudaDWT
 			const unsigned int	puWaveletLengths[],
 
 			size_t				*puNrOfElements,
+			#if	!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 			unsigned int		puKeys_host[],
 			float				pfCoefs_host[],
+			// ADD-BY-LEETEN 01/11/2013-BEGIN
+			#else	// #if	!WITH_CUDA_MALLOC_HOST
+			unsigned int		puKeys[],
+			float				pfCoefs[],
+			#endif	// #if	!WITH_CUDA_MALLOC_HOST
+			// ADD-BY-LEETEN 01/11/2013-END
+			int iTimingPrintingLevel = 0,	// ADD-BY-LEETEN 01/11/2013
 			void* _Reserved = NULL
 		);
 

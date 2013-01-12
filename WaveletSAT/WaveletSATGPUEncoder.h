@@ -25,7 +25,9 @@ namespace WaveletSAT
 protected:	
 		bool	bIsUsingGPUs;
 
-		bool	bIsPrintingTiming;
+		// MOD-BY-LEETEN 01/11/2013-FROM:		bool	bIsPrintingTiming;
+		int		iTimingPrintingLevel;
+		// MOD-BY-LEETEN 01/11/2013-END
 
 		size_t uMaxNrOfElementsOnTheDevice;
 
@@ -55,6 +57,7 @@ protected:
 
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
+				bool bIsPrintingTiming = ( iTimingPrintingLevel > 0 )?true:false;	// ADD-BY-LEETEN 01/11/2013
 				LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 
 				LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -77,7 +80,10 @@ protected:
 
 					&uNrOfEncodedCoefs,
 					vuKeys.data(),
-					vfCoefs.data()
+					// MOD-BY-LEETEN 01/11/2013-FROM:	vfCoefs.data()
+					vfCoefs.data(),
+					iTimingPrintingLevel - 1
+					// MOD-BY-LEETEN 01/11/2013-END
 				);
 				LIBCLOCK_END(bIsPrintingTiming);
 
@@ -140,6 +146,7 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0E00,
+			TIMING_PRINTING_LEVEL,	// ADD-BY-LEETEN 01/11/2013
 			IS_USING_GPUS,
 			MAX_NR_OF_ELEMENTS_ON_THE_DEVICE,
 			PARAMETER_END
@@ -156,6 +163,11 @@ public:
 			CWaveletSATEncoder<DT, ST, BT, WT>::_SetInteger(eName, lValue);
 			switch(eName)
 			{
+			// ADD-BY-LEETEN 01/11/2013-BEGIN
+			case TIMING_PRINTING_LEVEL:
+				iTimingPrintingLevel = lValue;
+				break;
+			// ADD-BY-LEETEN 01/11/2013-END
 			case IS_USING_GPUS:
 				bIsUsingGPUs = (lValue)?true:false;
 				break;

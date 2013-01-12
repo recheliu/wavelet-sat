@@ -62,6 +62,15 @@ namespace CudaDWT
 			FREE_MEMORY(pfCompactedCoefs_device);
 			FREE_MEMORY(puCompactedKeys_device);
 
+			// ADD-BY-LEETEN 01/11/2013-BEGIN
+			#if		WITH_CUDA_MALLOC_HOST	
+			FREE_MEMORY_ON_HOST(puNrOfCompactedKeys_host);
+			FREE_MEMORY_ON_HOST(puNrOfCompactedCoefs_host);
+			FREE_MEMORY_ON_HOST(pfCoefs_host);
+			FREE_MEMORY_ON_HOST(puKeys_host);
+			#endif	// #if		WITH_CUDA_MALLOC_HOST	
+			// ADD-BY-LEETEN 01/11/2013-END
+
 			FREE_MEMORY(puNrOfCompactedCoefs_device);
 			FREE_MEMORY(puNrOfCompactedKeys_device);
 
@@ -129,6 +138,15 @@ namespace CudaDWT
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCompactedCoefs_device,	sizeof(pfCompactedCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puCompactedKeys_device,	sizeof(puCompactedKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
 
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#if		WITH_CUDA_MALLOC_HOST	
+		CUDA_SAFE_CALL(cudaMallocHost((void**)&puNrOfCompactedKeys_host,			sizeof(puNrOfCompactedKeys_host[0])));
+		CUDA_SAFE_CALL(cudaMallocHost((void**)&puNrOfCompactedCoefs_host,			sizeof(puNrOfCompactedCoefs_host[0])));
+		CUDA_SAFE_CALL(cudaMallocHost((void**)&puKeys_host,			sizeof(puKeys_host[0]) * uMaxNrOfElementsOnTheDevice));
+		CUDA_SAFE_CALL(cudaMallocHost((void**)&pfCoefs_host,		sizeof(pfCoefs_host[0]) * uMaxNrOfElementsOnTheDevice));
+		#endif	// #if	WITH_CUDA_MALLOC_HOST	
+		// ADD-BY-LEETEN 01/11/2013-END
+
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedCoefs_device,	sizeof(puNrOfCompactedCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedKeys_device,	sizeof(puNrOfCompactedKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
 
@@ -159,6 +177,14 @@ namespace CudaDWT
 				&pfValues[0],
 				sizeof(pfValues_device[0]) * uNrOfElements, 
 				cudaMemcpyHostToDevice));
+
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		v3Blk = dim3(BLOCK_SIZE);
+		size_t uNrOfBlocks = (size_t)ceilf((float)uNrOfElements / (float)v3Blk.x);
+		size_t uGridSizeX = (size_t)ceil(sqrtf((float)uNrOfBlocks));
+		size_t uGridSizeY = (size_t)ceil((float)uNrOfBlocks/(float)uGridSizeX);
+		v3Grid = dim3(uGridSizeX, uGridSizeY);
+		// ADD-BY-LEETEN 01/11/2013-END
 	}
 
 	void
@@ -171,11 +197,21 @@ namespace CudaDWT
 		const unsigned int	puWaveletLengths[],
 
 		size_t				*puNrOfElements,
+		#if		!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 		unsigned int		puKeys_host[],
 		float				pfCoefs_host[],
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#else	// #if		!WITH_CUDA_MALLOC_HOST
+		unsigned int		puKeys[],
+		float				pfCoefs[],
+		#endif	// #if		!WITH_CUDA_MALLOC_HOST
+		// ADD-BY-LEETEN 01/11/2013-END
+
+		int iTimingPrintingLevel,	// ADD-BY-LEETEN 01/11/2013
 		void* _Reserved
 	)
 	{
+		bool bIsPrintingTiming = (iTimingPrintingLevel > 0)?true:false;	// ADD-BY-LEETEN 01/11/2013
 		LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 
 		// copy the lengths of the local coefficient array, wavelet lengths, and levels
@@ -217,8 +253,10 @@ namespace CudaDWT
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		// 
+		#if	0	// DEL-BY-LEETEN 01/11/2013-BEGIN
 		dim3 v3Blk = dim3(BLOCK_SIZE);
 		dim3 v3Grid = dim3((size_t)ceilf((float)uNrOfElements / (float)v3Blk.x));
+		#endif	// DEL-BY-LEETEN 01/11/2013-END
 
 		_ProjToWavelet_kernel<<<v3Grid, v3Blk, 0>>>(
 			&pu4BinSub_device[0],	// the tuples of <bin, data_subscripts> of all elements
@@ -272,12 +310,24 @@ namespace CudaDWT
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		#if		!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 		CUDA_SAFE_CALL(
 			cudaMemcpy(
 				&uNrOfCompactedCoefs_host, 
 				puNrOfCompactedCoefs_device, 
 				sizeof(uNrOfCompactedCoefs_host), 
 				cudaMemcpyDeviceToHost));
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#else	// #if		!WITH_CUDA_MALLOC_HOST	
+		CUDA_SAFE_CALL(
+			cudaMemcpy(
+				puNrOfCompactedCoefs_host, 
+				puNrOfCompactedCoefs_device, 
+				sizeof(uNrOfCompactedCoefs_host), 
+				cudaMemcpyDeviceToHost));
+		uNrOfCompactedCoefs_host = *puNrOfCompactedCoefs_host;
+		#endif	// #if		!WITH_CUDA_MALLOC_HOST	
+		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -287,6 +337,11 @@ namespace CudaDWT
 				&pfCompactedCoefs_device[0], 
 				uNrOfCompactedCoefs_host * sizeof(pfCoefs_host[0]),
 				cudaMemcpyDeviceToHost) );
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#if		WITH_CUDA_MALLOC_HOST	
+		memcpy(&pfCoefs[0], &pfCoefs_host[0], uNrOfCompactedCoefs_host * sizeof(pfCoefs[0]));
+		#endif	// #if		WITH_CUDA_MALLOC_HOST	
+		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		// compact the keys
@@ -302,12 +357,24 @@ namespace CudaDWT
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		#if		!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 		CUDA_SAFE_CALL(
 			cudaMemcpy(
 				&uNrOfCompactedKeys_host, 
 				puNrOfCompactedKeys_device, 
 				sizeof(uNrOfCompactedKeys_host), 
 				cudaMemcpyDeviceToHost));
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#else	// #if		!WITH_CUDA_MALLOC_HOST	
+		CUDA_SAFE_CALL(
+			cudaMemcpy(
+				puNrOfCompactedKeys_host, 
+				puNrOfCompactedKeys_device, 
+				sizeof(uNrOfCompactedKeys_host), 
+				cudaMemcpyDeviceToHost));
+		uNrOfCompactedKeys_host = *puNrOfCompactedKeys_host;
+		#endif	// #if		!WITH_CUDA_MALLOC_HOST	
+		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		// download the keys and the coefficinets back 
@@ -318,6 +385,11 @@ namespace CudaDWT
 				&puCompactedKeys_device[0], 
 				uNrOfCompactedKeys_host * sizeof(puKeys_host[0]),
 				cudaMemcpyDeviceToHost) );
+		// ADD-BY-LEETEN 01/11/2013-BEGIN
+		#if		WITH_CUDA_MALLOC_HOST	
+		memcpy(&puKeys[0], &puKeys_host[0], uNrOfCompactedKeys_host * sizeof(puKeys[0]));
+		#endif	// #if		WITH_CUDA_MALLOC_HOST	
+		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		ASSERT_OR_LOG(uNrOfCompactedKeys_host == uNrOfCompactedCoefs_host, cerr<<"Unmatched #keys and #coefs.");
