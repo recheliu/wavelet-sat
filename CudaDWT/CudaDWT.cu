@@ -180,6 +180,7 @@ namespace CudaDWT
 
 		// copy the lengths of the local coefficient array, wavelet lengths, and levels
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		#if	0	// MOD-BY-LEETEN 01/11/2013-FROM:
 		CUDA_SAFE_CALL(
 			cudaMemcpyToSymbol(
 				"puLevels_const", 
@@ -195,6 +196,23 @@ namespace CudaDWT
 				sizeof(puWaveletLengths_const[0]) * uNrOfDims, 
 				0,
 				cudaMemcpyHostToDevice) );
+		#else	// MOD-BY-LEETEN 01/11/2013-TO:
+		CUDA_SAFE_CALL(
+			cudaMemcpyToSymbol(
+				puLevels_const, 
+				&puLevels[0], 
+				sizeof(puLevels_const[0]) * uNrOfDims,
+				0,
+				cudaMemcpyHostToDevice) );
+
+		CUDA_SAFE_CALL(
+			cudaMemcpyToSymbol(
+				puWaveletLengths_const, 
+				&puWaveletLengths[0], 
+				sizeof(puWaveletLengths_const[0]) * uNrOfDims, 
+				0,
+				cudaMemcpyHostToDevice) );
+		#endif	// MOD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);

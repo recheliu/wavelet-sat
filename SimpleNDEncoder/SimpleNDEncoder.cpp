@@ -142,6 +142,14 @@ main(int argn, char* argv[])
 	_OPTAddComment("--is-using-gpus",
 		"The flag whether GPUs are used.");
 	// ADD-BY-LEETEN 01/10/2013-END
+	// ADD-BY-LEETEN 01/11/2013-BEGIN
+	int iMaxNrOfEntriesOnGPUs = 4096;
+	_OPTAddIntegerVector(
+		"--max-n-entries-on-gpus", 1,
+		&iMaxNrOfEntriesOnGPUs, iMaxNrOfEntriesOnGPUs);
+	_OPTAddComment("--max-n-entries-on-gpus",
+		"Max #Entries to be executed per GPU call. The unit is 1024.");
+	// ADD-BY-LEETEN 01/11/2013-END
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	/*
@@ -196,6 +204,9 @@ main(int argn, char* argv[])
 	// ADD-BY-LEETEN 01/10/2012-BEGIN
 	#if	WITH_CUDA
 	cSimpleND._SetInteger(cSimpleND.IS_USING_GPUS, (long)iIsUsingGPUs);
+	// ADD-BY-LEETEN 01/11/2013-BEGIN
+	cSimpleND._SetInteger(cSimpleND.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
+	// ADD-BY-LEETEN 01/11/2013-END
 	#endif	// #if	WITH_CUDA
 	// ADD-BY-LEETEN 01/10/2012-END
 
