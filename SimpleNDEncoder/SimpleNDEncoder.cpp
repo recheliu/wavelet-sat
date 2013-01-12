@@ -266,11 +266,10 @@ main(int argn, char* argv[])
 	cSimpleND._Finalize();
 	LIBCLOCK_END(bIsPrintingTiming);
 
-#if	0	// TMP-DEL
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleND._SaveFile(szNcFilePathPrefix);
 	LIBCLOCK_END(bIsPrintingTiming);
-#endif
+
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;
 }
