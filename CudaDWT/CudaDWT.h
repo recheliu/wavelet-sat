@@ -88,6 +88,8 @@ namespace CudaDWT
 
 		bool bIsInitialized;
 		// DEL-BY-LEETEN 01/11/2013:	bool bIsPrintingTiming;
+
+		bool bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
 	public:
 		CCudaDWT():
 			// DEL-BY-LEETEN 01/11/2013:	bIsPrintingTiming(false),
@@ -111,6 +113,7 @@ namespace CudaDWT
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
 			const float			pfValues[],
+			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		);
 

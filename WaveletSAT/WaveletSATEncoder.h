@@ -62,9 +62,15 @@ namespace WaveletSAT
 	*/
 	template<
 		typename DT,	//!< Type of the data
+		#if	0	// MOD-BY-LEETEN 01/13/2013-FROM:
 		typename ST = double,	//!< Type of the sum
 		typename BT = unsigned short,	//!< Type of the bin
 		typename WT = double	//!< Type of the wavelet coefficientsd
+		#else	// MOD-BY-LEETEN 01/13/2013-TO:
+		typename ST = typeSum,	//!< Type of the sum
+		typename BT = typeBin,	//!< Type of the bin
+		typename WT = typeWavelet	//!< Type of the wavelet coefficientsd
+		#endif	// MOD-BY-LEETEN 01/13/2013-END
 	>
 	class CWaveletSATEncoder:
 		virtual public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
@@ -1190,7 +1196,9 @@ public:
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
-				vdSums[b] /= dWaveletDenomiator;
+				// MOD-BY-LEETEN 01/13/2013-FROM:				vdSums[b] /= dWaveletDenomiator;
+				vdSums[b] /= (ST)dWaveletDenomiator;
+				// MOD-BY-LEETEN 01/13/2013-END
 		}
 
 		CWaveletSATEncoder():

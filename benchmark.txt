@@ -6,3 +6,4 @@ simulated	shockwave
 simulated	hydrogenAtom
 simulated	Spheres
 medical		foot
+simulated	colon_phantom8

@@ -160,9 +160,12 @@ namespace CudaDWT
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
 		const float			pfValues[],
+		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
 		void* _Reserved
 	)
 	{
+		this->bWithCpuBucketSort = bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
+
 		// upload the tuples in the pool to the device side
 		CUDA_SAFE_CALL(
 			cudaMemcpy(
@@ -271,6 +274,10 @@ namespace CudaDWT
 		CUT_CHECK_ERROR("_ProjToWavelet_kernel() failed");
 		LIBCLOCK_END(bIsPrintingTiming);
 
+		// ADD-BY-LEETEN 01/13/2013-BEGIN
+		if( !bWithCpuBucketSort )	
+		{
+		// ADD-BY-LEETEN 01/13/2013-END
 		// sort the wavelet projection according to the key composed by the bin and local subscripts
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		ASSERT_CUDPP(cudppSort(
@@ -279,6 +286,7 @@ namespace CudaDWT
 			&pfCoefs_device[0],
 			uNrOfElements));
 		LIBCLOCK_END(bIsPrintingTiming);
+		}	// ADD-BY-LEETEN 01/13/2013
 
 		// mark the segments. the beginning of a segment is marked as 1, and all other elements are marked as 0
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
