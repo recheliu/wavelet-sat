@@ -183,7 +183,9 @@ namespace CudaDWT
 		size_t uNrOfBlocks = (size_t)ceilf((float)uNrOfElements / (float)v3Blk.x);
 		size_t uGridSizeX = (size_t)ceil(sqrtf((float)uNrOfBlocks));
 		size_t uGridSizeY = (size_t)ceil((float)uNrOfBlocks/(float)uGridSizeX);
-		v3Grid = dim3(uGridSizeX, uGridSizeY);
+		// MOD-BY-LEETEN 01/12/2013-FROM:		v3Grid = dim3(uGridSizeX, uGridSizeY);
+		v3Grid = dim3( (unsigned int)uGridSizeX, (unsigned int)uGridSizeY );
+		// MOD-BY-LEETEN 01/12/2013-END
 		// ADD-BY-LEETEN 01/11/2013-END
 	}
 

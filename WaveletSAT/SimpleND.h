@@ -50,7 +50,9 @@ public:
 		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
 		uBin = min(uBin, uNrOfBins - 1);
 		vpBins.clear();
-		vpBins.push_back(pair<BT, WT>((BT)uBin, (ST)1));
+		// MOD-BY-LEETEN 01/12/2013-FROM:		vpBins.push_back(pair<BT, WT>((BT)uBin, (ST)1));
+		vpBins.push_back(pair<BT, ST>((BT)uBin, (ST)1));
+		// MOD-BY-LEETEN 01/12/2013-END
 	}
 	
 	////////////////////////////////////////////////////////////

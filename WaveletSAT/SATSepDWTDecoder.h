@@ -634,7 +634,9 @@ public:
 						this->vpcCoefPools[c]->_AddAt(
 							pLocalCoefBins[valuei],
 							vuLocalCoefSub,
-							pLocalCoefValues[valuei]);
+							// MOD-BY-LEETEN 01/12/2013-FROM:							pLocalCoefValues[valuei]);
+							(WT)pLocalCoefValues[valuei]);
+							// MOD-BY-LEETEN 01/12/2013-END
 				}
 				if( vpcCoefPools[c] )	// ADD-BY-LEETEN 12/26/2012
 				this->vpcCoefPools[c]->_Finalize(1.0);
@@ -1041,7 +1043,9 @@ public:
 						{
 							// if( !usNextOffset || usBin < usFetchedBin)  
 							usFetchedBin = pCoefBins[uLocalValueBase + (size_t)usNextOffset];
-							FetchedValue = pCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							// MOD-BY-LEETEN 01/12/2013-FROM:							FetchedValue = pCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							FetchedValue = (WT)pCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							// MOD-BY-LEETEN 01/12/2013-END
 							if( usFetchedBin >= usBin )
 								break;
 						}
@@ -1078,11 +1082,19 @@ public:
 				if( 1 == uCoefLength )
 					continue;
 
+				#if	0	// MOD-BY-LEETEN 01/12/2013-FROM:
 				valarray<WT> vSrc;
 				vSrc.resize(uCoefLength);
 
 				valarray<WT> vDst;
 				vDst.resize(uCoefLength);
+				#else	// MOD-BY-LEETEN 01/12/2013-TO:
+				valarray<ST> vSrc;
+				vSrc.resize(uCoefLength);
+
+				valarray<ST> vDst;
+				vDst.resize(uCoefLength);
+				#endif	// MOD-BY-LEETEN 01/12/2013-END
 
 				/*
 				vector<size_t> vuScanLineIndices;

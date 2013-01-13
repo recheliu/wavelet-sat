@@ -106,7 +106,9 @@ protected:
 			const vector<size_t>& vuPos, 
 			const DT& value,
 			const BT& uBin, 
-			const WT& dWeight,
+			// MOD-BY-LEETEN 01/12/2013-FROM:			const WT& dWeight,
+			const ST& dWeight,
+			// MOD-BY-LEETEN 01/12/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -321,7 +323,9 @@ protected:
 					vuLocalCoefSub[d] = vuSubs[uBase + uLevel];
 				}
 
-				WT dWavelet = dWeight * (WT)lWavelet;
+				// MOD-BY-LEETEN 01/12/2013-FROM:				WT dWavelet = dWeight * (WT)lWavelet;
+				WT dWavelet = (WT)dWeight * (WT)lWavelet;
+				// MOD-BY-LEETEN 01/12/2013-END
 				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
 			}
 			#endif	// #if	!WITH_COEF_POOL	
@@ -801,7 +805,9 @@ public:
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				size_t uF, uS;
-				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
+				// MOD-BY-LEETEN 01/12/2013-FROM:				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
+				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)dWaveletThreshold);
+				// MOD-BY-LEETEN 01/12/2013-END
 				uNrOfValuesInFullArray += uF;
 				uNrOfValuesOnSparseArray += uS;
 			}
@@ -1125,7 +1131,9 @@ public:
 			vector<size_t> vuLocalCoefSub;
 			vuLocalCoefSub.resize( UGetNrOfDims() );
 
-			vector<WT> vdWaveletBasis;
+			// MOD-BY-LEETEN 01/12/2013-FROM:			vector<WT> vdWaveletBasis;
+			vector<double> vdWaveletBasis;
+			// MOD-BY-LEETEN 01/12/2013-END
 			vector<size_t> vuSubs;
 
 			_GetBackwardWavelet(
@@ -1143,7 +1151,9 @@ public:
 					uBase += vuDimMaxLevels[d], d++, p++)
 				{
 					vuLocalCoefSub[d] = vuSubs[uBase + vuCoefDim2Level[p]];
-					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+					// MOD-BY-LEETEN 01/12/2013-FROM:					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+					dWavelet *= (WT)vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
+					// MOD-BY-LEETEN 01/12/2013-END
 				}
 
 				if( this->vcCoefPools[c].BIsSparse() )
