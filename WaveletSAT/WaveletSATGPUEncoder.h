@@ -40,6 +40,8 @@ protected:
 		vector<unsigned int>	vuKeys;
 		vector<float>			vfCoefs;
 
+		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
+
 		// ADD-BY-LEETEN 01/13/2013-BEGIN
 		#if		WITH_CPU_BUCKET_SORT
 		vector<uint4>			vu4SortedBinSubs;
@@ -121,6 +123,9 @@ protected:
 					vuKeys.data(),
 					// MOD-BY-LEETEN 01/11/2013-FROM:	vfCoefs.data()
 					vfCoefs.data(),
+
+					vuSegCounts.data(),	// ADD-BY-LEETEN 01/13/2013
+
 					iTimingPrintingLevel - 1
 					// MOD-BY-LEETEN 01/11/2013-END
 				);
@@ -132,10 +137,13 @@ protected:
 					vector<size_t> vuPos;
 					vuPos.resize(UGetNrOfDims());
 					size_t uKey = (size_t)vuKeys[e];
+					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
 					for(size_t d = 0; d < UGetNrOfDims(); d++, uKey /= 256)
 						vuPos[UGetNrOfDims() - 1 - d] = uKey % 256;
 					BT uBin = (BT)uKey;
-					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e]);
+					// MOD-BY-LEETEN 01/13/2013-FROM:					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e]);
+					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
+					// MOD-BY-LEETEN 01/13/2013-END
 				}
 				LIBCLOCK_END(bIsPrintingTiming);
 
@@ -265,6 +273,7 @@ public:
 			vfWeights.resize(uMaxNrOfElementsOnTheDevice);
 			vuKeys.resize(uMaxNrOfElementsOnTheDevice);
 			vfCoefs.resize(uMaxNrOfElementsOnTheDevice);
+			vuSegCounts.resize(uMaxNrOfElementsOnTheDevice);	// ADD-BY-LEETEN 01/13/2013
 
 			// ADD-BY-LEETEN 01/13/2013-BEGIN
 			#if		WITH_CPU_BUCKET_SORT

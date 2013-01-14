@@ -321,6 +321,7 @@ namespace WaveletSAT
 			const BT& Bin,
 			const vector<size_t>& vuSubs,
 			const WT& Value,
+			const size_t& uCount = 1,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		)
 		{
@@ -328,7 +329,9 @@ namespace WaveletSAT
 			// ADD-By-LEETEN 11/11/2012-BEGIN
 			#if	WITH_SPARSE_AS_VECTOR		
 			if( bIsSparse )
-				vuCounts[uIndex]++;
+				// MOD-BY-LEETEN 01/13/2013-FROM:				vuCounts[uIndex]++;
+				vuCounts[uIndex] += uCount;
+				// MOD-BY-LEETEN 01/13/2013-END
 			#endif	// #if	WITH_SPARSE_AS_VECTOR	
 
 			if( Value )

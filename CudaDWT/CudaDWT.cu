@@ -62,6 +62,13 @@ namespace CudaDWT
 			FREE_MEMORY(pfCompactedCoefs_device);
 			FREE_MEMORY(puCompactedKeys_device);
 
+			// ADD-BY-LEETEN 01/13/2013-BEGIN
+			FREE_MEMORY(puOnes_device);
+			FREE_MEMORY(puSegCounts_device);
+			FREE_MEMORY(puCompactedSegCounts_device);
+			FREE_MEMORY(puNrOfCompactedSegCounts_device);
+			// ADD-BY-LEETEN 01/13/2013-END
+
 			// ADD-BY-LEETEN 01/11/2013-BEGIN
 			#if		WITH_CUDA_MALLOC_HOST	
 			FREE_MEMORY_ON_HOST(puNrOfCompactedKeys_host);
@@ -83,6 +90,13 @@ namespace CudaDWT
 				ASSERT_CUDPP(cudppDestroyPlan(planCompactCoefs));
 			if( planCompactKeys )
 				ASSERT_CUDPP(cudppDestroyPlan(planCompactKeys));
+			// ADD-BY-LEETEN 01/13/2013-BEGIN
+			if( planSegScanCounts )
+				ASSERT_CUDPP(cudppDestroyPlan(planSegScanCounts));
+
+			if( planCompactSegCounts )
+				ASSERT_CUDPP(cudppDestroyPlan(planCompactSegCounts));
+			// ADD-BY-LEETEN 01/13/2013-END
 			if( theCudpp )
 				ASSERT_CUDPP(cudppDestroy(theCudpp));
 		}
@@ -137,6 +151,27 @@ namespace CudaDWT
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCoefSums_device,		sizeof(pfCoefSums_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCompactedCoefs_device,	sizeof(pfCompactedCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puCompactedKeys_device,	sizeof(puCompactedKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
+
+		// ADD-BY-LEETEN 01/13/2013-BEGIN
+		configSegScanCounts.datatype = CUDPP_UINT;
+		configSegScanCounts.algorithm = CUDPP_SEGMENTED_SCAN;
+		configSegScanCounts.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
+		ASSERT_CUDPP(cudppPlan(theCudpp, &planSegScanCounts, configSegScanCounts, uMaxNrOfElementsOnTheDevice, 1, 0));
+
+		configCompactSegCounts.datatype = CUDPP_UINT;
+		configCompactSegCounts.algorithm = CUDPP_COMPACT;
+		configCompactSegCounts.options = CUDPP_OPTION_FORWARD;
+		ASSERT_CUDPP(cudppPlan(theCudpp, &planCompactSegCounts, configCompactSegCounts, uMaxNrOfElementsOnTheDevice, 1, 0));
+
+		CUDA_SAFE_CALL(cudaMalloc((void**)&puOnes_device,			sizeof(puOnes_device[0]) * uMaxNrOfElementsOnTheDevice));
+		CUDA_SAFE_CALL(cudaMalloc((void**)&puSegCounts_device,		sizeof(puSegCounts_device[0]) * uMaxNrOfElementsOnTheDevice));
+		CUDA_SAFE_CALL(cudaMalloc((void**)&puCompactedSegCounts_device,			sizeof(puCompactedSegCounts_device[0]) * uMaxNrOfElementsOnTheDevice));
+		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedSegCounts_device,		sizeof(puNrOfCompactedSegCounts_device[0])));
+
+		vector<unsigned int> vuOnes;
+		vuOnes.assign(uMaxNrOfElementsOnTheDevice, 1);
+		CUDA_SAFE_CALL(cudaMemcpy(puOnes_device, vuOnes.data(), sizeof(puOnes_device[0]) * vuOnes.size(), cudaMemcpyHostToDevice));
+		// ADD-BY-LEETEN 01/13/2013-END
 
 		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		#if		WITH_CUDA_MALLOC_HOST	
@@ -211,6 +246,8 @@ namespace CudaDWT
 		float				pfCoefs[],
 		#endif	// #if		!WITH_CUDA_MALLOC_HOST
 		// ADD-BY-LEETEN 01/11/2013-END
+
+		unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 
 		int iTimingPrintingLevel,	// ADD-BY-LEETEN 01/11/2013
 		void* _Reserved
@@ -296,6 +333,48 @@ namespace CudaDWT
 			&puiSegFlags_device[0]);
 		CUT_CHECK_ERROR("_MarkSegments_kernel() failed");
 		LIBCLOCK_END(bIsPrintingTiming);
+
+		// ADD-BY-LEETEN 01/13/2013-BEGIN
+		// compute the count per segment
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		ASSERT_CUDPP(cudppSegmentedScan(
+			planSegScanCounts,
+			&puSegCounts_device[0],
+			&puOnes_device[0],
+			&puiSegFlags_device[0],
+			uNrOfElements));
+		LIBCLOCK_END(bIsPrintingTiming);
+
+		// compact the result
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		ASSERT_CUDPP(cudppCompact(
+			planCompactSegCounts,
+			&puCompactedSegCounts_device[0],
+			puNrOfCompactedSegCounts_device,
+			&puSegCounts_device[0],
+			&puiSegFlags_device[0],
+			uNrOfElements));
+		LIBCLOCK_END(bIsPrintingTiming);
+
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		size_t uNrOfCompactedSegCounts_host;
+		CUDA_SAFE_CALL(
+			cudaMemcpy(
+				&uNrOfCompactedSegCounts_host, 
+				puNrOfCompactedSegCounts_device, 
+				sizeof(uNrOfCompactedSegCounts_host), 
+				cudaMemcpyDeviceToHost));
+		LIBCLOCK_END(bIsPrintingTiming);
+
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		CUDA_SAFE_CALL(
+			cudaMemcpy(
+				&puSegCounts_host[0],
+				&puCompactedSegCounts_device[0], 
+				uNrOfCompactedSegCounts_host * sizeof(puSegCounts_host[0]),
+				cudaMemcpyDeviceToHost) );
+		LIBCLOCK_END(bIsPrintingTiming);
+		// ADD-BY-LEETEN 01/13/2013-END
 
 		// compute the sum of the segments
 		LIBCLOCK_BEGIN(bIsPrintingTiming);

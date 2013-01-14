@@ -77,6 +77,19 @@ namespace CudaDWT
 		float* pfCompactedCoefs_device;
 		unsigned int* puCompactedKeys_device;
 
+		// ADD-BY-LEETEN 01/13/2013-BEGIN
+		CUDPPConfiguration configSegScanCounts;
+		CUDPPHandle planSegScanCounts;
+
+		size_t *puNrOfCompactedSegCounts_device;
+		CUDPPConfiguration configCompactSegCounts;
+		CUDPPHandle planCompactSegCounts;
+
+		unsigned int *puOnes_device;
+		unsigned int *puSegCounts_device;
+		unsigned int *puCompactedSegCounts_device;
+		// ADD-BY-LEETEN 01/13/2013-END
+
 		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		#if	WITH_CUDA_MALLOC_HOST 
 		size_t *puNrOfCompactedKeys_host;
@@ -135,6 +148,9 @@ namespace CudaDWT
 			float				pfCoefs[],
 			#endif	// #if	!WITH_CUDA_MALLOC_HOST
 			// ADD-BY-LEETEN 01/11/2013-END
+
+			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
+
 			int iTimingPrintingLevel = 0,	// ADD-BY-LEETEN 01/11/2013
 			void* _Reserved = NULL
 		);
