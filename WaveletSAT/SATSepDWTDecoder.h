@@ -966,6 +966,21 @@ public:
 		}
 		// ADD-BY-LEETEN 01/05/2013-END
 
+		// ADD-BY-LEETEN 01/18/2012-BEGIN
+		virtual	
+		void
+		_GetDecodedSize
+		(
+			vector<size_t>& vuDecodedSize,
+			void *_Reserved = NULL
+		) const
+		{
+			if(vuDecodedSize.size() != UGetNrOfDims())
+				vuDecodedSize.resize(UGetNrOfDims());
+			copy(vuCoefLengths.begin(), vuCoefLengths.end(), vuDecodedSize.begin());
+		}
+		// ADD-BY-LEETEN 01/18/2012-END
+
 		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		virtual
 		void
@@ -1133,7 +1148,7 @@ public:
 			vector<size_t> vuSub;
 			for(size_t d = 0; d < uDataSize; d++)
 			{
-				vector<size_t> vuSub;
+				// DEL-BY-LEETEN 01/18/2012:	vector<size_t> vuSub;
 				_ConvertIndexToSub(d, vuSub, vuDimLengths);
 				vDataField[d] = vCoefField[UConvertSubToIndex(vuSub, vuCoefLengths)];
 			}

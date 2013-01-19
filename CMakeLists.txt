@@ -84,6 +84,15 @@ link_directories (
 	"${MYLIB_DIR}/lib" )
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
+# ADD-BY-LEETEN 01/18/2012-BEGIN
+set(WITH_SAT_FILE	OFF	CACHE 	BOOL "Is SAT file format used?")	
+if(WITH_SAT_FILE)
+	add_definitions(
+		-DWITH_SAT_FILE
+	)
+else()
+# ADD-BY-LEETEN 01/18/2012-END
+
 set(WITH_CUDA	OFF	CACHE 	BOOL "Is CUDA used?")	
 if( WITH_CUDA )
 	add_definitions(-DWITH_CUDA)
@@ -117,6 +126,7 @@ if( WITH_CUDA )
 		)
 endif()
 # ADD-BY-LEETEN 01/10/2012-END
+endif()	# ADD-BY-LEETEN 01/18/2012
 
 add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
@@ -136,10 +146,14 @@ add_subdirectory(SimpleNDQuery)
 
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 
+add_subdirectory(Ocean)		# ADD-BY-LEETEN 01/18/2012
+
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )
 	add_dependencies(SimpleND 			CudaDWT)
 	add_dependencies(SimpleNDWithNrrd 	CudaDWT)
 	add_dependencies(SimpleNDEncoder 	CudaDWT)
+	
+	add_dependencies(Ocean 	CudaDWT)	# ADD-BY-LEETEN 01/18/2012
 endif()
 # ADD-BY-LEETEN 01/10/2012-END

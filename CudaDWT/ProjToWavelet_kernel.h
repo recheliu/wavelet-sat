@@ -1,5 +1,6 @@
 __constant__ unsigned int puWaveletLengths_const[CudaDWT::GPU_MAX_NR_OF_DIMS];
 __constant__ unsigned int puLevels_const[CudaDWT::GPU_MAX_NR_OF_DIMS];
+__constant__ unsigned int puCoefLengths_const[CudaDWT::GPU_MAX_NR_OF_DIMS];	// ADD-BY-LEETEN 01/18/2012
 
 __global__ 
 void 
@@ -51,7 +52,9 @@ _ProjToWavelet_kernel
 			}
 			iWavelet *= iLocalWavelet;
 
-			uKey *= 256;
+			// MOD-BY-LEETEN 01/18/2012-FROM:			uKey *= 256;
+			uKey *= puCoefLengths_const[d]/2;
+			// MOD-BY-LEETEN 01/18/2012-END
 			uKey += uSub / w;
 		}
 

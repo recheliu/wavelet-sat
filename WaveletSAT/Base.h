@@ -10,10 +10,12 @@ using namespace std;
 
 #include "utils.h" // ADD-BY-LEETEN 10/30/2012
 
+#if	0	// DEL-BY-LEETEN 01/18/2012-BEGIN
 // ADD-BY-LEETEN 01/05/2013-BEGIN
 // If this is non-0, the non-wavelet SAT file will be used
 #define WITH_SAT_FILE			0
 // ADD-BY-LEETEN 01/05/2013-END
+#endif	// DEL-BY-LEETEN 01/18/2012-END
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 

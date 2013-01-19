@@ -72,6 +72,21 @@ public:
 			CDecoderBase<ST, BT>::_GetInteger(eName, plValue);
 		}
 
+		// ADD-BY-LEETEN 01/18/2012-BEGIN
+		virtual	
+		void
+		_GetDecodedSize
+		(
+			vector<size_t>& vuDecodedSize,
+			void *_Reserved = NULL
+		) const
+		{
+			if(vuDecodedSize.size() != UGetNrOfDims())
+				vuDecodedSize.resize(UGetNrOfDims());
+			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDecodedSize.begin());
+		} 
+		// ADD-BY-LEETEN 01/18/2012-END
+
 		virtual
 		void
 		_Allocate(

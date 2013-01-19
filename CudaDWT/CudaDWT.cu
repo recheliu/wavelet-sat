@@ -192,6 +192,10 @@ namespace CudaDWT
 	CCudaDWT::
 	_InitEncoder
 	(
+		// ADD-BY-LEETEN 01/18/2012-BEGIN
+		size_t uNrOfDims,
+		unsigned int puCoefLengths[],
+		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
 		const float			pfValues[],
@@ -215,6 +219,16 @@ namespace CudaDWT
 				&pfValues[0],
 				sizeof(pfValues_device[0]) * uNrOfElements, 
 				cudaMemcpyHostToDevice));
+
+		// ADD-BY-LEETEN 01/18/2012-BEGIN
+		CUDA_SAFE_CALL(
+			cudaMemcpyToSymbol(
+				puCoefLengths_const, 
+				puCoefLengths,
+				uNrOfDims * sizeof(puCoefLengths_const[0]), 
+				0,
+				cudaMemcpyHostToDevice));
+		// ADD-BY-LEETEN 01/18/2012-END
 
 		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		v3Blk = dim3(BLOCK_SIZE);

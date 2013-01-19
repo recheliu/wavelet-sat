@@ -141,6 +141,16 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		) = 0;
 
+		// ADD-BY-LEETEN 01/18/2012-BEGIN
+		virtual	
+		void
+		_GetDecodedSize
+		(
+			vector<size_t>& vuDecodedSize,
+			void *_Reserved = NULL
+		) const = 0;
+		// ADD-BY-LEETEN 01/18/2012-END
+
 		// ADD-BY-LEETEN 01/05/2013-BEGIN
 		//! Return the sum of all bins at the given position
 		virtual	

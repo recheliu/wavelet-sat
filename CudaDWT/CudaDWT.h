@@ -123,6 +123,10 @@ namespace CudaDWT
 		void
 		_InitEncoder
 		(
+			// ADD-BY-LEETEN 01/18/2012-BEGIN
+			size_t uNrOfDims,
+			unsigned int puCoefLengths[],
+			// ADD-BY-LEETEN 01/18/2012-END
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
 			const float			pfValues[],
