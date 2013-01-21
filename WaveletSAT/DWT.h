@@ -67,4 +67,83 @@ namespace WaveletSAT
 		}
 	}	
 	// ADD-BY-LEETEN 12/29/2012-END
+
+	// ADD-BY-LEETEN 01/21/2013-BEGIN
+	template<typename T>
+	void
+	_IDWT1D
+	(
+		valarray<T>& vSrc,
+		valarray<T>& vTemp,
+		valarray<T>& vDst,
+		size_t uWaveletLength,
+		size_t uDataLength,
+		size_t uLength,
+		size_t uLevel,
+		void* _Reserved = NULL
+	)
+	{
+		size_t uHalfLength = uLength / 2;
+		size_t uBound = min(uHalfLength, (size_t)ceil((double)uDataLength/(double)uWaveletLength));
+		for(size_t c = 0; c < uBound; c++)
+		{
+			T Src1 = vTemp[c];
+			T Src2 = vSrc[c + uHalfLength];
+			vDst[c * 2]		= (Src1	+ Src2) * M_SQRT1_2;
+			vDst[c * 2 + 1]	= (Src1	- Src2) * M_SQRT1_2;
+		}
+
+		if( uLevel > 0 )
+		{
+			_IDWT1D<T>(
+				vSrc, 
+				vDst, 
+				vTemp,
+				uWaveletLength / 2,
+				uDataLength,
+				uLength * 2, 
+				uLevel - 1);
+		}
+	}	
+
+	// ADD-BY-LEETEN 12/29/2012-BEGIN
+	template<typename T>
+	void
+	_IDWT1D
+	(
+		const T* pSrc,
+		size_t uStep,
+		T* pTemp,
+		T* pDst,
+		size_t uWaveletLength,
+		size_t uDataLength,
+		size_t uLength,
+		size_t uLevel,
+		void* _Reserved = NULL
+	)
+	{
+		size_t uHalfLength = uLength / 2;
+		size_t uBound = min(uHalfLength, (size_t)ceil((double)uDataLength/(double)uWaveletLength));
+		for(size_t c = 0, s = uHalfLength*uStep; c < uBound; c++, s+= uStep)
+		{
+			T Src1 = pTemp[c];
+			T Src2 = pSrc[s];
+			pDst[c * 2]		= (Src1	+ Src2) * M_SQRT1_2;
+			pDst[c * 2 + 1]	= (Src1	- Src2) * M_SQRT1_2;
+		}
+
+		if( uLevel > 0 )
+		{
+			_IDWT1D<T>(
+				pSrc, 
+				uStep,
+				pDst, // now swap the dst and the temp arrays
+				pTemp,
+				uWaveletLength / 2,
+				uDataLength,
+				uLength * 2, 
+				uLevel - 1);
+		}
+	}	
+	// ADD-BY-LEETEN 01/21/2013-END
 }

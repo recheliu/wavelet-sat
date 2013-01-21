@@ -286,7 +286,13 @@ public:
 		_DecodeBin
 		(
 			const BT& usBin,
+			#if WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			valarray<ST> &vSAT,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if WITH_VALARRAY	
+			vector<ST>& vSAT,
+			#endif	// #if WITH_VALARRAY	
+			// ADD-BY-LEETEN 01/21/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -326,8 +332,15 @@ public:
 		virtual
 		void
 		_ClampToDataSize(
+			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			const valarray<ST>& vCoefField,
 			valarray<ST>& vDataField,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if	WITH_VALARRAY	
+			const vector<ST>& vCoefField,
+			vector<ST>& vDataField,
+			#endif	// #if	WITH_VALARRAY	
+			// ADD-BY-LEETEN 01/21/2013-END
 			void* _Reserved = NULL
 			)
 		{
@@ -340,7 +353,13 @@ public:
 		virtual
 		void
 		_ClampBorder(
+			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			valarray<ST>& vField,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if	WITH_VALARRAY	
+			vector<ST>& vField,	
+			#endif	// #if	WITH_VALARRAY	
+			// ADD-BY-LEETEN 01/21/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL

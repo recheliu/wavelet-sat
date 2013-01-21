@@ -987,7 +987,13 @@ public:
 		_DecodeBin
 		(
 			const BT& usBin,
+			#if WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			valarray<ST> &vSAT,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if WITH_VALARRAY	
+			vector<ST>& vSAT,
+			#endif	// #if WITH_VALARRAY	
+			// ADD-BY-LEETEN 01/21/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -1078,7 +1084,6 @@ public:
 
 					// if the cached bin is equal to the given bin, the value is the cached one
 					vSAT[gc] = ( 0 < usCount && usNextOffset < usCount && usFetchedBin == usBin )?FetchedValue:(WT)0;
-
 					// update the cache 
 					vusCachedNextOffsets[gc] = usNextOffset;
 				}
@@ -1088,7 +1093,7 @@ public:
 			//////////////////////////////////////////////////
 			// now apply IDWT
 			LIBCLOCK_BEGIN(bIsPrintingDecodeBinTiming);
-			      for(size_t uOffset = 1, d = 0, uCoefLength = 1; 
+		      for(size_t uOffset = 1, d = 0, uCoefLength = 1; 
 				d < UGetNrOfDims(); 
 				uOffset *= uCoefLength, d++)
 			{
@@ -1104,11 +1109,24 @@ public:
 				valarray<WT> vDst;
 				vDst.resize(uCoefLength);
 				#else	// MOD-BY-LEETEN 01/12/2013-TO:
+				#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 				valarray<ST> vSrc;
 				vSrc.resize(uCoefLength);
-
+				#if	0	// MOD-BY-LEETEN 01/21/2013-FROM:
 				valarray<ST> vDst;
 				vDst.resize(uCoefLength);
+				#else	// MOD-BY-LEETEN 01/21/2013-TO:
+				valarray<ST> pvDsts[2];
+				for(size_t i = 0; i < 2; i++)
+					pvDsts[i].resize(uCoefLength);
+				#endif	// MOD-BY-LEETEN 01/21/2013-END
+				// ADD-BY-LEETEN 01/21/2013-BEGIN
+				#else	// #if	WITH_VALARRAY	
+				vector<ST> pvDsts[2];
+				for(size_t i = 0; i < 2; i++)
+					pvDsts[i].resize(uCoefLength);
+				#endif	// #if	WITH_VALARRAY	
+				// ADD-BY-LEETEN 01/21/2013-END
 				#endif	// MOD-BY-LEETEN 01/12/2013-END
 
 				/*
@@ -1122,13 +1140,46 @@ public:
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
 					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
+					#if	0	// MOD-BY-LEETEN 01/21/2013-FROM:
 					vSrc = vSAT[slice(uScanlineBase, uCoefLength, uOffset)];
 					_IDWT1D(vSrc, vDst, 2, uNrOfLevels - 1);
 					vSAT[slice(uScanlineBase, uCoefLength, uOffset)] = vDst;
+					#else	// MOD-BY-LEETEN 01/21/2013-TO:
+					#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
+					slice sliceScanline = slice(uScanlineBase, uCoefLength, uOffset);
+					vSrc = vSAT[sliceScanline];
+					pvDsts[0][0] = vSrc[0];
+					_IDWT1D(
+						vSrc, 
+						pvDsts[0], 
+						pvDsts[1], 
+						vuCoefLengths[d],
+						vuDimLengths[d],
+						2, 
+						uNrOfLevels - 1);
+					vSAT[sliceScanline] = pvDsts[uNrOfLevels%2];
+					// ADD-BY-LEETEN 01/21/2013-BEGIN	
+					#else	// #if	WITH_VALARRAY
+					ST *vSrc = &vSAT.data()[uScanlineBase];
+					pvDsts[0][0] = vSrc[0];
+					_IDWT1D(
+						vSrc, 
+						uOffset,
+						pvDsts[0].data(), 
+						pvDsts[1].data(), 
+						vuCoefLengths[d],
+						vuDimLengths[d],
+						2, 
+						uNrOfLevels - 1);
+					vector<ST>& vDST = pvDsts[uNrOfLevels%2];
+					for(size_t si = 0, di = 0; di < uCoefLength; di++, si += uOffset)
+							vSrc[si] = vDST[di];
+					#endif	// #if	WITH_VALARRAY	
+					// ADD-BY-LEETEN 01/21/2013-END
+					#endif	// MOD-BY-LEETEN 01/21/2013-END
 				}
 			}
 			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
-
 			LIBCLOCK_PRINT(bIsPrintingDecodeBinTiming);
 		}
 		// ADD-BY-LEETEN 12/29/2012-END
@@ -1137,8 +1188,15 @@ public:
 		virtual
 		void
 		_ClampToDataSize(
+			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			const valarray<ST>& vCoefField,
 			valarray<ST>& vDataField,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if	WITH_VALARRAY
+			const vector<ST>& vCoefField,
+			vector<ST>& vDataField,
+			#endif	// #if	WITH_VALARRAY
+			// ADD-BY-LEETEN 01/21/2013-END
 			void* _Reserved = NULL
 			)
 		{
@@ -1157,7 +1215,13 @@ public:
 		virtual
 		void
 		_ClampBorder(
+			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 			valarray<ST>& vField,
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			#else	// #if	WITH_VALARRAY	
+			vector<ST>& vField,	
+			#endif	// #if	WITH_VALARRAY	
+			// ADD-BY-LEETEN 01/21/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL

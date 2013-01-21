@@ -113,6 +113,8 @@ protected:
 		vector< vector<size_t> > vvuSliceScanlineBase;
 		// ADD-BY-LEETEN 12/30/2012-END
 
+		vector< vector<bool> > vvbSliceScanlineValid;	// ADD-BY-LEETEN 01/21/2013
+
 		// ADD-BY-LEETEN 10/18/2012-BEGIN
 		#if	WITH_PRECOMPUTED_WAVELET_BASIS
 		//! The volume to store the wavelet basis for all updating coefficients.
@@ -495,6 +497,12 @@ public:
 			}
 			// ADD-BY-LEETEN 12/29/2012-END
 
+			// ADD-BY-LEETEN 01/21/2013-BEGIN
+			vector<size_t> vuLocalCoefSub, vuGlobalCoefBase, vuLocalCoefLengths;
+			vvbSliceScanlineValid.resize(UGetNrOfDims());
+			size_t uNrOfInvalids = 0;
+			// ADD-BY-LEETEN 01/21/2013-END
+
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
 			vvuSliceScanlineBase.resize(UGetNrOfDims());
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
@@ -503,13 +511,38 @@ public:
 				vuSliceCoefLengths[d] = 1;
 				size_t uNrOfScanlines = uNrOfCoefs / vuCoefLengths[d];
 				vvuSliceScanlineBase[d].resize(uNrOfScanlines);
+				vvbSliceScanlineValid[d].resize(uNrOfScanlines);	// ADD-BY-LEETEN 01/21/2013
 				for(size_t s = 0; s < uNrOfScanlines; s++)
 				{
 					vector<size_t> vuScanlineBase;
 					_ConvertIndexToSub(s, vuScanlineBase, vuSliceCoefLengths);
 					vvuSliceScanlineBase[d][s] = UConvertSubToIndex(vuScanlineBase, vuCoefLengths);
+					// ADD-BY-LEETEN 01/21/2013-BEGIN
+					this->_ConvertIndexToLevels(
+						vvuSliceScanlineBase[d][s],
+						vuLevel,
+						vuLocalCoefSub,
+						vuGlobalCoefBase,
+						vuLocalCoefLengths);
+					bool bIsValid = true;
+					for(size_t d2 = 0; d2 < UGetNrOfDims(); d2++)
+						if( vuLevel[d2] > 0 )
+						{
+							size_t uWaveletLength = vuCoefLengths[d2] / ((size_t)1 << (vuLevel[d2] - 1));
+							// uWaveletLength /= 2;	// TMP
+							if( vuLocalCoefSub[d2] >= (size_t)ceil( (double)vuDimLengths[d2]/(double)uWaveletLength ) )
+							{
+								bIsValid = false;
+								uNrOfInvalids++;
+								break;
+							}
+						}
+
+					vvbSliceScanlineValid[d][s] = bIsValid;	// (!d)?bIsValid:true;
+					// ADD-BY-LEETEN 01/21/2013-END
 				}
 			}
+			LOG_VAR(uNrOfInvalids);	// ADD-BY-LEETEN 01/21/2013
 			// ADD-BY-LEETEN 12/30/2012-END
 		}
 
