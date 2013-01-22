@@ -218,13 +218,8 @@ public:
 			vector<size_t> vuOtherDimLengths;	// the base coordinate of the scane line
 			vuOtherDimLengths.resize(this->UGetNrOfDims());
 
-			#if	0	// MOD-BY-LEETEN 01/18/2012-FROM:
-			ST *pSAT;
-			pSAT = new ST[this->uDataSize];
-			#else	// MOD-BY-LEETEN 01/18/2012-TO:
 			vector<double> pSAT;
 			pSAT.assign(this->uDataSize, 0);
-			#endif	// MOD-BY-LEETEN 01/18/2012-END
 			for(size_t 	b = 0;	
 					b < UGetNrOfBins(); 
 					b++)
@@ -233,9 +228,7 @@ public:
 				{
 					const map<BT, ST>& mapHist = vmapHists[i];
 					typename map<BT, ST>::const_iterator imapHist = mapHist.find((BT)b);
-					// MOD-BY-LEETEN 01/18/2012-FROM:					pSAT[i] = ( mapHist.end() == imapHist )?0:imapHist->second;
 					pSAT[i] = (double)( mapHist.end() == imapHist )?0:imapHist->second;
-					// MOD-BY-LEETEN 01/18/2012-END
 				}
 				
 				for(size_t uOffset = 1, d = 0; d < this->UGetNrOfDims(); uOffset *= vuDimLengths[d], d++)
@@ -285,7 +278,6 @@ public:
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 
-			// DEL-BY-LEETEN 01/18/2012:	delete [] pSAT;
 			iNcId = 0;
 		}
 

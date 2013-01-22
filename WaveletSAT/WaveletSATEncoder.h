@@ -62,15 +62,9 @@ namespace WaveletSAT
 	*/
 	template<
 		typename DT,	//!< Type of the data
-		#if	0	// MOD-BY-LEETEN 01/13/2013-FROM:
-		typename ST = double,	//!< Type of the sum
-		typename BT = unsigned short,	//!< Type of the bin
-		typename WT = double	//!< Type of the wavelet coefficientsd
-		#else	// MOD-BY-LEETEN 01/13/2013-TO:
 		typename ST = typeSum,	//!< Type of the sum
 		typename BT = typeBin,	//!< Type of the bin
 		typename WT = typeWavelet	//!< Type of the wavelet coefficientsd
-		#endif	// MOD-BY-LEETEN 01/13/2013-END
 	>
 	class CWaveletSATEncoder:
 		virtual public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
@@ -112,9 +106,7 @@ protected:
 			const vector<size_t>& vuPos, 
 			const DT& value,
 			const BT& uBin, 
-			// MOD-BY-LEETEN 01/12/2013-FROM:			const WT& dWeight,
 			const ST& dWeight,
-			// MOD-BY-LEETEN 01/12/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -329,9 +321,7 @@ protected:
 					vuLocalCoefSub[d] = vuSubs[uBase + uLevel];
 				}
 
-				// MOD-BY-LEETEN 01/12/2013-FROM:				WT dWavelet = dWeight * (WT)lWavelet;
 				WT dWavelet = (WT)dWeight * (WT)lWavelet;
-				// MOD-BY-LEETEN 01/12/2013-END
 				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
 			}
 			#endif	// #if	!WITH_COEF_POOL	
@@ -1137,9 +1127,7 @@ public:
 			vector<size_t> vuLocalCoefSub;
 			vuLocalCoefSub.resize( UGetNrOfDims() );
 
-			// MOD-BY-LEETEN 01/12/2013-FROM:			vector<WT> vdWaveletBasis;
 			vector<double> vdWaveletBasis;
-			// MOD-BY-LEETEN 01/12/2013-END
 			vector<size_t> vuSubs;
 
 			_GetBackwardWavelet(
@@ -1157,9 +1145,7 @@ public:
 					uBase += vuDimMaxLevels[d], d++, p++)
 				{
 					vuLocalCoefSub[d] = vuSubs[uBase + vuCoefDim2Level[p]];
-					// MOD-BY-LEETEN 01/12/2013-FROM:					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
 					dWavelet *= (WT)vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
-					// MOD-BY-LEETEN 01/12/2013-END
 				}
 
 				if( this->vcCoefPools[c].BIsSparse() )
@@ -1196,9 +1182,7 @@ public:
 			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
-				// MOD-BY-LEETEN 01/13/2013-FROM:				vdSums[b] /= dWaveletDenomiator;
 				vdSums[b] /= (ST)dWaveletDenomiator;
-				// MOD-BY-LEETEN 01/13/2013-END
 		}
 
 		CWaveletSATEncoder():

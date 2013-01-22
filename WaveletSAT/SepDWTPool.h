@@ -329,9 +329,7 @@ namespace WaveletSAT
 			// ADD-By-LEETEN 11/11/2012-BEGIN
 			#if	WITH_SPARSE_AS_VECTOR		
 			if( bIsSparse )
-				// MOD-BY-LEETEN 01/13/2013-FROM:				vuCounts[uIndex]++;
 				vuCounts[uIndex] += uCount;
-				// MOD-BY-LEETEN 01/13/2013-END
 			#endif	// #if	WITH_SPARSE_AS_VECTOR	
 
 			if( Value )

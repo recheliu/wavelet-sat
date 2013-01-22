@@ -124,41 +124,17 @@ public:
 		// ADD-BY-LEETEN 01/02/2013-END
 	  // ADD-BY-LEETEN 12/30/2012-BEGIN
 		const size_t uDataSize = this->uDataSize;
-		// MOD-BY-LEETEN 01/18/2012-FROM:		const vector<size_t>& vuDimLengths = this->vuDimLengths;
 		vector<size_t> vuDecodedLengths;
 		_GetDecodedSize(vuDecodedLengths);
-		// MOD-BY-LEETEN 01/18/2012-END
 		// ADD-BY-LEETEN 12/30/2012-END
 		////////////////////////////////////////////////////////
 		// decide the offsets
 		size_t uNrOfCorners = (size_t)1<<this->UGetNrOfDims();
-		#if	0	// DEL-BY-LEETEN 01/18/2012-BEGIN
-		vector< size_t > vuCenter;	vuCenter.resize(this->UGetNrOfDims());
-		for(size_t d = 0; d < this->UGetNrOfDims(); d++)
-			vuCenter[d] = vuDimLengths[d]/2;
-		size_t uCenter = WaveletSAT::UConvertSubToIndex(vuCenter, vuDimLengths);
-		#endif	// DEL-BY-LEETEN 01/18/2012-END
 
 		vector< long long > vllOffsets;	vllOffsets.resize(uNrOfCorners);
 		vector< int > viSigns;			viSigns.resize(uNrOfCorners);
 		for(size_t i = 0; i < uNrOfCorners; i++)
 		{
-			#if	0	// MOD-BY-LEETEN 01/18/2012-FROM:
-			vector<size_t> vuSub;	vuSub.resize(this->UGetNrOfDims());
-			size_t uSign = 0; 
-			for(size_t 
-				d = 0, j = i; 
-				d < this->UGetNrOfDims(); 
-				d++, j /= 2)
-			{
-				size_t uOffset = (0 == j % 2)?0:1;
-				uSign += uOffset;
-				int iSub = (int)vuCenter[d] + ((!uOffset)?viLeft[d]:viRight[d]);
-				vuSub[d] = (size_t)iSub;
-			}
-			viSigns[i] = (0 == uSign % 2)?(-1):(+1);
-			vllOffsets[i] = (long long)WaveletSAT::UConvertSubToIndex(vuSub, vuDimLengths) - (long long)uCenter;
-			#else	// MOD-BY-LEETEN 01/18/2012-TO:
 			int iSign = 1; 
 			long long llOffset = 0;
 			for(size_t 
@@ -172,7 +148,6 @@ public:
 			}
 			viSigns[i] = iSign;
 			vllOffsets[i] = llOffset;
-			#endif	// MOD-BY-LEETEN 01/18/2012-END
 		}
 		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 
@@ -214,7 +189,6 @@ public:
 			// ADD-BY-LEETEN 01/02/2013-END
 
 			// compute the local sum
-			// MOD-BY-LEETEN 01/18/2012-FROM:			vLocalHist = (DT)0;
 			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013-BEGIN
 			vLocalHist = (ST)0;	
 			// ADD-BY-LEETEN 01/21/2013-BEGIN
@@ -222,7 +196,6 @@ public:
 			vLocalHist.assign(vLocalHist.size(), (ST)0);
 			#endif	// #if	WITH_VALARRAY	
 			// ADD-BY-LEETEN 01/21/2013-END
-			// MOD-BY-LEETEN 01/18/2012-END
 
 			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 			for(size_t i = 0; i < uNrOfCorners; i++)
@@ -241,9 +214,7 @@ public:
 					uEnd = vSAT.size(); 
 				}
 				for(size_t d = uBegin; d < uEnd; d++)
-					// MOD-BY-LEETEN 01/18/2012-FROM:					vLocalHist[d] += vSAT[d + vllOffsets[i]] * (DT)viSigns[i];
 					vLocalHist[d] += vSAT[d + vllOffsets[i]] * (ST)viSigns[i];
-					// MOD-BY-LEETEN 01/18/2012-END
 			}
 			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
 

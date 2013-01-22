@@ -13,10 +13,8 @@ _MarkSegments_kernel
 	int iY = (iYZ % iVolumeHeight_const);
 	int iZ = (iYZ / iVolumeHeight_const);
 	*/
-	// MOD-BY-LEETEN 01/11/2013-FROM:	unsigned int uElement = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned int uBlockId = blockIdx.x + blockIdx.y * gridDim.x;
 	unsigned int uElement = uBlockId * blockDim.x + threadIdx.x;
-	// MOD-BY-LEETEN 01/11/2013-END
 
 	if( uElement < uNrOfElements )
 	{

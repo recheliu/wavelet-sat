@@ -9,21 +9,12 @@
 
 // namespace po = boost::program_options;
 
-#if	0	// DEL-BY-LEETEN 01/13/2013-BEGIN
-double dValueMin = HUGE_VAL;
-double dValueMax = -HUGE_VAL;
-#endif	// DEL-BY-LEETEN 01/13/2013-END
 Nrrd *nin;
-#if	0	// MOD-BY-LEETEN 01/13/2013-FROM:
-CSimpleND<double> cSimpleND;
-vector<double> vdData;
-#else	// MOD-BY-LEETEN 01/13/2013-TO:
 typedef float typeData;
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
 CSimpleND<typeData, float, WaveletSAT::typeBin, float> cSimpleND;
 vector<typeData> vdData;
-#endif	// MOD-BY-LEETEN 01/13/2013-END
 
 //! Convert the volume to an array of double type
 template<typename T>
@@ -31,34 +22,21 @@ void
 _ConvertVolume
 (
 	const Nrrd *nin,
-	#if	0	// MOD-BY-LEETEN 01/13/2013-FROM:
-	double& dValueMin,
-	double& dValueMax,
-	vector<double>& vdData
-	#else	// MOD-BY-LEETEN 01/13/2013-TO:
 	typeData& dValueMin,
 	typeData& dValueMax,
 	vector<typeData>& vdData
-	#endif	// MOD-BY-LEETEN 01/13/2013-END
 )
 {	
 	T *data = (T*)nin->data;	
 
 	// search for the range
-	#if	0	// MOD-BY-LEETEN 01/13/2013-FROM:
-	dValueMin = HUGE_VAL;
-	dValueMax = -HUGE_VAL;
-	#else	// MOD-BY-LEETEN 01/13/2013-TO:
 	dValueMin = (typeData)HUGE_VAL;
 	dValueMax = (typeData)-HUGE_VAL;
-	#endif	// MOD-BY-LEETEN 01/13/2013-END
 	for(int v = 0,	z = 0; z < (int)nin->axis[2].size; z++)
 		for(int		y = 0; y < (int)nin->axis[1].size; y++)
 			for(int x = 0; x < (int)nin->axis[0].size; x++, v++)
 			{
-				// MOD-BY-LEETEN 01/13/2013-FROM:				double dValue = (double)data[v];
 				typeData dValue = (typeData)data[v];
-				// MOD-BY-LEETEN 01/13/2013-END
 				vdData.push_back(dValue);
 				dValueMin = min(dValueMin, dValue);
 				dValueMax = max(dValueMax, dValue);
@@ -120,11 +98,6 @@ _ReadVolume
 int
 main(int argn, char* argv[])
 {
-	#if	0	// DEL-BY-LEETEN 01/11/2013-BEGIN
-	bool bIsPrintingTiming = true;
-	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	#endif	// DEL-BY-LEETEN 01/11/2013-END
 	_OPTInit();			// initialize the option parser
 
 	char *szVolFilePath = NULL;
@@ -184,36 +157,6 @@ main(int argn, char* argv[])
 	// ADD-BY-LEETEN 01/11/2013-END
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
-	/*
-	int iSizeOfFullArrays = 0;
-	int iNetCDFDeflateLevel = 0;
-	int iNrOfBins = 8;	// iValueMax;
-	po::options_description desc("Allowed options");
-	desc.add_options()
-		("help", "produce help message")
-		("size-of-full-arrays",		po::value<int>(&iSizeOfFullArrays)->default_value(iSizeOfFullArrays), 
-			"Size (in MB) of the full arrays from all bin SATs")
-		("netcdf-deflate-level",	po::value<int>(&iNetCDFDeflateLevel)->default_value(iNetCDFDeflateLevel), 
-			"Deflate level for NetCDF file. The value is between 0 (store only) and 9 (maximal).")
-		("n-bins",			po::value<int>(&iNrOfBins)->default_value(iNrOfBins), 
-			"#Bins in the integral histograms")
-		("vol-filepath",		po::value< string >(), 
-			"The path to the input volum")
-		("nc-filepath-prefix",		po::value< string >(), 
-			"The prefixe of the output file");
-
-	po::variables_map vm;
-	po::store(po::parse_command_line(argn, argv, desc), vm);
-	po::notify(vm);    
-
-	if (vm.count("help")) {
-		cout << desc << "\n";
-		return 1;
-	}
-	const char *szVolFilePath = vm["vol-filepath"].as< string >().c_str();
-	const char* szNcFilePathPrefix = vm["nc-filepath-prefix"].as< string >().c_str();
-	*/
-    
 	assert(bIsOptParsed);
 	assert(szVolFilePath);
 	assert(szNcFilePathPrefix);

@@ -31,11 +31,7 @@ namespace CudaDWT
 		#if	defined(_DEBUG)	
 		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x0400,
 		#else	// #if	defined(_DEBUG)	
-		// MOD-BY-LEETEN 01/11/2013-FROM:		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x0400000,
-		// MOD-BY-LEETEN 01/11/2013-FROM:		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x1000000,
 		DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE = 0x8000000,
-		// MOD-BY-LEETEN 01/11/2013-END
-		// MOD-BY-LEETEN 01/11/2013-END
 		#endif	// #if	defined(_DEBUG)	
 
 		PARAMETER_END
@@ -100,12 +96,10 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/11/2013-END
 
 		bool bIsInitialized;
-		// DEL-BY-LEETEN 01/11/2013:	bool bIsPrintingTiming;
 
 		bool bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
 	public:
 		CCudaDWT():
-			// DEL-BY-LEETEN 01/11/2013:	bIsPrintingTiming(false),
 			bIsInitialized(false)
 		{
 		}

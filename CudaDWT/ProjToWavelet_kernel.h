@@ -20,10 +20,8 @@ _ProjToWavelet_kernel
 	int iY = (iYZ % iVolumeHeight_const);
 	int iZ = (iYZ / iVolumeHeight_const);
 	*/
-	// MOD-BY-LEETEN 01/11/2013-FROM:	unsigned int uElement = (unsigned int)(blockIdx.x * blockDim.x + threadIdx.x);
 	unsigned int uBlockId = blockIdx.x + blockIdx.y * gridDim.x;
 	unsigned int uElement = uBlockId * blockDim.x + threadIdx.x;
-	// MOD-BY-LEETEN 01/11/2013-END
 
 	if( uElement < uNrOfElements )
 	{
@@ -52,9 +50,7 @@ _ProjToWavelet_kernel
 			}
 			iWavelet *= iLocalWavelet;
 
-			// MOD-BY-LEETEN 01/18/2012-FROM:			uKey *= 256;
 			uKey *= puCoefLengths_const[d]/2;
-			// MOD-BY-LEETEN 01/18/2012-END
 			uKey += uSub / w;
 		}
 

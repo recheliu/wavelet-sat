@@ -235,9 +235,7 @@ namespace CudaDWT
 		size_t uNrOfBlocks = (size_t)ceilf((float)uNrOfElements / (float)v3Blk.x);
 		size_t uGridSizeX = (size_t)ceil(sqrtf((float)uNrOfBlocks));
 		size_t uGridSizeY = (size_t)ceil((float)uNrOfBlocks/(float)uGridSizeX);
-		// MOD-BY-LEETEN 01/12/2013-FROM:		v3Grid = dim3(uGridSizeX, uGridSizeY);
 		v3Grid = dim3( (unsigned int)uGridSizeX, (unsigned int)uGridSizeY );
-		// MOD-BY-LEETEN 01/12/2013-END
 		// ADD-BY-LEETEN 01/11/2013-END
 	}
 
@@ -272,23 +270,7 @@ namespace CudaDWT
 
 		// copy the lengths of the local coefficient array, wavelet lengths, and levels
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		#if	0	// MOD-BY-LEETEN 01/11/2013-FROM:
-		CUDA_SAFE_CALL(
-			cudaMemcpyToSymbol(
-				"puLevels_const", 
-				&puLevels[0], 
-				sizeof(puLevels_const[0]) * uNrOfDims,
-				0,
-				cudaMemcpyHostToDevice) );
 
-		CUDA_SAFE_CALL(
-			cudaMemcpyToSymbol(
-				"puWaveletLengths_const", 
-				&puWaveletLengths[0], 
-				sizeof(puWaveletLengths_const[0]) * uNrOfDims, 
-				0,
-				cudaMemcpyHostToDevice) );
-		#else	// MOD-BY-LEETEN 01/11/2013-TO:
 		CUDA_SAFE_CALL(
 			cudaMemcpyToSymbol(
 				puLevels_const, 
@@ -304,15 +286,10 @@ namespace CudaDWT
 				sizeof(puWaveletLengths_const[0]) * uNrOfDims, 
 				0,
 				cudaMemcpyHostToDevice) );
-		#endif	// MOD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		// 
-		#if	0	// DEL-BY-LEETEN 01/11/2013-BEGIN
-		dim3 v3Blk = dim3(BLOCK_SIZE);
-		dim3 v3Grid = dim3((size_t)ceilf((float)uNrOfElements / (float)v3Blk.x));
-		#endif	// DEL-BY-LEETEN 01/11/2013-END
 
 		_ProjToWavelet_kernel<<<v3Grid, v3Blk, 0>>>(
 			&pu4BinSub_device[0],	// the tuples of <bin, data_subscripts> of all elements

@@ -634,9 +634,7 @@ public:
 						this->vpcCoefPools[c]->_AddAt(
 							pLocalCoefBins[valuei],
 							vuLocalCoefSub,
-							// MOD-BY-LEETEN 01/12/2013-FROM:							pLocalCoefValues[valuei]);
 							(WT)pLocalCoefValues[valuei]);
-							// MOD-BY-LEETEN 01/12/2013-END
 				}
 				if( vpcCoefPools[c] )	// ADD-BY-LEETEN 12/26/2012
 				this->vpcCoefPools[c]->_Finalize(1.0);
@@ -1064,9 +1062,7 @@ public:
 						{
 							// if( !usNextOffset || usBin < usFetchedBin)  
 							usFetchedBin = pCoefBins[uLocalValueBase + (size_t)usNextOffset];
-							// MOD-BY-LEETEN 01/12/2013-FROM:							FetchedValue = pCoefValues[uLocalValueBase + (size_t)usNextOffset];
 							FetchedValue = (WT)pCoefValues[uLocalValueBase + (size_t)usNextOffset];
-							// MOD-BY-LEETEN 01/12/2013-END
 							if( usFetchedBin >= usBin )
 								break;
 						}
@@ -1102,24 +1098,12 @@ public:
 				if( 1 == uCoefLength )
 					continue;
 
-				#if	0	// MOD-BY-LEETEN 01/12/2013-FROM:
-				valarray<WT> vSrc;
-				vSrc.resize(uCoefLength);
-
-				valarray<WT> vDst;
-				vDst.resize(uCoefLength);
-				#else	// MOD-BY-LEETEN 01/12/2013-TO:
 				#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 				valarray<ST> vSrc;
 				vSrc.resize(uCoefLength);
-				#if	0	// MOD-BY-LEETEN 01/21/2013-FROM:
-				valarray<ST> vDst;
-				vDst.resize(uCoefLength);
-				#else	// MOD-BY-LEETEN 01/21/2013-TO:
 				valarray<ST> pvDsts[2];
 				for(size_t i = 0; i < 2; i++)
 					pvDsts[i].resize(uCoefLength);
-				#endif	// MOD-BY-LEETEN 01/21/2013-END
 				// ADD-BY-LEETEN 01/21/2013-BEGIN
 				#else	// #if	WITH_VALARRAY	
 				vector<ST> pvDsts[2];
@@ -1127,7 +1111,6 @@ public:
 					pvDsts[i].resize(uCoefLength);
 				#endif	// #if	WITH_VALARRAY	
 				// ADD-BY-LEETEN 01/21/2013-END
-				#endif	// MOD-BY-LEETEN 01/12/2013-END
 
 				/*
 				vector<size_t> vuScanLineIndices;
@@ -1140,11 +1123,6 @@ public:
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
 					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
-					#if	0	// MOD-BY-LEETEN 01/21/2013-FROM:
-					vSrc = vSAT[slice(uScanlineBase, uCoefLength, uOffset)];
-					_IDWT1D(vSrc, vDst, 2, uNrOfLevels - 1);
-					vSAT[slice(uScanlineBase, uCoefLength, uOffset)] = vDst;
-					#else	// MOD-BY-LEETEN 01/21/2013-TO:
 					#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
 					slice sliceScanline = slice(uScanlineBase, uCoefLength, uOffset);
 					vSrc = vSAT[sliceScanline];
@@ -1176,7 +1154,6 @@ public:
 							vSrc[si] = vDST[di];
 					#endif	// #if	WITH_VALARRAY	
 					// ADD-BY-LEETEN 01/21/2013-END
-					#endif	// MOD-BY-LEETEN 01/21/2013-END
 				}
 			}
 			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
@@ -1206,7 +1183,6 @@ public:
 			vector<size_t> vuSub;
 			for(size_t d = 0; d < uDataSize; d++)
 			{
-				// DEL-BY-LEETEN 01/18/2012:	vector<size_t> vuSub;
 				_ConvertIndexToSub(d, vuSub, vuDimLengths);
 				vDataField[d] = vCoefField[UConvertSubToIndex(vuSub, vuCoefLengths)];
 			}
