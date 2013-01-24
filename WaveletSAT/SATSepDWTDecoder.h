@@ -20,6 +20,7 @@ using namespace std;
 #include "DecoderBase.h"	// ADD-BY-LEETEN 01/02/2013
 
 #include "liblog.h"	
+#if	0	// DEL-BY-LEETEN 01/23/2013-BEGIN
 #if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 #include "libbuf.h"
 // ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -27,6 +28,7 @@ using namespace std;
 #include <boost/shared_array.hpp>
 #endif	// #if	!WITH_SMART_PTR
 // ADD-BY-LEETEN 12/30/2012-END
+#endif	// DEL-BY-LEETEN 01/23/2013-END
 
 #if	WITH_NETCDF
 #include <netcdf.h>
@@ -108,6 +110,7 @@ protected:
 			*/
 			vector< CSepDWTPool<WT, BT>* > vpcCoefPools;
 
+			#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 			#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
 			//! An array to store the coefficient bins.
 			TBuffer<TYPE_COEF_BIN>		pCoefBins;
@@ -121,6 +124,12 @@ protected:
 			boost::shared_array<TYPE_COEF_VALUE>	pCoefValues;
 			#endif	// #if	!WITH_SMART_PTR	
 			// ADD-BY-LEETEN 12/30/2012-END
+			#else	// MOD-BY-LEETEN 01/23/2013-TO:
+			vector<TYPE_COEF_BIN>	vCoefBins;
+
+			vector<TYPE_COEF_VALUE>	vCoefValues;
+			#endif	// MOD-BY-LEETEN 01/23/2013-END
+
 			//! #Non-zero values in the file
 			size_t uNrOfNonZeroValues;
 
@@ -207,6 +216,7 @@ public:
 			}
 			// ADD-BY-LEETEN 12/29/2012-END
 
+			#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 			#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 			pCoefBins.alloc(UGetNrOfBins());
 			pCoefValues.alloc(UGetNrOfBins());
@@ -216,6 +226,10 @@ public:
 			pCoefValues.reset(new TYPE_COEF_VALUE[UGetNrOfBins()]);
 			#endif	// #if	!WITH_SMART_PTR
 			// ADD-BY-LEETEN 12/30/2012-END
+			#else	// MOD-BY-LEETEN 01/23/2013-TO:
+			vCoefBins.resize(UGetNrOfBins());
+			vCoefValues.resize(UGetNrOfBins());
+			#endif	// MOD-BY-LEETEN 01/23/2013-END
 			// sort the coef. indices by its # coefficients
 			vector< pair<BT, long long> > vpairCoefCountIndex;
 			vpairCoefCountIndex.resize(uNrOfCoefs);
@@ -456,6 +470,7 @@ public:
 
 			/////////////////////////////////////////////////////////////////////
 			// define the #non-zero bins per coef.
+			#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 			#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
 			TBuffer<TYPE_COEF_OFFSET> pCoefOffsets;
 			TBuffer<TYPE_COEF_COUNT> pCoefCounts;
@@ -463,10 +478,15 @@ public:
 			boost::shared_array<TYPE_COEF_OFFSET> pCoefOffsets;
 			boost::shared_array<TYPE_COEF_COUNT> pCoefCounts;
 			#endif	// #if	!WITH_SMART_PTR
+			#else	// MOD-BY-LEETEN 01/23/2013-TO:
+			vector<TYPE_COEF_OFFSET>	vCoefOffsets;
+			vector<TYPE_COEF_COUNT>		vCoefCounts;
+			#endif	// MOD-BY-LEETEN 01/23/2013-END
 
 			// now read the entire header
 			vuCoefOffsets.resize(uNrOfCoefs);
 			vusCoefCounts.resize(uNrOfCoefs);
+			#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 			#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
 			pCoefOffsets.alloc(vuCoefOffsets.size());
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -480,6 +500,7 @@ public:
 				(void*)&pCoefOffsets[0]));
 			for(size_t h = 0; h < vuCoefOffsets.size(); h++)
 				vuCoefOffsets[h] = (size_t)pCoefOffsets[h];
+
 			#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 			pCoefOffsets.free();
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -495,12 +516,14 @@ public:
 			pCoefCounts.reset(new TYPE_COEF_COUNT[vusCoefCounts.size()]);
 			#endif	// #if	!WITH_SMART_PTR
 			// ADD-BY-LEETEN 12/30/2012-END
+
 			ASSERT_NETCDF(nc_get_var(
 				iNcId,
 				ncVarCoefCount,
 				(void*)&pCoefCounts[0]));
 			for(size_t h = 0; h < vusCoefCounts.size(); h++)
 				vusCoefCounts[h] = (BT)pCoefCounts[h];
+
 			#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 			pCoefCounts.free();
 			// ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -508,6 +531,24 @@ public:
 			pCoefCounts.reset();
 			#endif	// #if	!WITH_SMART_PTR
 			// ADD-BY-LEETEN 12/30/2012-END
+			#else	// MOD-BY-LEETEN 01/23/2013-TO:
+			vCoefOffsets.resize(vuCoefOffsets.size());
+			ASSERT_NETCDF(nc_get_var(
+				iNcId,
+				ncVarCoefOffset,
+				vCoefOffsets.data()));
+			for(size_t h = 0; h < vuCoefOffsets.size(); h++)
+				vuCoefOffsets[h] = (size_t)vCoefOffsets[h];
+
+			vCoefCounts.resize(vusCoefCounts.size());
+
+			ASSERT_NETCDF(nc_get_var(
+				iNcId,
+				ncVarCoefCount,
+				vCoefCounts.data()));
+			for(size_t h = 0; h < vusCoefCounts.size(); h++)
+				vusCoefCounts[h] = (BT)vCoefCounts[h];
+			#endif	// MOD-BY-LEETEN 01/23/2013-END
 
 			// ADD-BY-LEETEN 12/26/2012-BEGIN
 			_Allocate();
@@ -533,6 +574,7 @@ public:
 					puCount[UGetNrOfDims() - 1 - d] = vuLocalCoefLengths[d];
 				}
 
+				#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 				// ADD-BY-LEETEN 12/29/2012-BEGIN
 				#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 				TBuffer<TYPE_COEF_OFFSET> pLocalCoefOffsets;
@@ -600,6 +642,52 @@ public:
 					puStart,
 					puCount,
 					(void*)&pLocalCoefValues[0]));
+				#else	// MOD-BY-LEETEN 01/23/2013-TO:
+				vector<TYPE_COEF_OFFSET> vLocalCoefOffsets;
+				vLocalCoefOffsets.resize(uNrOfLocalCoefs);
+				vector<TYPE_COEF_COUNT> vLocalCoefCounts;
+				vLocalCoefCounts.resize(uNrOfLocalCoefs);
+
+				// read the header for the current basis
+				ASSERT_NETCDF(nc_get_vara(
+					iNcId,
+					ncVarCoefOffset,
+					puStart,
+					puCount,
+					vLocalCoefOffsets.data()));
+
+				ASSERT_NETCDF(nc_get_vara(
+					iNcId,
+					ncVarCoefCount,
+					puStart,
+					puCount,
+					vLocalCoefCounts.data()));
+
+				// compute the total number of coefficients in the current basis
+				size_t uNrOfLocalCoefValues = 0;
+				for(size_t h = 0; h < uNrOfLocalCoefs; h++)
+					uNrOfLocalCoefValues += (size_t)vLocalCoefCounts[h];
+				puStart[0] = (size_t)vLocalCoefOffsets[0];
+				puCount[0] = uNrOfLocalCoefValues;
+
+				vector<TYPE_COEF_BIN> vLocalCoefBins;
+				vLocalCoefBins.resize(uNrOfLocalCoefValues);
+				ASSERT_NETCDF(nc_get_vara(
+					iNcId,
+					ncVarCoefBin,
+					puStart,
+					puCount,
+					vLocalCoefBins.data()));
+
+				vector<TYPE_COEF_VALUE> vLocalCoefValues;
+				vLocalCoefValues.resize(uNrOfLocalCoefValues);
+				ASSERT_NETCDF(nc_get_vara(
+					iNcId,
+					ncVarCoefValue,
+					puStart,
+					puCount,
+					vLocalCoefValues.data()));
+				#endif	// MOD-BY-LEETEN 01/23/2013-END
 
 				// scan through all basis
 				for(size_t valuei = 0, lc = 0; lc < uNrOfLocalCoefs; lc++, i++)
@@ -613,7 +701,9 @@ public:
 
 					if( !bIsInCore )
 					{
-						valuei += pLocalCoefCounts[lc];
+						// MOD-BY-LEETEN 01/23/2013-FROM:						valuei += pLocalCoefCounts[lc];
+						valuei += vLocalCoefCounts[lc];
+						// MOD-BY-LEETEN 01/23/2013-END
 						continue;
 					}
 
@@ -630,11 +720,19 @@ public:
 					// ADD-BY-LEETEN 12/26/2012-END
 
 					// scan through all bin
+					#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 					for(size_t bini = 0; bini < pLocalCoefCounts[lc]; bini++, valuei++)
 						this->vpcCoefPools[c]->_AddAt(
 							pLocalCoefBins[valuei],
 							vuLocalCoefSub,
 							(WT)pLocalCoefValues[valuei]);
+					#else	// MOD-BY-LEETEN 01/23/2013-TO:
+					for(size_t bini = 0; bini < vLocalCoefCounts[lc]; bini++, valuei++)
+						this->vpcCoefPools[c]->_AddAt(
+							vLocalCoefBins[valuei],
+							vuLocalCoefSub,
+							(WT)vLocalCoefValues[valuei]);
+					#endif	// MOD-BY-LEETEN 01/23/2013-END
 				}
 				if( vpcCoefPools[c] )	// ADD-BY-LEETEN 12/26/2012
 				this->vpcCoefPools[c]->_Finalize(1.0);
@@ -680,6 +778,7 @@ public:
 				vpairCoefBinValues.clear();
 				if( uCount )
 				{
+					#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 					ASSERT_NETCDF(nc_get_vara(
 						iNcId,
 						ncVarCoefBin,
@@ -695,6 +794,23 @@ public:
 						(void*)&pCoefValues[0]));
 					for(size_t i = 0; i < uCount; i++)
 						vpairCoefBinValues.push_back(pair<BT, WT>((BT)pCoefBins[i], (WT)pCoefValues[i]));
+					#else	// MOD-BY-LEETEN 01/23/2013-TO:
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefBin,
+						&uStart,
+						&uCount,
+						vCoefBins.data()));
+	
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefValue,
+						&uStart,
+						&uCount,
+						vCoefValues.data()));
+					for(size_t i = 0; i < uCount; i++)
+						vpairCoefBinValues.push_back(pair<BT, WT>((BT)vCoefBins[i], (WT)vCoefValues[i]));
+					#endif	// MOD-BY-LEETEN 01/23/2013-END
 				}	
 			}
 		}
@@ -1008,15 +1124,21 @@ public:
 
 			for(size_t c = 0, w = 0; w < uNrOfUpdatingCoefs; w++)
 			{
+				#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 				// if the coefficient of this wavelet is out of core, load them to the memory
 				#if	!WITH_SMART_PTR				// ADD-BY-LEETEN 12/30/2012
 				TBuffer<TYPE_COEF_BIN>	pCoefBins;		
 				TBuffer<TYPE_COEF_VALUE> pCoefValues;	
 				#endif	// #if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
+				#else	// MOD-BY-LEETEN 01/23/2013-TO:
+				vector<TYPE_COEF_BIN>	vCoefBins;		
+				vector<TYPE_COEF_VALUE> vCoefValues;	
+				#endif	// MOD-BY-LEETEN 01/23/2013-END
 				if( !this->vpcCoefPools[w] )
 				{
 					size_t uLocalValueBase = this->vuGlobalValueBase[w];
 					size_t uNrOfLocalValues = this->vuLocalValueCount[w];
+					#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 					#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 					pCoefBins.alloc(uNrOfLocalValues);
 					pCoefValues.alloc(uNrOfLocalValues);
@@ -1026,6 +1148,7 @@ public:
 					boost::shared_array<TYPE_COEF_VALUE> pCoefValues(new TYPE_COEF_VALUE[uNrOfLocalValues]);
 					#endif	// #if	!WITH_SMART_PTR
 					// ADD-BY-LEETEN 12/30/2012-END
+
 					ASSERT_NETCDF(nc_get_vara(
 						iNcId,
 						ncVarCoefBin,
@@ -1039,7 +1162,24 @@ public:
 						&uLocalValueBase,
 						&uNrOfLocalValues,
 						(void*)&pCoefValues[0]));
+					#else	// MOD-BY-LEETEN 01/23/2013-TO:
+					vCoefBins.resize(uNrOfLocalValues);
+					vCoefValues.resize(uNrOfLocalValues);
 
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefBin,
+						&uLocalValueBase,
+						&uNrOfLocalValues,
+						vCoefBins.data()));
+	
+					ASSERT_NETCDF(nc_get_vara(
+						iNcId,
+						ncVarCoefValue,
+						&uLocalValueBase,
+						&uNrOfLocalValues,
+						vCoefValues.data()));
+					#endif	// MOD-BY-LEETEN 01/23/2013-END
 				}
 				///////////////////////////////////////
 				size_t uNrOfLocalCoefs = 1;
@@ -1061,8 +1201,13 @@ public:
 						for(; usNextOffset < usCount; usNextOffset++)
 						{
 							// if( !usNextOffset || usBin < usFetchedBin)  
+							#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 							usFetchedBin = pCoefBins[uLocalValueBase + (size_t)usNextOffset];
 							FetchedValue = (WT)pCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							#else	// MOD-BY-LEETEN 01/23/2013-TO:
+							usFetchedBin = vCoefBins[uLocalValueBase + (size_t)usNextOffset];
+							FetchedValue = (WT)vCoefValues[uLocalValueBase + (size_t)usNextOffset];
+							#endif	// MOD-BY-LEETEN 01/23/2013-END
 							if( usFetchedBin >= usBin )
 								break;
 						}
@@ -1227,6 +1372,71 @@ public:
 			}
 		}
 		// ADD-BY-LEETEN 01/02/2013-END
+
+		// ADD-BY-LEETEN 01/23/2013-BEGIN
+		//! Apply statistics to the wavelet coefficients in the specified wavelet function
+		virtual
+		void
+		_CompBlockStatistics
+		(
+			size_t uBlockLevel,	//!< The subscvript of the wavelet 
+			ST (*Stat)(const vector< pair< BT, WT > >&),
+			const char *szStaticsFilepath,
+			void* _Reserved = NULL
+		)
+		{		
+			if( 0 == uBlockLevel )
+				return;
+
+			vector<size_t> vuWaveletSub;
+			vuWaveletSub.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				if( vuDimLevels[d] < uBlockLevel )
+					return;
+				else
+					vuWaveletSub[d] = vuDimLevels[d] - uBlockLevel;
+
+			LOG_VAR(szStaticsFilepath);
+
+			vector<size_t> vuGlobalCoefBase;
+			vector<size_t> vuLocalCoefLengths;
+			this->_ConvertWaveletSubToLevels(
+				vuWaveletSub,
+				vuGlobalCoefBase,
+				vuLocalCoefLengths);
+			size_t uNrOfLocalCoefs = 1;
+			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
+				uNrOfLocalCoefs *= vuLocalCoefLengths[d];
+
+			// now skip the portion outside the data
+			size_t uLocalDataLength = 1;
+			vector<size_t> vuLocalDataLengths;
+			vuLocalDataLengths.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vuLocalDataLengths[d] = (size_t)ceil( (double)vuDimLengths[d] / (double)((size_t)1<<uBlockLevel) );
+				uLocalDataLength *= vuLocalDataLengths[d];
+			}
+
+			// scan through all coefficients to compute the statistics
+			vector<ST> vStat;
+			vStat.resize(uLocalDataLength);
+
+			size_t uWavelet = UConvertSubToIndex(vuWaveletSub, vuDimLevels);
+
+			vector< pair< BT, WT > > vpairCoefBinValues;
+			vector<size_t> vuLocalDataSub;
+			for(size_t l = 0; l < uLocalDataLength; l++)
+			{
+				_ConvertIndexToSub(l, vuLocalDataSub, vuLocalDataLengths);
+				this->_GetCoefSparse(uWavelet, UConvertSubToIndex(vuLocalDataSub, vuLocalCoefLengths), vpairCoefBinValues);
+				vStat[l] = Stat(vpairCoefBinValues);
+			}
+
+			// now save the file to NRRD format
+			_SaveNrrd<ST>(vuLocalDataLengths, vStat.data(), szStaticsFilepath);
+		}
+		// ADD-BY-LEETEN 01/23/2013-END
 
 		CSATSepDWTDecoder():
 			// ADD-BY-LEETEN 01/05/2012-BEGIN

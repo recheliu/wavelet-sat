@@ -38,21 +38,21 @@ if( WITH_BOOST )
 		${BOOST_LIB_DIR}
 	)
 
-	# ADD-BY-LEETEN 12/30/2012-BEGIN
-	set(WITH_SMART_PTR		OFF	CACHE 	BOOL "Is smart ptr used?")	
-	if( WITH_SMART_PTR )
-		add_definitions(
-			-DWITH_SMART_PTR=1
-		)
-	endif()
+	# # DEL-BY-LEETEN 01/23/2013-BEGIN
+	# # ADD-BY-LEETEN 12/30/2012-BEGIN
+	# set(WITH_SMART_PTR		OFF	CACHE 	BOOL "Is smart ptr used?")	
+	# if( WITH_SMART_PTR )
+	# 	add_definitions(
+	# 		-DWITH_SMART_PTR=1
+	# 	)
+	# endif()
 	# ADD-BY-LEETEN 12/30/2012-END
+	# # DEL-BY-LEETEN 01/23/2013-END
 endif()
 # ADD-BY-LEETEN 12/28/2012-END
 
 # ADD-BY-LEETEN 10/28/2012-BEGIN
-# MOD-BY-LEETEN 01/02/2013-FROM:	set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?")	
 set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?"	FORCE)	
-# MOD-BY-LEETEN 01/02/2013-END
 set(WITH_NETCDF4	ON	CACHE 	BOOL "Is NetCDF4 used?")	# ADD-BY-LEETEN 11/09/2012
 set(NETCDF_DIR "/usr/local" CACHE PATH "The intalled path of NetCDF")	
 set(HDF5_DIR "/usr/local" CACHE PATH "The intalled path of HDF5") # ADD-BY-LEETEN 10/29/2012
@@ -130,19 +130,11 @@ endif()	# ADD-BY-LEETEN 01/18/2012
 
 add_subdirectory(WaveletSAT)
 add_subdirectory(SimpleND)
-# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleND WaveletSAT)
 
-# ADD-BY-LEETEN 09/30/2012-BEGIN
 add_subdirectory(SimpleNDWithNrrd)
-# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDWithNrrd WaveletSAT)
-# ADD-BY-LEETEN 09/30/2012-END
 
-# ADD-BY-LEETEN 12/16/2012-BEGIN
 add_subdirectory(SimpleNDEncoder)
-# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDEncoder WaveletSAT)
 add_subdirectory(SimpleNDQuery)
-# DEL-BY-LEETEN 01/10/2012:	add_dependencies(SimpleNDQuery WaveletSAT)
-# ADD-BY-LEETEN 12/16/2012-END
 
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 

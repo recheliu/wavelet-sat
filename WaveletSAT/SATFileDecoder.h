@@ -9,6 +9,7 @@ using namespace std;
 #include "SATFileNetCDF.h"
 
 #include "liblog.h"	
+#if	0	// DEL-BY-LEETEN 01/23/2013-BEGIN
 #if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
 #include "libbuf.h"
 // ADD-BY-LEETEN 12/30/2012-BEGIN
@@ -16,6 +17,7 @@ using namespace std;
 #include <boost/shared_array.hpp>
 #endif	// #if	!WITH_SMART_PTR
 // ADD-BY-LEETEN 12/30/2012-END
+#endif	// DEL-BY-LEETEN 01/23/2013-END
 
 namespace WaveletSAT
 {

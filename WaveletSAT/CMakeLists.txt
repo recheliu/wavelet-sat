@@ -7,21 +7,39 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(WaveletSAT)
 
+# ADD-BY-LEETEN 01/23/2013-BEGIN
+set(WITH_GNUPLOT OFF			CACHE BOOL	"The flag whethre GNUPLOT is enabled.")
+set(GNUPLOT_BIN_DIR "/usr/bin"	CACHE PATH	"The path to the executable of GNU Plot.")
+if(WITH_GNUPLOT)
+	set(IS_USING_GNUPLOT	1)
+else()
+	set(IS_USING_GNUPLOT	0)
+endif()
+if(DEFINED WIN32)	
+	set(GNUPLOT_BIN_PATHFILENAME	${GNUPLOT_BIN_DIR}/gnuplot.exe)
+else()
+	set(GNUPLOT_BIN_PATHFILENAME	${GNUPLOT_BIN_DIR}/gnuplot)
+endif()
+configure_file(
+	${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h.in
+	${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h
+)
+# ADD-BY-LEETEN 01/23/2013-END
+
 # The source codes
 set(HEADER_FILES
+		${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h	# ADD-BY-LEETEN 01/23/2013
 		Base.h			# ADD-BY-LEETEN 12/30/2012
 		
 		HeaderBase.h
 		DecoderBase.h 	# ADD-BY-LEETEN 01/02/2013
 		EncoderBase.h
 		NetCDFBase.h	# ADD-BY-LEETEN 01/02/2013
-		# DEL-BY-LEETEN 01/02/2013:	SATEncoder.h
 
 		DWT.h	
 		SepDWTHeader.h
 		SepDWTPool.h	# ADD-BY-LEETEN 11/11/2012
 		WaveletSATEncoder.h
-		# DEL-BY-LEETEN 01/02/2013:	SATSepDWTEncoder.h
 		WaveletSATGPUEncoder.h	# ADD-BY-LEETEN 01/10/2012
 
 		# ADD-BY-LEETEN 01/02/2013-BEGIN
@@ -37,29 +55,11 @@ set(HEADER_FILES
 		SimpleNDFile.h
 		# ADD-BY-LEETEN 12/16/2012-END
 
-		# MOD-BY-LEETEN 01/02/2013-FROM:
-			# SATSepDWTOutOfCore.h	# ADD-BY-LEETEN 12/25/2012
-		# TO:
 		SATSepDWTDecoder.h	# ADD-BY-LEETEN 12/25/2012
-		# MOD-BY-LEETEN 01/02/2013-END
 		
 		utils.h			# ADD-BY-LEETEN 10/29/2012
 	)
 	
-# # DEL-BY-LEETEN 01/02/2013-BEGIN
-# # ADD-BY-LEETEN 10/28/2012-BEGIN
-# if( WITH_NETCDF )
-	# list(APPEND HEADER_FILES
-		# # ADD-BY-LEETEN 12/16/2012-BEGIN
-		# SATFileNetCDF.h	
-		# SATFileDecoder.h
-		# # ADD-BY-LEETEN 12/16/2012-END
-		# SATFileEncoder.h	
-	# )
-# endif()
-# # ADD-BY-LEETEN 10/28/2012-END
-# # DEL-BY-LEETEN 01/02/2013-END
-			
 add_custom_target (
 	${PROJECT_NAME}
 	SOURCES

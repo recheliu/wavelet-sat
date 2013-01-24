@@ -1,9 +1,11 @@
+#if	0	// DEL-BY-LEETEN 01/23/2013-BEGIN
 // ADD-BY-LEETEN 12/30/2012-BEGIN
 #if		WITH_BOOST
 #include <boost/filesystem.hpp>
 using namespace boost::filesystem;
 #endif	//	#if	WITH_BOOST
 // ADD-BY-LEETEN 12/30/2012-END
+#endif	// DEL-BY-LEETEN 01/23/2013-END
 
 #include <math.h>
 #include <assert.h>
@@ -169,6 +171,38 @@ main(int argn, char* argv[])
 	_OPTAddComment("--size-of-full-arrays", 
 		"Size (in MB) of the full arrays from all bin SATs");
 
+	// ADD-BY-LEETEN 01/23/2013-BEGIN
+	enum {
+		STAT_MEAN,
+		STAT_COUNT,
+		STAT_STDDEV,
+		STAT_ENTROPY,
+		NR_OF_STATS,
+		STAT_DEFAULT = STAT_MEAN 
+	};
+	int iStat = STAT_DEFAULT;
+	_OPTAddEnum(
+		"--stat", &iStat, iStat, NR_OF_STATS,
+		"mean",		STAT_MEAN,
+		"count",	STAT_COUNT,
+		"stddev",	STAT_STDDEV,
+		"entropy",	STAT_ENTROPY);
+
+	int iBlockLevel = 2;
+	_OPTAddIntegerVector(
+		"--block-level", 1,
+		&iBlockLevel, iBlockLevel);
+
+	char *szStatFilepathPrefix = NULL;
+	_OPTAddStringVector(
+		"--stat-filepath-prefix", 1,
+		&szStatFilepathPrefix, szStatFilepathPrefix);
+
+	int iIsComputingBlockStat = 0; 
+	_OPTAddBoolean(
+		"--is-computing-block-stat", &iIsComputingBlockStat, iIsComputingBlockStat);
+	// ADD-BY-LEETEN 01/23/2013-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
 	assert(szNcFilePath);
@@ -298,6 +332,7 @@ main(int argn, char* argv[])
 		LIBCLOCK_END(bIsPrintingTiming);	
 
 		/////////////////////////////////////////////////////////////
+		#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		// Setup the file name
 		ASSERT_OR_LOG(NULL != szEntropyFilepathPrefix, "");
@@ -359,7 +394,36 @@ main(int argn, char* argv[])
 		LOG_VAR(szEntropyNhdrFilepath);	// ADD-BY-LEETEN 12/30/2012
 		LIBCLOCK_END(bIsPrintingTiming);
 		// ADD-BY-LEETEN 12/30/2012-END
+		#else	// MOD-BY-LEETEN 01/23/2013-TO:
+		vector<size_t> vuDimLengths;
+		cSimpleNDFile._GetDataSize(vuDimLengths);
+		WaveletSAT::_SaveNrrd<double>(
+			vuDimLengths,
+			valEntropyField.data(),
+			szEntropyFilepathPrefix
+			);
+		#endif	// MOD-BY-LEETEN 01/23/2013-END
 	}
+
+	// ADD-BY-LEETEN 01/23/2013-BEGIN
+	if( iIsComputingBlockStat ) // iIsComputingBlockStatistics )
+	{
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		double (*StatFunc)(const vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet> >&);
+		switch(iStat)
+		{
+		case STAT_MEAN:		StatFunc = WaveletSAT::Statistics::Mean<double>;	break;
+		case STAT_COUNT:	StatFunc = WaveletSAT::Statistics::Count<double>;	break;
+		case STAT_ENTROPY:	StatFunc = WaveletSAT::Statistics::Entropy<double>;	break;
+		case STAT_STDDEV:	StatFunc = WaveletSAT::Statistics::StdDev<double>;	break;
+		}
+		cSimpleNDFile._CompBlockStatistics(
+			(size_t)iBlockLevel,
+			StatFunc,
+			szStatFilepathPrefix);
+		LIBCLOCK_END(bIsPrintingTiming);	
+	}
+	// ADD-BY-LEETEN 01/23/2013-END
 
 	// ADD-BY-LEETEN 01/05/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
