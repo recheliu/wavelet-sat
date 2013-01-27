@@ -149,3 +149,6 @@ if( WITH_CUDA )
 	add_dependencies(Ocean 	CudaDWT)	# ADD-BY-LEETEN 01/18/2012
 endif()
 # ADD-BY-LEETEN 01/10/2012-END
+
+add_subdirectory(SATSepDWTViewer)	# ADD-BY-LEETEN 01/27/2013
+

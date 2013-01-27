@@ -70,6 +70,8 @@ namespace WaveletSAT
 		virtual public CSepDWTHeader
 	{
 protected:	
+			bool bIsPrintingTiming;	// ADD-BY-LEETEN 01/27/2013
+
 			// ADD-BY-LEETEN 01/05/2013-BEGIN
 			#if		WITH_PRE_ALLOCATED_QUEUES	
 			vector< pair<size_t, WT> > vpairLocalWaveletQueues; 
@@ -367,6 +369,11 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 01/27/2013-BEGIN
+			LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			// ADD-BY-LEETEN 01/27/2013-END
+
 			this->szFilepath = szFilepath;			// ADD-BY-LEETEN 12/23/2012
 
 			/////////////////////////////////////////////////////////////////
@@ -550,11 +557,22 @@ public:
 				vusCoefCounts[h] = (BT)vCoefCounts[h];
 			#endif	// MOD-BY-LEETEN 01/23/2013-END
 
+			// ADD-BY-LEETEN 01/27/2013-BEGIN
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			// ADD-BY-LEETEN 01/27/2013-END
+
 			// ADD-BY-LEETEN 12/26/2012-BEGIN
 			_Allocate();
 			size_t uNrOfAllocatedPools = 0;
 			// ADD-BY-LEETEN 12/26/2012-END
 
+			// ADD-BY-LEETEN 01/27/2013-BEGIN
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			// ADD-BY-LEETEN 01/27/2013-END
 			/////////////////////////////////////////////////////////////////
 			// now load the coefficients that can be in core
 			vector<size_t> vuLocalCoefLengths;
@@ -562,6 +580,7 @@ public:
 			vector<size_t> vuGlobalCoefBase;
 			vuGlobalCoefBase.resize(UGetNrOfDims());
 
+			#if	0	// MOD-BY-LEETEN 01/27/2013-FROM:
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
 			for(size_t i = 0, c = 0; c < this->uNrOfUpdatingCoefs; c++)
@@ -737,10 +756,62 @@ public:
 				if( vpcCoefPools[c] )	// ADD-BY-LEETEN 12/26/2012
 				this->vpcCoefPools[c]->_Finalize(1.0);
 			}
+			#else	// MOD-BY-LEETEN 01/27/2013-TO:
+			vector<TYPE_COEF_BIN> vCoefBins;
+			vCoefBins.resize(uNrOfNonZeroValues);
+			ASSERT_NETCDF(nc_get_var(
+				iNcId,
+				ncVarCoefBin,
+				vCoefBins.data()));
+
+			vector<TYPE_COEF_VALUE> vCoefValues;
+			vCoefValues.resize(uNrOfNonZeroValues);
+			ASSERT_NETCDF(nc_get_var(
+				iNcId,
+				ncVarCoefValue,
+				vCoefValues.data()));
+
+			for(size_t i = 0, c = 0; c < this->uNrOfUpdatingCoefs; c++)
+			{
+				size_t uNrOfLocalCoefs; 
+				this->_ConvertWaveletToLevels(c, vuGlobalCoefBase, vuLocalCoefLengths, uNrOfLocalCoefs);
+				// scan through all basis
+				for(size_t valuei = 0, lc = 0; lc < uNrOfLocalCoefs; lc++, i++)
+				{
+					size_t uCoefIndex = this->vuMapLocalToGlobal[i];
+					bool bIsInCore = this->vbFlagsCoefInCore[uCoefIndex];
+					if( !vpcCoefPools[c] )
+					{
+						vpcCoefPools[c]= new CSepDWTPool<WT, BT>;
+						vpcCoefPools[c]->_Set(
+							(BT)UGetNrOfBins(),
+							vuLocalCoefLengths,
+							vuMaxCounts[c],
+							true);
+						uNrOfAllocatedPools++;
+					}
+
+					this->vpcCoefPools[c]->_Copy(
+						lc,
+						vusCoefCounts[uCoefIndex], 
+						&vCoefBins.data()[vuCoefOffsets[uCoefIndex]],
+						&vCoefValues.data()[vuCoefOffsets[uCoefIndex]]);
+				}
+				if( vpcCoefPools[c] )	
+					this->vpcCoefPools[c]->_Finalize(1.0);
+			}
+			#endif	// MOD-BY-LEETEN 01/27/2013-END
+
 			// ADD-BY-LEETEN 12/26/2012-BEGIN
 			LOG_VAR(uNrOfAllocatedPools);
 			// ADD-BY-LEETEN 12/26/2012-END
 			// #endif	// #if WITH_NETCDF 
+
+			// ADD-BY-LEETEN 01/27/2013-BEGIN
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_PRINT(bIsPrintingTiming);
+			// ADD-BY-LEETEN 01/27/2013-END
 		}
 
 		// ADD-BY-LEETEN 01/05/2013-BEGIN

@@ -203,6 +203,7 @@ namespace WaveletSAT
 	// ADD-BY-LEETEN 01/23/2013-END
 
 	// ADD-BY-LEETEN 10/30/2012-BEGIN
+	inline	// ADD-BY-LEETEN 01/27/2012
 	void
 	_ConvertIndexToSub
 	(
@@ -222,6 +223,7 @@ namespace WaveletSAT
 		}
 	};
 
+	inline	// ADD-BY-LEETEN 01/27/2012
 	size_t
 	UConvertSubToIndex
 	(

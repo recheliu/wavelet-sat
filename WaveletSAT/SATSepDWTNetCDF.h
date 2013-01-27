@@ -15,6 +15,7 @@ namespace WaveletSAT
 		virtual public CBase
 	{
 protected:	
+		#if	0	// DEL-BY-LEETEN 01/27/2013-BEGIN
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		#if !WITH_NETCDF4
 		typedef int	TYPE_COEF_COUNT;
@@ -27,6 +28,7 @@ protected:
 		#endif // #if !WITH_NETCDF4
 		typedef double TYPE_COEF_VALUE;
 		// ADD-BY-LEETEN 12/25/2012-END
+		#endif	// DEL-BY-LEETEN 01/27/2013-END
 
 		const char* szDimValue;
 		int ncDimValue;
@@ -68,6 +70,19 @@ public:
 			// ADD-BY-LEETEN 12/12/2012-END
 			PARAMETER_END
 		};
+
+		// ADD-BY-LEETEN 01/27/2013-BEGIN
+		#if !WITH_NETCDF4
+		typedef int	TYPE_COEF_COUNT;
+		typedef int	TYPE_COEF_OFFSET;
+		typedef int	TYPE_COEF_BIN;
+		#else // #if !WITH_NETCDF4
+		typedef unsigned int 		TYPE_COEF_COUNT;
+		typedef unsigned long long	TYPE_COEF_OFFSET;
+		typedef unsigned int		TYPE_COEF_BIN;
+		#endif // #if !WITH_NETCDF4
+		typedef double TYPE_COEF_VALUE;
+		// ADD-BY-LEETEN 01/27/2013-END
 
 		virtual	
 		void

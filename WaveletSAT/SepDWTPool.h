@@ -13,6 +13,7 @@ using namespace std;
 
 #include "HeaderBase.h"	
 #include "DWT.h"
+#include "SATSepDWTNetCDF.h"	// ADD-BY-LEETEN 01/27/2013
 #include "liblog.h"	
 
 /*
@@ -88,6 +89,37 @@ namespace WaveletSAT
 			return bIsSparse;
 		}
 		
+		// ADD-BY-LEETEN 01/27/2013-BEGIN
+		void
+		_Copy(
+			size_t uIndex,
+			size_t uNrOfBins,
+			const CSATSepDWTNetCDF::TYPE_COEF_BIN	*pBins,
+			const CSATSepDWTNetCDF::TYPE_COEF_VALUE	*pValues,
+			void *_Reserved = NULL
+		)
+		{
+			if( bIsSparse )
+				vvpairSparse[uIndex].resize(uNrOfBins);
+
+			for(size_t b = 0; b < uNrOfBins; b++)
+			{
+				CSATSepDWTNetCDF::TYPE_COEF_VALUE	Value = pValues[b];
+				CSATSepDWTNetCDF::TYPE_COEF_BIN		Bin =	pBins[b];
+				if( Value )
+				{
+					if( !bIsSparse )
+						vvFull[Bin][uIndex] = Value;
+					else
+						vvpairSparse[uIndex][b] = pair<BT, WT>((BT)Bin, (WT)Value);
+				}	
+			}
+
+			if( bIsSparse )
+				vuCounts[uIndex] = uMaxCount;
+		}
+		// ADD-BY-LEETEN 01/27/2013-END
+
 		void
 		_Set
 		(
