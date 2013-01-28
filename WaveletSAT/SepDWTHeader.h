@@ -12,6 +12,17 @@ This table is used in the compression stage.
 */
 #define	WITH_PRECOMPUTED_WAVELET_SUMS	0
 
+// ADD-BY-LEETEN 01/27/2013-BEGIN
+#if	WITH_PRECOMPUTED_WAVELET_BASIS
+#error WITH_PRECOMPUTED_WAVELET_BASIS must be undefined or 0
+#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
+
+#if	WITH_PRECOMPUTED_WAVELET_SUMS
+#error WITH_PRECOMPUTED_WAVELET_SUMS must be 0
+#endif	// #if	WITH_PRECOMPUTED_WAVELET_SUMS
+
+// ADD-BY-LEETEN 01/27/2013-END
+
 //! Decide whether a table that immediately map each updating coefficients and its dimension to the corresponding 1D index in the wavelet table per dimension.
 #define WITH_COEF_DIM_2_WAVELET		1
 // ADD-BY-LEETEN 10/21/2012-END
@@ -117,15 +128,11 @@ protected:
 
 		// ADD-BY-LEETEN 10/18/2012-BEGIN
 		#if	WITH_PRECOMPUTED_WAVELET_BASIS
-		//! The volume to store the wavelet basis for all updating coefficients.
-		vector<double>	vdWaveletBasisPerUpdatingCoefs;
 		#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
 		// ADD-BY-LEETEN 10/18/2012-END
 
 		// ADD-BY-LEETEN 10/21/2012-BEGIN
 		#if	WITH_PRECOMPUTED_WAVELET_SUMS
-		vector<double>	vdWaveletSigns;
-		vector<double>	vdWaveletSums;
 		#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
 		// ADD-BY-LEETEN 10/21/2012-END
 
@@ -402,25 +409,6 @@ public:
 
 			// ADD-BY-LEETEN 10/18/2012-BEGIN
 			#if	WITH_PRECOMPUTED_WAVELET_BASIS
-			vector<double> vdWaveletBasis;
-			vdWaveletBasis.resize( this->UGetNrOfDims() * this->vuDimMaxLevels[0] );
-
-			// for each dimension d, based on the posistion, store the corresponding l[d] wavelet basis value
-			for(size_t p = 0,	d = 0; d < this->UGetNrOfDims();	d++)
-				for(size_t	l = 0; l < this->vuDimMaxLevels[d];	l++, p++)
-					vdWaveletBasis[p] = ( l >= 2 )?sqrt( (double)(1 << (l - 1)) ):1.0;
-
-			vdWaveletBasisPerUpdatingCoefs.resize(uNrOfUpdatingCoefs);
-			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
-			{
-				double dWavelet = 1.0;
-				for(size_t d = 0, uBase = 0;
-					d < UGetNrOfDims(); 
-					uBase += this->vuDimMaxLevels[d], d++, p++)
-					// combine the wavelet basis value
-					dWavelet *= vdWaveletBasis[uBase + vuCoefDim2Level[p]];	
-				vdWaveletBasisPerUpdatingCoefs[c] = dWavelet;
-			}
 			#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
 
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
@@ -435,31 +423,6 @@ public:
 			}
 
 			#if	WITH_PRECOMPUTED_WAVELET_SUMS
-			vdWaveletSigns.resize(uNrOfUpdatingCoefs);
-			for(size_t p = 0,	c = 0; c < uNrOfUpdatingCoefs;	c++)
-			{
-				int iSign = +1;
-				for(size_t	d = 0; d < UGetNrOfDims();	d++, p++)
-					if( this->vuCoefDim2Level[p] )
-						iSign = -iSign;
-				vdWaveletSigns[c] = (double)iSign;
-			}
-
-			size_t uWaveletSumSize = 1;
-			for(size_t d = 0; d < this->UGetNrOfDims(); d++)
-				uWaveletSumSize *= this->vuDimLengths[d] + 1;	
-			vdWaveletSums.resize(uWaveletSumSize);
-
-			for(size_t c = 0; c < uWaveletSumSize; c++)
-			{
-				long lProd = 1;
-				for(size_t uIndex = c, d = 0; d < UGetNrOfDims(); d++)
-				{
-					lProd *= uIndex % (this->vuDimLengths[d] + 1);
-					uIndex /= this->vuDimLengths[d] + 1;
-				}
-				vdWaveletSums[c] = (double)lProd;
-			}
 			#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
 			
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
