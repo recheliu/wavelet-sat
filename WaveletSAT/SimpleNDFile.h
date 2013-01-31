@@ -125,7 +125,11 @@ public:
 	  // ADD-BY-LEETEN 12/30/2012-BEGIN
 		const size_t uDataSize = this->uDataSize;
 		vector<size_t> vuDecodedLengths;
-		_GetDecodedSize(vuDecodedLengths);
+
+		// MOD-BY-LEETEN 01/31/2013-FROM:		_GetDecodedSize(vuDecodedLengths);
+		this->_GetDecodedSize(vuDecodedLengths);
+		// MOD-BY-LEETEN 01/31/2013-END
+
 		// ADD-BY-LEETEN 12/30/2012-END
 		////////////////////////////////////////////////////////
 		// decide the offsets

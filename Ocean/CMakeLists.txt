@@ -63,6 +63,7 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	WaveletSAT_Ocean_main.cpp
 )
 
+if( DEFINED WIN32) # ADD-BY-LEETEN 01/31/2013
 target_link_libraries(
 	${PROJECT_NAME}
 	debug	libopt_d	optimized	libopt_r
@@ -74,3 +75,21 @@ if( NOT WITH_SAT_FILE AND WITH_CUDA )
 		debug	CudaDWT_d	optimized	CudaDWT_r
 		)
 endif()
+# ADD-BY-LEETEN 01/31/2013-BEGIN
+else()
+target_link_libraries(
+	${PROJECT_NAME}
+	rt
+	boost_system
+	netcdf
+	libopt
+	)
+
+      if( NOT WITH_SAT_FILE AND WITH_CUDA )
+	target_link_libraries(
+		${PROJECT_NAME}
+		CudaDWT
+		)
+	    endif()
+endif()
+# ADD-BY-LEETEN 01/31/2013-END

@@ -22,6 +22,13 @@ link_directories(
 	${MYLIB_DIR}/lib
 )
 
+# ADD-BY-LEETEN 01/31/2013-BEGIN
+if( NOT DEFINED WIN32 )
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -O3")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++0x -O3")
+endif()
+# ADD-BY-LEETEN 01/31/2013-END
+
 # ADD-BY-LEETEN 12/28/2012-BEGIN
 set(WITH_BOOST	OFF	CACHE 	BOOL "Is Boost used?")	
 set(BOOST_INC_DIR 	"/usr/local/include" 	CACHE PATH "The path to Boost headers.")	

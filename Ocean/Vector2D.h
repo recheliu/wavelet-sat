@@ -51,7 +51,9 @@ public:
 		case NR_OF_BINS:
 			// here one more bin is allocated for the missing value
 			uNrOfDataBins = (size_t)lValue;	
-			uNrOfBins = uNrOfDataBins + NR_OF_DEFAULT_BINS;	
+			// MOD-BY-LEETEN 01/31/2013-FROM:			uNrOfBins = uNrOfDataBins + NR_OF_DEFAULT_BINS;	
+			this->uNrOfBins = uNrOfDataBins + NR_OF_DEFAULT_BINS;	
+			// MOD-BY-LEETEN 01/31/2013-END
 			break;
 
 		case DEPTH:
@@ -158,7 +160,9 @@ public:
 			return;
 
 		// now set up the encoder
-		_Set(vuDimLengths, uNrOfBins);
+		// MOD-BY-LEETEN 01/31/2013-FROM:		_Set(vuDimLengths, uNrOfBins);
+		_Set(vuDimLengths, this->uNrOfBins);
+		// MOD-BY-LEETEN 01/31/2013-END
 	}
 
 	virtual
@@ -207,11 +211,14 @@ public:
 	{
 		_ReadVectorComponent(0, szVecDirPath, szUVecFileName, szUVecVarName);
 		_ReadVectorComponent(1, szVecDirPath, szVVecFileName, szVVecVarName);
+		const size_t& uDataSize = this->uDataSize; // ADD-BY-LEETEN 01/31/2013
 		vuBins.assign(uDataSize, 0);
 		for(size_t d = 0; d < uDataSize; d++)
 			vuBins[d] = (DT)UGetBin(pvfComps[0][d], pvfComps[1][d]);
 
-		_Allocate();
+		// MOD-BY-LEETEN 01/31/2013-FROM:		_Allocate();
+		this->_Allocate();
+		// MOD-BY-LEETEN 01/31/2013-END
 	}
 
 	virtual 
@@ -237,13 +244,20 @@ public:
 		void *_Reserved = NULL
 	)
 	{
+	  // ADD-BY-LEETEN 01/31/2013-BEGIN
+	  const size_t& uDataSize = this->uDataSize;
+	  const vector<size_t>& vuDimLengths = vuDimLengths;
+	  // ADD-BY-LEETEN 01/31/2013-END
+
 		for(size_t d = 0; d < uDataSize; d++)
 		{
 			vector<size_t> vuPos;
 			WaveletSAT::_ConvertIndexToSub(d, vuPos, vuDimLengths);
 			this->_Update(vuPos, vuBins[d]);
 		}
-		_Finalize();
+	  // MOD-BY-LEETEN 01/31/2013-FROM: 		_Finalize();
+		this->_Finalize();
+	  // MOD-BY-LEETEN 01/31/2013-END
 	}
 };
 

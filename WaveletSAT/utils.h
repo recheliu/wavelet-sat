@@ -1,5 +1,10 @@
 #pragma once
 
+// ADD-BY-LEETEN 01/31/2013-BEGIN
+#include <type_traits>
+using namespace std;
+// ADD-BY-LEETEN 01/31/2013-END
+
 #define _USE_MATH_DEFINES
 #include <math.h>
 
