@@ -7,18 +7,112 @@
 
 #include "SATSepDWTHistView.h"
 
+// ADD-BY-LEETEN 02/03/2013-BEGIN
+void
+CSATSepDWTHistView::
+	_Allocate(
+		void *_Reserved
+)
+{
+	CSATSepDWT::_Allocate();
+
+	vpairCoefColors.assign(this->uNrOfCoefs, pair<bool, float4>(false, make_float4(0.0f, 0.0f, 0.0f, 1.0f)));
+}
+
+void
+CSATSepDWTHistView::
+	_RenderHistogram
+(
+	size_t uLevel,
+	const vector<size_t>& vuWaveletSub,
+	const vector<size_t>& vuLocalSub,
+	const float4 f4Color,
+	bool bIsHightLighting,
+	void *_Reserved
+)
+{
+	// fetch the coordinates and plot it 
+	vector<size_t> vuGlobalCoefBase;
+	vector<size_t> vuLocalCoefLengths;
+	this->_ConvertWaveletSubToLevels(vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+	vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > > vpairBinCoefs;
+	_GetCoefSparse( 
+		WaveletSAT::UConvertSubToIndex(vuWaveletSub,	vuDimLevels),
+		WaveletSAT::UConvertSubToIndex(vuLocalSub,		vuLocalCoefLengths),
+		vpairBinCoefs );
+	float fSum = 0.0f;
+	for(vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator 
+			ivpairBinCoef = vpairBinCoefs.begin();
+		ivpairBinCoef != vpairBinCoefs.end();
+		ivpairBinCoef++)
+	{
+		if( ivpairBinCoef->first < (size_t)iMinBin )
+			continue;
+		fSum += (float)ivpairBinCoef->second;
+	}
+
+	glPushAttrib(
+		GL_LINE_BIT |
+		0 );
+	glLineWidth( (bIsHightLighting)?4.0:2.0 );
+	glPushMatrix();
+	// MOD-BY-LEETEN 02/03/2013-FROM:	glTranslatef(0.0f, (float)iMaxLevel - (float)uLevel, 0.0f);
+	glTranslatef(0.0f, (float)uLevel, 0.0f);
+	// MOD-BY-LEETEN 02/03/2013-END
+
+	glColor4fv((float*)&f4Color);
+
+	glBegin(GL_LINE_STRIP);
+	int iPrevBin = 0;
+	for(vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator 
+			ivpairBinCoef = vpairBinCoefs.begin();
+		ivpairBinCoef != vpairBinCoefs.end();
+		ivpairBinCoef++)
+	{
+		int iBin = (int)ivpairBinCoef->first;
+		if( iBin < iMinBin )
+			continue;
+
+		if( iBin - iPrevBin > 1 )
+		{
+			glVertex2f((float)iPrevBin + 1, 0.0f);
+			glVertex2f((float)iBin, 0.0f);
+		}
+
+		float fCount = (float)ivpairBinCoef->second;
+		glVertex2f((float)iBin, fCount/fSum);
+		glVertex2f((float)iBin+1, fCount/fSum);
+		iPrevBin = iBin;
+	}
+	if( iPrevBin != (int)UGetNrOfBins() - 1 )
+	{
+		glVertex2f((float)iPrevBin + 1, 0.0f);
+		glVertex2f((float)UGetNrOfBins() - 1.0f, 0.0f);
+	}
+	glEnd();
+	glPopMatrix();
+	glPopAttrib();
+		// GL_LINE_BIT |
+}
+// ADD-BY-LEETEN 02/03/2013-END
+
 void
 CSATSepDWTHistView::_RenderBlock
 (
 	size_t uLevel,
 	const vector<size_t>& vuWaveletSub,
 	const vector<size_t>& vuLocalSub,
-	const float pfColor[]
+	// MOD-BY-LEETEN 02/03/2013-FROM:	const float pfColor[]
+	const float4 f4Color,
+	bool	bIsHighLighting,
+	void	*_Reserved
+	// MOD-BY-LEETEN 02/03/2013-END
 )
 {
 	if( (int)uLevel > iMaxLevel )
 		return;
 
+	#if	0	// MOD-BY-LEETEN 02/03/2013-FROM:
 	// fetch the coordinates and plot it 
 	vector<size_t> vuGlobalCoefBase;
 	vector<size_t> vuLocalCoefLengths;
@@ -71,7 +165,18 @@ CSATSepDWTHistView::_RenderBlock
 	}
 	glEnd();
 	glPopMatrix();
+	#else	// MOD-BY-LEETEN 02/03/2013-TO:
+	float4 f4NextColor;
 
+	_RenderHistogram
+	(
+		uLevel,
+		vuWaveletSub,
+		vuLocalSub,
+		f4Color,
+		bIsHighLighting
+	);
+	#endif	// MOD-BY-LEETEN 02/03/2013-END
 	///////////////////////////////////////////
 	// now plot the children
 
@@ -87,6 +192,20 @@ CSATSepDWTHistView::_RenderBlock
 	vuChildVol.assign(UGetNrOfDims(), 2);
 	vector<size_t> vuChildSub;
 	vuChildSub.resize(UGetNrOfDims());
+	
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	///////////////////////////////////////////////////////////////////////
+	// if this children has its own color, save it to a queue first
+	// display other children that do not have its own color
+	// display the children that has its own color
+
+	// queue of the children of its own color
+	vector<size_t> vuChildrenWithColor;
+
+	vector<size_t> vuNextGlobalCoefBase, vuNextLocalCoefLengths;
+	this->_ConvertWaveletSubToLevels(vuNextWaveletSub, vuNextGlobalCoefBase, vuNextLocalCoefLengths);
+	// ADD-BY-LEETEN 02/03/2013-END
+
 	for(size_t c = 0; c < uNrOfChildren; c++)
 	{
 		WaveletSAT::_ConvertIndexToSub(c, vuChildSub, vuChildVol);
@@ -94,6 +213,44 @@ CSATSepDWTHistView::_RenderBlock
 		for(size_t d = 0; d < UGetNrOfDims(); d++)
 			vuChildSub[d] += vuLocalSub[d] * 2;
 
+		// ADD-BY-LEETEN 02/03/2013-BEGIN
+		vector<size_t> vuGlobalSub;
+		vuGlobalSub.resize(UGetNrOfDims());
+		for(size_t d = 0; d < vuGlobalSub.size(); d++)
+			vuGlobalSub[d] = vuNextGlobalCoefBase[d] + vuChildSub[d];
+		size_t uGlobal = WaveletSAT::UConvertSubToIndex(vuGlobalSub, vuCoefLengths);
+
+		if( this->vpairCoefColors[uGlobal].first )
+		{
+			vuChildrenWithColor.push_back(uGlobal);
+			continue;
+		}
+		// ADD-BY-LEETEN 02/03/2013-END
+
+		// otherwise, use the passed colors
+		_RenderBlock(
+			uLevel + 1, 
+			vuNextWaveletSub, 
+			vuChildSub, 
+			// MOD-BY-LEETEN 02/03/2013-FROM:			pfColor);
+			f4Color,
+			bIsHighLighting);
+			// MOD-BY-LEETEN 02/03/2013-END
+	}
+
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	vector<size_t> 
+		vuBlobalCoefBase,	// not used
+		vuLocalCoefLengths;	// not used
+	for(size_t c = 0; c < vuChildrenWithColor.size(); c++)
+	{
+		this->_ConvertIndexToLevels(
+			vuChildrenWithColor[c], 
+			vuNextWaveletSub, 
+			vuChildSub, 
+			vuBlobalCoefBase,		// not used
+			vuLocalCoefLengths);	// not used
+			
 		// if this child has its own cluster, use the color of this cluster
 
 		// otherwise, use the passed colors
@@ -101,8 +258,10 @@ CSATSepDWTHistView::_RenderBlock
 			uLevel + 1, 
 			vuNextWaveletSub, 
 			vuChildSub, 
-			pfColor);
+			this->vpairCoefColors[vuChildrenWithColor[c]].second,
+			false);
 	}
+	// ADD-BY-LEETEN 02/03/2013-END
 }
 
 //////////////////// CGlutWin methods //////////////////// 
@@ -159,7 +318,9 @@ CSATSepDWTHistView::_InitFunc()
 	GLUI *pcGlui = PCGetGluiSubwin();
 	GLUI_Spinner* pcSpinner_MaxLevel = pcGlui->add_spinner("Max Level", GLUI_SPINNER_INT, &iMaxLevel);
 		// decdie the max level
-		size_t uMaxLevel = 0;
+		// MOD-BY-LEETEN 02/03/2013-FROM:		size_t uMaxLevel = 0;
+		uMaxLevel = 0;
+		// MOD-BY-LEETEN 02/03/2013-END
 		for(size_t d = 0; d < UGetNrOfDims(); d++)
 		{
 			size_t uLevel = vuDimLevels[d] - 2;
@@ -172,8 +333,19 @@ CSATSepDWTHistView::_InitFunc()
 	GLUI_Spinner* pcSpinner_MinBin = pcGlui->add_spinner("Min Bin", GLUI_SPINNER_INT, &iMinBin);
 		pcSpinner_MinBin->set_int_limits(0, UGetNrOfBins());
 
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	/////////////////////////////////////////////////////////
-	// setup the cluste
+	// setup the color editor
+	cColorEditor.AddGlui(
+		(CGlutWin*)this, 
+		pcGlui, 
+		NULL,
+		uMaxLevel);
+	// ADD-BY-LEETEN 02/03/2013-END
+
+	/////////////////////////////////////////////////////////
+	// setup the cluster editor
+	#if	0	// MOD-BY-LEETEN 02/03/2013-FROM:
 	GLUI_Panel *pcPanel_Cluster = pcGlui->add_panel("Cluster");
 	{
 		GLUI_Panel *pcPanel_Color = pcGlui->add_panel_to_panel(pcPanel_Cluster, "Color");
@@ -219,7 +391,14 @@ CSATSepDWTHistView::_InitFunc()
 		for(size_t c = 0; c < vvcClusters[l].size(); c++)
 			vvcClusters[l][c] = CCluster(UGetNrOfBins());
 	}
-
+	#else	// MOD-BY-LEETEN 02/03/2013-TO:
+	cClusterEditor.AddGlui(
+		(CGlutWin*)this, 
+		pcGlui, 
+		NULL,
+		uMaxLevel,
+		UGetNrOfBins());
+	#endif	// MOD-BY-LEETEN 02/03/2013-END
 }
 
 void 
@@ -267,7 +446,9 @@ CSATSepDWTHistView::_DisplayFunc()
 
 	////////////////////////////////////////////////////////////////// 
 	// plot block histograms
-	static float pfDefaultColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+	// MOD-BY-LEETEN 02/03/2013-FROM:	static float pfDefaultColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+	float4 f4DefaultColor = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+	// MOD-BY-LEETEN 02/03/2013-END
 	vector<size_t> vuWaveletSub;
 	vuWaveletSub.assign(UGetNrOfDims(), 0);
 	vector<size_t> vuLocalSub;
@@ -277,12 +458,38 @@ CSATSepDWTHistView::_DisplayFunc()
 			0, 
 			vuWaveletSub,
 			vuLocalSub,
-			pfDefaultColor
+			// MOD-BY-LEETEN 02/03/2013-FROM:	pfDefaultColor
+			f4DefaultColor,
+			false
+			// MOD-BY-LEETEN 02/03/2013-END
 		);
+
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	if( cColorEditor.iIsActive )
+	{
+		bool bIsValid;
+		vector<size_t> vuWaveletSub, vuLocalSub, vuGlobalSub;
+		size_t uGlobal;
+		_GetColorEditor(bIsValid, vuWaveletSub, vuLocalSub, vuGlobalSub, uGlobal);
+		if(bIsValid)
+		{
+			_RenderBlock
+			(
+				cColorEditor.iLevel, 
+				vuWaveletSub,
+				vuLocalSub,
+				cColorEditor.f4Color,
+				true
+			);
+		}
+	}
+	// ADD-BY-LEETEN 02/03/2013-END
 
 	////////////////////////////////////////////////////////////////
 	// plot the editing cluster
-	if( iIsEditingCluster )
+	// MOD-BY-LEETEN 02/03/2013-FROM:	if( iIsEditingCluster )
+	if( cClusterEditor.iIsActive )
+	// MOD-BY-LEETEN 02/03/2013-END
 	{
 		glPushAttrib(
 			GL_LINE_BIT | 
@@ -291,20 +498,43 @@ CSATSepDWTHistView::_DisplayFunc()
 		glLineStipple(4, 0x0F0F);
 		glEnable(GL_LINE_STIPPLE);
 		glPushMatrix();
+		#if	0	// MOD-BY-LEETEN 02/03/2013-FROM:
 		glTranslatef(0.0f, (float)iMaxLevel - this->cEditing.iLevel, 0.0f);
 		// plot the lines
 		glColor4f(this->cEditing.cCluster.pfColor[0], this->cEditing.cCluster.pfColor[1], this->cEditing.cCluster.pfColor[2], 0.1f);
+		#else	// MOD-BY-LEETEN 02/03/2013-TO:
+		glTranslatef(0.0f, (float)cClusterEditor.iLevel, 0.0f);
+		// plot the lines
+		glColor4f(cClusterEditor.f4Color.x, cClusterEditor.f4Color.y, cClusterEditor.f4Color.z, 0.1f);
+		#endif	// MOD-BY-LEETEN 02/03/2013-END
 		for(size_t i = 0; i < 2; i++)
 		{
 			glBegin(GL_LINE_STRIP);
 			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
 			{
-				float fProb = (i)?this->cEditing.cCluster.vf2BinRanges[b].x:this->cEditing.cCluster.vf2BinRanges[b].y;
+				// MOD-BY-LEETEN 02/03/2013-FROM:	float fProb = (i)?this->cEditing.cCluster.vf2BinRanges[b].x:this->cEditing.cCluster.vf2BinRanges[b].y;
+				float fProb = (i)?this->cClusterEditor.vf2BinRanges[b].x:cClusterEditor.vf2BinRanges[b].y;
+				// MOD-BY-LEETEN 02/03/2013-END
 				glVertex2f((float)b, fProb);
 				glVertex2f((float)b + 1.0f, fProb);
 			}
 			glEnd();
 		}
+		// ADD-BY-LEETEN 02/03/2013-BEGIN
+		// plot a rectangle to highlight the current bin
+		glDisable(GL_LINE_STIPPLE);
+		float l = (float)cClusterEditor.iBin;
+		float r = l + 1.0f;
+		float b = cClusterEditor.f2Prob.x;
+		float t = cClusterEditor.f2Prob.y;
+		glBegin(GL_LINE_STRIP);
+		glVertex2f(l, b);
+		glVertex2f(r, b);
+		glVertex2f(r, t);
+		glVertex2f(l, t);
+		glVertex2f(l, b);
+		glEnd();
+		// ADD-BY-LEETEN 02/03/2013-END
 		glPopMatrix();
 		glPopAttrib(
 			// GL_LINE_BIT
@@ -329,14 +559,165 @@ CSATSepDWTHistView::_ReshapeFunc(int w, int h)
 {
 }
 
+// ADD-BY-LEETEN 02/03/2013-BEGIN
+void
+CSATSepDWTHistView::
+	_GetColorEditor(
+		bool& bIsValid,
+		vector<size_t>& vuWaveletSub,
+		vector<size_t>& vuLocalSub,
+		vector<size_t>& vuGlobalSub,
+		size_t& uGlobal,
+		void* _Reserved
+	)
+{
+	bIsValid = true;
+	if( !cColorEditor.iIsActive )
+		bIsValid = false;
+
+	if( cColorEditor.iLevel > (int)this->uMaxLevel || cColorEditor.iLevel < 0 )
+		bIsValid = false;
+
+	if( !bIsValid )
+		return;
+
+	vuWaveletSub.assign(UGetNrOfDims(), cColorEditor.iLevel);
+
+	vector<size_t> vuGlobalCoefBase, vuLocalCoefLengths;
+	this->_ConvertWaveletSubToLevels(vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+
+	size_t uNrOfBlocks = 1;
+	for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
+		uNrOfBlocks *= vuLocalCoefLengths[d];
+
+	if( cColorEditor.iBlock >= (int)uNrOfBlocks || cColorEditor.iBlock < 0 )
+		bIsValid = false;
+
+	if( !bIsValid )
+		return;
+
+	// now convert the local ID to local subscript
+	WaveletSAT::_ConvertIndexToSub(cColorEditor.iBlock, vuLocalSub, vuLocalCoefLengths);
+
+	vuGlobalSub.resize(UGetNrOfDims());
+	for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
+		vuGlobalSub[d] = vuGlobalCoefBase[d] + vuLocalSub[d];
+
+	uGlobal = WaveletSAT::UConvertSubToIndex(vuGlobalSub, vuCoefLengths);
+}
+// ADD-BY-LEETEN 02/03/2013-END
+
 void 
 CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 {
 	switch(usValue)
 	{
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	case GLUI_EVENT_COLOR_ASSIGN:
+	{
+		bool bIsValid;
+		vector<size_t> vuWaveletSub, vuLocalSub, vuGlobalSub;
+		size_t uGlobal;
+		_GetColorEditor(bIsValid, vuWaveletSub, vuLocalSub, vuGlobalSub, uGlobal);
+		if( !bIsValid )
+			return;
+
+		vpairCoefColors[uGlobal].first = true;
+		vpairCoefColors[uGlobal].second = cColorEditor.f4Color;
+	} break;
+
+	case GLUI_EVENT_COLOR_RESET:
+	{
+		bool bIsValid;
+		vector<size_t> vuWaveletSub, vuLocalSub, vuGlobalSub;
+		size_t uGlobal;
+		_GetColorEditor(bIsValid, vuWaveletSub, vuLocalSub, vuGlobalSub, uGlobal);
+		if( !bIsValid )
+			return;
+		vpairCoefColors[uGlobal].first = false;
+	} break;
+	// ADD-BY-LEETEN 02/03/2013-END
+
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	case GLUI_EVENT_CLUSTER_RESET_PROB:
+		cClusterEditor.f2Prob = make_float2(0.0f, 1.0f);
+		break;
+
+	case GLUI_EVENT_CLUSTER_ASSIGN:
+	case GLUI_EVENT_CLUSTER_RESET:
+	{
+		vector<size_t> vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths;
+		vuWaveletSub.assign(UGetNrOfDims(), cClusterEditor.iLevel);
+		size_t uWavelet = WaveletSAT::UConvertSubToIndex(vuWaveletSub,	vuDimLevels);
+		this->_ConvertWaveletSubToLevels(vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+		size_t uNrOfChildren = 1;
+		for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
+			uNrOfChildren *= vuLocalCoefLengths[d];
+		vector<size_t> vuLocalSub;
+		for(size_t c = 0; c < uNrOfChildren; c++)
+		{
+			WaveletSAT::_ConvertIndexToSub(c, vuLocalSub, vuLocalCoefLengths);
+			vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > > vpairBinCoefs;
+			_GetCoefSparse( 
+				uWavelet,
+				c, 
+				vpairBinCoefs);
+			float fSum = 0.0f;
+			for(size_t b = 0; b < vpairBinCoefs.size(); b++)
+				fSum += vpairBinCoefs[b].second;
+
+			vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator ivpairBinCoef = vpairBinCoefs.begin();
+			bool bIsIn = true;
+			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
+			{
+				// update the bin
+				float fProb = 0.0f;
+				if( vpairBinCoefs.end() == ivpairBinCoef )
+					fProb = 0.0f;
+				else
+				{
+					if( b < ivpairBinCoef->first )
+						fProb = 0.0f;
+					else
+					{
+						fProb = ivpairBinCoef->second / fSum;
+						ivpairBinCoef++;
+					}
+				}
+
+				if( fProb < cClusterEditor.vf2BinRanges[b].x || fProb > cClusterEditor.vf2BinRanges[b].y )
+				{
+					bIsIn = false;
+					break;
+				}
+			}
+			if( !bIsIn )
+				continue;
+
+			vector<size_t> vuGlobalSub;
+			vuGlobalSub.resize(UGetNrOfDims());
+			for(size_t d = 0; d < vuGlobalSub.size(); d++)
+				vuGlobalSub[d]  = vuGlobalCoefBase[d] + vuLocalSub[d];
+			size_t uGlobal = WaveletSAT::UConvertSubToIndex(vuGlobalSub, vuCoefLengths);
+			switch(usValue)
+			{
+				case GLUI_EVENT_CLUSTER_ASSIGN:
+					this->vpairCoefColors[uGlobal].first = true;
+					this->vpairCoefColors[uGlobal].second = cClusterEditor.f4Color;
+					break;
+				case GLUI_EVENT_CLUSTER_RESET:
+					this->vpairCoefColors[uGlobal].first = false;
+					break;
+			}
+		}
+	} break;
+	// ADD-BY-LEETEN 02/03/2013-END
+
 	case GLUI_EVENT_CLUSTER_EDITING:
 	{
-		cEditing.cCluster.vf2BinRanges[cEditing.iBin] = cEditing.f2Prob;
+		// MOD-BY-LEETEN 02/03/2013-FROM:		cEditing.cCluster.vf2BinRanges[cEditing.iBin] = cEditing.f2Prob;
+		cClusterEditor.vf2BinRanges[cClusterEditor.iBin] = cClusterEditor.f2Prob;
+		// MOD-BY-LEETEN 02/03/2013-END
 	} break;
 	}
 }

@@ -13,6 +13,7 @@ namespace fs = boost::filesystem;
 #include <algorithm>	// ADD-BY-LEETEN 12/26/2012
 using namespace std;
 #include <math.h>
+#include <assert.h>		// ADD-BY-LEETEN 02/03/2013
 
 #include "SepDWTHeader.h"
 #include "SATSepDWTNetCDF.h"
