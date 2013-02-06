@@ -15,10 +15,12 @@ CSATSepDWTHistView cSATSepDWTHistView;
 // CSATSepDWT3DView cSATSepDWT3DView;
 CSATSepDWT3DView cSATSepDWT3DView;	// ADD-BY-LEETEN 02/05/2013
 
+#if	0	// DEL-BY-LEETEN 02/06/2013-BEGIN
 void
 _UpdateTf()
 {
 }
+#endif	// DEL-BY-LEETEN 02/06/2013-END
 
 void 
 _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)

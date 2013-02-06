@@ -14,6 +14,7 @@
 
 struct 
 CSATSepDWT3DView:	
+	virtual	public CTfUi::CReceiver,	// ADD-BY-LEETEN 02/06/2013
 	virtual public CClipVolume,	// ADD-BY-LEETEN 02/05/2013
 	virtual public CDvrWin2
 	/*
@@ -52,6 +53,14 @@ public:
 	CTfWin	cTfWin;
 	CTfUi	cTfUi;
 
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	virtual 
+	void
+	_Receive(
+		CTransFunc *pcTransFunc
+	);
+	// ADD-BY-LEETEN 02/06/2013-END
+	
 	void 
 	_InitTf
 	(

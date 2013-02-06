@@ -7,6 +7,28 @@
 
 #include "SATSepDWT3DView.h"
 
+// ADD-BY-LEETEN 02/06/2013-BEGIN
+void
+CSATSepDWT3DView::
+_Receive
+(
+	CTransFunc *pcTransFunc
+)
+{
+	size_t uNrOfTfEntries = vf4TransFunc.size();
+
+	pcTransFunc->_ExportColorMap(
+		(float*)&vf4TransFunc.front(),
+		uNrOfTfEntries);
+
+	float fTfDomainMin, fTfDomainMax;
+	cTransFunc._GetTfDomain(&fTfDomainMin, &fTfDomainMax);
+	_SetTfDomain(fTfDomainMin, fTfDomainMax);
+	_SetTransferFunc(&vf4TransFunc.front(), GL_RGBA, GL_FLOAT, uNrOfTfEntries);
+	_Redisplay();
+}
+// ADD-BY-LEETEN 02/06/2013-END
+
 // ADD-BY-LEETEN 02/05/2013-BEGIN
 template<typename T>
 void
@@ -149,6 +171,7 @@ CSATSepDWT3DView::
 		vfHist.size(), 
 		dValueMin, 
 		dValueMax);
+	cTfUi._SetReceiver((CTfUi::CReceiver*)this);	// ADD-BY-LEETEN 02/06/2013
 }
 // ADD-BY-LEETEN 02/05/2013-END
 
