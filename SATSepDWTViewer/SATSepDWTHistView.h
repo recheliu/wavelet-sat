@@ -222,7 +222,24 @@ protected:
 	//! The color per coefficient whether this coefficient has its own color
 	vector< pair<bool, float4> > vpairCoefColors;	
 	// ADD-BY-LEETEN 02/03/2013-END
+
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	//! A flag whether the blocks with their own color should be plotted
+	int iIsPlottingBoxs;
+
+	//! an array to store these blocks and their color
+	vector< pairBlockColor > vpairBlockColors;
+	// ADD-BY-LEETEN 02/06/2013-END
+
 public:
+
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	enum {
+		EVENT_PLOTTING_BOX,
+		NR_OF_EVENTS
+	};
+	// ADD-BY-LEETEN 02/06/2013-END
+
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	virtual 
 	void

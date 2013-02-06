@@ -19,13 +19,40 @@ _Receive
 
 	pcTransFunc->_ExportColorMap(
 		(float*)&vf4TransFunc.front(),
-		uNrOfTfEntries);
+		// MOD-BY-LEETEN 02/06/2013-FROM:		uNrOfTfEntries);
+		(int)uNrOfTfEntries);
+		// MOD-BY-LEETEN 02/06/2013-END
 
 	float fTfDomainMin, fTfDomainMax;
 	cTransFunc._GetTfDomain(&fTfDomainMin, &fTfDomainMax);
 	_SetTfDomain(fTfDomainMin, fTfDomainMax);
-	_SetTransferFunc(&vf4TransFunc.front(), GL_RGBA, GL_FLOAT, uNrOfTfEntries);
+	// MOD-BY-LEETEN 02/06/2013-FROM:	_SetTransferFunc(&vf4TransFunc.front(), GL_RGBA, GL_FLOAT, uNrOfTfEntries);
+	_SetTransferFunc(
+		&vf4TransFunc.front(), 
+		GL_RGBA, 
+		GL_FLOAT, 
+		(int)uNrOfTfEntries);
+	// MOD-BY-LEETEN 02/06/2013-END
 	_Redisplay();
+}
+// ADD-BY-LEETEN 02/06/2013-END
+
+// ADD-BY-LEETEN 02/06/2013-BEGIN
+void
+CSATSepDWT3DView::
+	_SetBlockColors
+	(
+		bool bIsPlottingBlocks,
+		const vector< pairBlockColor >& vpairBlockColors,
+		void* _Reserved
+	)
+{
+	if( bIsPlottingBlocks )
+	{
+		this->vpairBlockColors.assign(vpairBlockColors.begin(), vpairBlockColors.end());
+	}
+	else
+		this->vpairBlockColors.clear();
 }
 // ADD-BY-LEETEN 02/06/2013-END
 
@@ -117,7 +144,11 @@ CSATSepDWT3DView::
 	vf4TransFunc.assign(uNrOfTfEntries, make_float4(0.0f, 0.0f, 0.0f, 0.0f));
 
 	cTransFunc._LoadRainBow();
-	cTransFunc._ExportColorMap((float*)&vf4TransFunc.front(), vf4TransFunc.size());
+	// MOD-BY-LEETEN 02/06/2013-FROM:	cTransFunc._ExportColorMap((float*)&vf4TransFunc.front(), vf4TransFunc.size());
+	cTransFunc._ExportColorMap(
+		(float*)&vf4TransFunc.front(), 
+		(int)vf4TransFunc.size());
+	// MOD-BY-LEETEN 02/06/2013-END
 	cTransFunc._SetTfDomain((float)dValueMin, (float)dValueMax);
 }
 // ADD-BY-LEETEN 02/05/2013-END
@@ -156,19 +187,30 @@ CSATSepDWT3DView::
 	cTfWin._SetNrOfEntries(256);
 	cTfWin.ICreate("Transfer Function");
 	cTfWin._Set();
+	#if	0	// MOD-BY-LEETEN 02/06/2013-FROM:
 	cTfWin._SetHistogram(
 		&vfHist.front(), 
 		vfHist.size(), 
 		fMaxCount, 
 		dValueMin, 
 		dValueMax);
+	#else	// MOD-BY-LEETEN 02/06/2013-TO:
+	cTfWin._SetHistogram(
+		&vfHist.front(), 
+		(int)vfHist.size(), 
+		fMaxCount, 
+		(float)dValueMin, 
+		(float)dValueMax);
+	#endif	// MOD-BY-LEETEN 02/06/2013-END
 	cTfWin._KeepUpdateOn();
 
 	cTfUi._SetTransFunc(&cTransFunc);
 	cTfUi.ICreate("Transfer Function Editor");
 	cTfUi._SetHistogramAsBackground(
 		&vfHist.front(), 
-		vfHist.size(), 
+		// MOD-BY-LEETEN 02/06/2013-FROM:		vfHist.size(), 
+		(int)vfHist.size(), 
+		// MOD-BY-LEETEN 02/06/2013-END
 		dValueMin, 
 		dValueMax);
 	cTfUi._SetReceiver((CTfUi::CReceiver*)this);	// ADD-BY-LEETEN 02/06/2013
@@ -247,7 +289,13 @@ CSATSepDWT3DView::_InitFunc()
 	}
 
 	////////////////////////////////////////////////////////////////
-	_SetTransferFunc((float*)&vf4TransFunc.front(), GL_RGBA, GL_FLOAT, vf4TransFunc.size());
+	// MOD-BY-LEETEN 02/06/2013-FROM:	_SetTransferFunc((float*)&vf4TransFunc.front(), GL_RGBA, GL_FLOAT, vf4TransFunc.size());
+	_SetTransferFunc(
+		(float*)&vf4TransFunc.front(), 
+		GL_RGBA, 
+		GL_FLOAT, 
+		(int)vf4TransFunc.size());
+	// MOD-BY-LEETEN 02/06/2013-END
 	_LoadSavedMatrix();		
 	_SetDataValue((float)dValueMin, (float)dValueMax);
 	_SetTfDomain((float)dValueMin, (float)dValueMax);
@@ -302,12 +350,19 @@ CSATSepDWT3DView::
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 	glPushMatrix();
+	#if	0	// MOD-BY-LEETEN 02/06/2013-FROM:
 	float fMaxDim = max(iXDim, max(iYDim, iZDim));
 	glScalef(
 		iXDim / fMaxDim,
 		iYDim / fMaxDim,
 		iZDim / fMaxDim);
-
+	#else	// MOD-BY-LEETEN 02/06/2013-TO:
+	float fMaxDim = (float)max(iXDim, max(iYDim, iZDim));
+	glScalef(
+		(float)iXDim / fMaxDim,
+		(float)iYDim / fMaxDim,
+		(float)iZDim / fMaxDim);
+	#endif	// MOD-BY-LEETEN 02/06/2013-END
 	glutWireCube(2.0);	// plot the bounding box
 
 	CClipVolume::_Create();
@@ -356,6 +411,39 @@ CSATSepDWT3DView::
 {
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	glUseProgramObjectARB(0);
+
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	///////////////////////////////////////////////////////////
+	// now plot the boxes
+	glPushAttrib(
+		GL_DEPTH_BUFFER_BIT |
+		0);
+	glDisable(GL_DEPTH_TEST);
+
+	glPushMatrix();
+
+	glTranslatef(-1.0f, -1.0f, -1.0f);
+	glScalef(2.0f/(float)(iXDim - 1), 2.0f/(float)(iYDim - 1), 2.0f/(float)(iZDim - 1));
+	for(size_t b = 0; b < this->vpairBlockColors.size(); b++)
+	{
+		glPushMatrix();
+		const float4& f4Left = vpairBlockColors[b].first.first;
+		glTranslatef(f4Left.x, f4Left.y, f4Left.z);
+		const float4& f4Size = vpairBlockColors[b].first.second;
+		glScalef(f4Size.x, f4Size.y, f4Size.z);
+		glTranslatef(+0.5f, +0.5f, +0.5f);
+		const float4& f4Color = vpairBlockColors[b].second;
+		glColor4fv(&f4Color.x);
+		glutWireCube(1.0);
+		glPopMatrix();
+	}
+
+	glPopMatrix();
+
+	glPopAttrib();
+		// GL_DEPTH_BUFFER_BIT |
+	// ADD-BY-LEETEN 02/06/2013-END
+
 	glPopMatrix();
 	// ADD-BY-LEETEN 02/05/2013-END
 }

@@ -240,7 +240,9 @@ CSATSepDWTHistView::_RenderBlock
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	vector<size_t> 
-		vuBlobalCoefBase,	// not used
+		// MOD-BY-LEETEN 02/06/2013-FROM:		vuBlobalCoefBase,	// not used
+		vuGlobalCoefBase,
+		// MOD-BY-LEETEN 02/06/2013-END
 		vuLocalCoefLengths;	// not used
 	for(size_t c = 0; c < vuChildrenWithColor.size(); c++)
 	{
@@ -248,7 +250,7 @@ CSATSepDWTHistView::_RenderBlock
 			vuChildrenWithColor[c], 
 			vuNextWaveletSub, 
 			vuChildSub, 
-			vuBlobalCoefBase,		// not used
+			vuGlobalCoefBase,		// not used
 			vuLocalCoefLengths);	// not used
 			
 		// if this child has its own cluster, use the color of this cluster
@@ -260,6 +262,31 @@ CSATSepDWTHistView::_RenderBlock
 			vuChildSub, 
 			this->vpairCoefColors[vuChildrenWithColor[c]].second,
 			false);
+
+		// ADD-BY-LEETEN 02/06/2013-BEGIN
+		// append the blocks with its own color to vpairBlockColors
+		float4 f4Left, f4Size;
+		float* pfLeft = (float*)&f4Left.x;
+		float* pfSize = (float*)&f4Size.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+		{
+			float fWaveletLength = (float)vuCoefLengths[d] / (float)vuLocalCoefLengths[d];
+			pfLeft[d] = (float)vuChildSub[d] * fWaveletLength;
+			pfSize[d] = (float)fWaveletLength;
+		}
+		for(size_t d = UGetNrOfDims(); d < 4; d++)
+		{
+			pfLeft[d] = 0.0f;
+			pfSize[d] = 1.0f;
+		}
+		vpairBlockColors.push_back(
+				make_pair<pair<float4, float4>, float4>
+				(
+					make_pair<float4, float4>(f4Left, f4Size), 
+					this->vpairCoefColors[vuChildrenWithColor[c]].second
+				)
+			);
+		// ADD-BY-LEETEN 02/06/2013-END
 	}
 	// ADD-BY-LEETEN 02/03/2013-END
 }
@@ -268,6 +295,18 @@ CSATSepDWTHistView::_RenderBlock
 void 
 CSATSepDWTHistView::_IdleFunc()
 {
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	if( iIsPlottingBoxs )
+	{
+		CGlutWin::_GlobalCB(
+			IGetId(), 
+			CGlutWin::CB_MANUAL, 
+			EVENT_PLOTTING_BOX, 
+			iIsPlottingBoxs,
+			(vector< pairBlockColor >*)&vpairBlockColors,
+			NULL);		
+	}
+	// ADD-BY-LEETEN 02/06/2013-END
 }
 
 void 
@@ -332,6 +371,8 @@ CSATSepDWTHistView::_InitFunc()
 		pcSpinner_MaxLevel->set_int_limits(0, (int)uMaxLevel);
 	GLUI_Spinner* pcSpinner_MinBin = pcGlui->add_spinner("Min Bin", GLUI_SPINNER_INT, &iMinBin);
 		pcSpinner_MinBin->set_int_limits(0, UGetNrOfBins());
+
+	pcGlui->add_checkbox("Plotting Box?", &iIsPlottingBoxs);	// ADD-BY-LEETEN 02/06/2013
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	/////////////////////////////////////////////////////////
@@ -453,6 +494,10 @@ CSATSepDWTHistView::_DisplayFunc()
 	vuWaveletSub.assign(UGetNrOfDims(), 0);
 	vector<size_t> vuLocalSub;
 	vuLocalSub.assign(UGetNrOfDims(), 0);
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	// reset the block colors
+	vpairBlockColors.clear();
+	// ADD-BY-LEETEN 02/06/2013-END
 	_RenderBlock
 		(
 			0, 
@@ -481,6 +526,35 @@ CSATSepDWTHistView::_DisplayFunc()
 				cColorEditor.f4Color,
 				true
 			);
+
+			// ADD-BY-LEETEN 02/06/2013-BEGIN
+			vector<size_t> vuGlobalCoefBase, vuLocalCoefLengths;
+			this->_ConvertWaveletSubToLevels(
+				vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+
+			// append the blocks with its own color to vpairBlockColors
+			float4 f4Left, f4Size;
+			float* pfLeft = (float*)&f4Left.x;
+			float* pfSize = (float*)&f4Size.x;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				float fWaveletLength = (float)vuCoefLengths[d] / (float)vuLocalCoefLengths[d];
+				pfLeft[d] = (float)vuLocalSub[d] * fWaveletLength;
+				pfSize[d] = (float)fWaveletLength;
+			}
+			for(size_t d = UGetNrOfDims(); d < 4; d++)
+			{
+				pfLeft[d] = 0.0f;
+				pfSize[d] = 1.0f;
+			}
+			vpairBlockColors.push_back(
+					make_pair<pair<float4, float4>, float4>
+					(
+						make_pair<float4, float4>(f4Left, f4Size), 
+						cColorEditor.f4Color
+					)
+				);
+			// ADD-BY-LEETEN 02/06/2013-END
 		}
 	}
 	// ADD-BY-LEETEN 02/03/2013-END

@@ -45,6 +45,8 @@ protected:
 	GLuint pidRayIntegral;
 	// ADD-BY-LEETEN 02/05/2013-END
 
+	vector< pairBlockColor > vpairBlockColors;	// ADD-BY-LEETEN 02/06/2013
+
 public:
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	vector<float4> vf4TransFunc;
@@ -60,7 +62,17 @@ public:
 		CTransFunc *pcTransFunc
 	);
 	// ADD-BY-LEETEN 02/06/2013-END
-	
+
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	void
+	_SetBlockColors
+	(
+		bool bIsPlottingBlocks,
+		const vector< pairBlockColor >& vpairBlockColors,
+		void* _Reserved = NULL
+	);
+	// ADD-BY-LEETEN 02/06/2013-END
+
 	void 
 	_InitTf
 	(

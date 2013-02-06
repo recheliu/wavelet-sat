@@ -25,6 +25,40 @@ _UpdateTf()
 void 
 _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 {
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	// 	// pass the new created cluster from cSATSepDWTHistView to cSATSepDWT3DView
+		// the passed information: bounding box and color
+	// vpairBoxColor
+
+	if( cSATSepDWTHistView.IGetId() == iWid )
+	{
+		switch(uiCbId)	{
+		case CGlutWin::CB_MANUAL:	// not a default GlutWin event
+		{
+			unsigned int uEvent = va_arg(vaArgs, unsigned int);
+			switch(uEvent)	{
+			case CSATSepDWTHistView::EVENT_PLOTTING_BOX:
+			{
+				// read the parameters. eg.
+				/* 
+				int i = va_arg(vaArgs, int);
+				double d = va_arg(vaArgs, double);
+				*/
+				// read #blocks to add
+				int iIsPlottingBlocks = va_arg(vaArgs, int);
+				vector< pairBlockColor >& vpairBlockColors = *va_arg(vaArgs, vector< pairBlockColor >*);
+				cSATSepDWT3DView._SetBlockColors
+					(
+						(iIsPlottingBlocks)?true:false,
+						vpairBlockColors
+					);
+
+			} break;
+			}
+		} break;
+		}
+	}
+	// ADD-BY-LEETEN 02/06/2013-END
 }
 
 int
@@ -80,6 +114,8 @@ main(int argn, char* argv[])
 	cSATSepDWT3DView._LoadData(szVolFilepath);
 	cSATSepDWT3DView.ICreate("3D Viewer");
 	// ADD-BY-LEETEN 02/05/2013-END
+
+	CGlutWin::_RegisterGlobalFunc(_GlobalFunc);	// ADD-BY-LEETEN 02/06/2013
 
 	glutMainLoop();
 
