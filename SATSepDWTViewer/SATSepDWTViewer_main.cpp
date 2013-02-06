@@ -13,6 +13,7 @@ using namespace std;
 
 CSATSepDWTHistView cSATSepDWTHistView;
 // CSATSepDWT3DView cSATSepDWT3DView;
+CSATSepDWT3DView cSATSepDWT3DView;	// ADD-BY-LEETEN 02/05/2013
 
 void
 _UpdateTf()
@@ -40,6 +41,13 @@ main(int argn, char* argv[])
 		"--nc-filepath", 1,
 		&szNcFilePath, szNcFilePath);
 
+	// ADD-BY-LEETEN 02/05/2013-BEGIN
+	char* szVolFilepath = NULL;
+	_OPTAddStringVector(
+		"--vol-filepath", 1,
+		&szVolFilepath, szVolFilepath);
+	// ADD-BY-LEETEN 02/05/2013-END
+
 	int iSizeOfFullArrays = 0;
 	_OPTAddIntegerVector(
 		"--size-of-full-arrays", 1,
@@ -62,6 +70,14 @@ main(int argn, char* argv[])
 		cSATSepDWTHistView._SetData(&cSATSepDWT);
 	*/
 	cSATSepDWTHistView.ICreate("Integral Histogram Wavelet Viewer");
+
+	// ADD-BY-LEETEN 02/05/2013-BEGIN
+	ASSERT_OR_LOG(NULL != szVolFilepath, "Missed szVolFilepath");
+	cSATSepDWT3DView._SetData((CSATSepDWT*)&cSATSepDWTHistView);
+
+	cSATSepDWT3DView._LoadData(szVolFilepath);
+	cSATSepDWT3DView.ICreate("3D Viewer");
+	// ADD-BY-LEETEN 02/05/2013-END
 
 	glutMainLoop();
 

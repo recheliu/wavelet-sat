@@ -59,6 +59,7 @@ link_directories(
 
 # process the shaders
 list(APPEND SHADER_NAMES
+	ray_integral.frag	# ADD-BY-LEETEN 02/05/2013
 	)
 
 foreach(SHADER ${SHADER_NAMES})
@@ -123,6 +124,7 @@ if(DEFINED WIN32)
 		debug	libdvr2_d	optimized	libdvr2_r
 		debug	libclip_d	optimized	libclip_r
 		debug	libshader_d	optimized	libshader_r
+		debug	libtfw_d	optimized	libtfw_r	# ADD-BY-LEETEN 02/05/2013
 	)
 	
 else()
@@ -132,6 +134,7 @@ else()
 		libdvr2
 		libclip
 		libshader
+		libtfw	# ADD-BY-LEETEN 02/05/2013
 	)
 endif()
 

@@ -4,12 +4,17 @@
 
 #include "libclip/ClipVolume.h"
 #include "libdvr2/DvrWin2.h"
+// ADD-BY-LEETEN 02/05/2013-BEGIN
+#include "libtfw/TfWin.h"
+#include "libtfw/TfUi.h"	
+// ADD-BY-LEETEN 02/05/2013-END
 #include "libtfw/TransFunc.h"
 
 #include "SATSepDWT.h"
 
 struct 
 CSATSepDWT3DView:	
+	virtual public CClipVolume,	// ADD-BY-LEETEN 02/05/2013
 	virtual public CDvrWin2
 	/*
 	virtual public CClipVolume
@@ -23,8 +28,36 @@ protected:
 	};
 
 	CSATSepDWT *pcSATSepDWT;
-	
+
+	// ADD-BY-LEETEN 02/05/2013-BEGIN
+	//////////////////////////////////////////////////////
+	// fields for volume rendering
+	Nrrd *nin;
+
+	double dValueMin;
+	double dValueMax;
+
+	// histogram
+	vector<float> vfHist;
+	float fMaxCount; // the maximal count of the histogram	
+
+	GLuint pidRayIntegral;
+	// ADD-BY-LEETEN 02/05/2013-END
+
 public:
+	// ADD-BY-LEETEN 02/05/2013-BEGIN
+	vector<float4> vf4TransFunc;
+	CTransFunc cTransFunc;
+
+	CTfWin	cTfWin;
+	CTfUi	cTfUi;
+
+	void 
+	_InitTf
+	(
+	);
+	// ADD-BY-LEETEN 02/05/2013-END
+
 	void
 	_SetData
 	(
@@ -33,6 +66,22 @@ public:
 	{
 		this->pcSATSepDWT = pcSATSepDWT;
 	}
+
+	// ADD-BY-LEETEN 02/05/2013-BEGIN
+	template<typename T>
+	void
+	_ConvertDataToTexture
+	(
+		Nrrd *nin
+	);
+
+	void
+	_LoadData
+	(
+		char* szFilepath,
+		void* _Reserved = NULL
+	);
+	// ADD-BY-LEETEN 02/05/2013-END
 
 	void _InitFunc();
 	void _GluiFunc(unsigned short usValue);
