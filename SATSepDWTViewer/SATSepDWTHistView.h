@@ -231,6 +231,8 @@ protected:
 	vector< pairBlockColor > vpairBlockColors;
 	// ADD-BY-LEETEN 02/06/2013-END
 
+	vector< vector<WaveletSAT::typeWavelet> > vvdLevelBinMax;	// ADD-BY-LEETEN 02/06/2013
+
 public:
 
 	// ADD-BY-LEETEN 02/06/2013-BEGIN
@@ -251,6 +253,17 @@ public:
 		size_t& uGlobal,
 		void* _Reserved = NULL
 	);
+
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	virtual
+	void
+	_LoadFile
+	(
+		const char* szFilepath,
+		void *_Reserved = NULL
+	);
+	// ADD-BY-LEETEN 02/06/2013-END
+
 
 	virtual 
 	void
