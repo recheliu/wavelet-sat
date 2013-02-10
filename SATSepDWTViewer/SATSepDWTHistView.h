@@ -233,6 +233,11 @@ protected:
 
 	vector< vector<WaveletSAT::typeWavelet> > vvdLevelBinMax;	// ADD-BY-LEETEN 02/06/2013
 
+	// ADD-BY-LEETEN 02/10/2013-BEGIN
+	// queue of the children of its own color
+	vector<size_t> vuChildrenWithColor;
+	// ADD-BY-LEETEN 02/10/2013-END
+
 public:
 
 	// ADD-BY-LEETEN 02/06/2013-BEGIN

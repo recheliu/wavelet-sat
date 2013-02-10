@@ -121,6 +121,7 @@ if(DEFINED WIN32)
 	target_link_libraries(${PROJECT_NAME}
 		debug	libopt_d	optimized	libopt_r
 		debug	libgw_d		optimized	libgw_r
+		debug	libdvrsuite_d	optimized	libdvrsuite_r	# ADD-BY-LEETEN 02/10/2013
 		debug	libdvr2_d	optimized	libdvr2_r
 		debug	libclip_d	optimized	libclip_r
 		debug	libshader_d	optimized	libshader_r
@@ -131,6 +132,7 @@ else()
 	target_link_libraries(${PROJECT_NAME}
 		libopt
 		libgw
+		libdvrsuite	# ADD-BY-LEETEN 02/10/2013
 		libdvr2
 		libclip
 		libshader

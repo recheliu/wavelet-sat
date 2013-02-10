@@ -7,6 +7,7 @@
 
 #include "SATSepDWT3DView.h"
 
+#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 // ADD-BY-LEETEN 02/06/2013-BEGIN
 void
 CSATSepDWT3DView::
@@ -36,6 +37,7 @@ _Receive
 	_Redisplay();
 }
 // ADD-BY-LEETEN 02/06/2013-END
+#endif	// DEL-BY-LEETEN 02/10/2013-END
 
 // ADD-BY-LEETEN 02/06/2013-BEGIN
 void
@@ -56,6 +58,7 @@ CSATSepDWT3DView::
 }
 // ADD-BY-LEETEN 02/06/2013-END
 
+#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 // ADD-BY-LEETEN 02/05/2013-BEGIN
 template<typename T>
 void
@@ -152,11 +155,13 @@ CSATSepDWT3DView::
 	cTransFunc._SetTfDomain((float)dValueMin, (float)dValueMax);
 }
 // ADD-BY-LEETEN 02/05/2013-END
+#endif	// DEL-BY-LEETEN 02/10/2013-END
 
 //////////////////// CGlutWin methods //////////////////// 
 void 
 CSATSepDWT3DView::_IdleFunc()
 {
+	CDvrSuiteWin::_IdleFunc();	// ADD-BY-LEETEN 02/10/2013
 }
 
 void 
@@ -168,6 +173,7 @@ CSATSepDWT3DView::_MouseFunc
 		int y
 	)
 {
+	CDvrSuiteWin::_MouseFunc(button, state, x, y);	// ADD-BY-LEETEN 02/10/2013
 }
 
 void 
@@ -176,6 +182,7 @@ CSATSepDWT3DView::
 {
 }
 
+#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 // ADD-BY-LEETEN 02/05/2013-BEGIN
 void 
 CSATSepDWT3DView::
@@ -216,10 +223,12 @@ CSATSepDWT3DView::
 	cTfUi._SetReceiver((CTfUi::CReceiver*)this);	// ADD-BY-LEETEN 02/06/2013
 }
 // ADD-BY-LEETEN 02/05/2013-END
+#endif	// DEL-BY-LEETEN 02/10/2013-END
 
 void 
 CSATSepDWT3DView::_InitFunc()
 {
+	#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	_InitTf();
 	_Set();	// reset the current window to this window
@@ -300,12 +309,17 @@ CSATSepDWT3DView::_InitFunc()
 	_SetDataValue((float)dValueMin, (float)dValueMax);
 	_SetTfDomain((float)dValueMin, (float)dValueMax);
 	// ADD-BY-LEETEN 02/05/2013-END
+	#else	// MOD-BY-LEETEN 02/10/2013-TO:
+	CDvrSuiteWin::_InitFunc();
+	_CreateTfWins();
+	#endif	// MOD-BY-LEETEN 02/10/2013-END
 }
 
 void 
 CSATSepDWT3DView::
 	_TimerFunc(unsigned short usEvent)
 {
+	CDvrSuiteWin::_TimerFunc(usEvent);	// ADD-BY-LEETEN 02/10/2013
 }
 
 void 
@@ -315,29 +329,37 @@ CSATSepDWT3DView::_DisplayFunc()
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	#else	// MOD-BY-LEETEN 02/05/2013-TO:
-	CDvrWin2::_DisplayFunc();
+	// MOD-BY-LEETEN 02/10/2013-FROM:	CDvrWin2::_DisplayFunc();
+	CDvrSuiteWin::_DisplayFunc();
+	// MOD-BY-LEETEN 02/10/2013-END
 	#endif	// MOD-BY-LEETEN 02/05/2013-END
 }
 
 void 
 CSATSepDWT3DView::_KeyboardFunc(unsigned char ubKey, int x, int y)
 {
+	CDvrSuiteWin::_KeyboardFunc(ubKey, x, y);	// ADD-BY-LEETEN 02/10/2013
 }
 
 void 
 CSATSepDWT3DView::_ReshapeFunc(int w, int h)
 {
+	#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
 	CDvrWin2::_ReshapeFunc(w, h);
 	/*
 	CClipVolume::_ReshapeFunc(w, h);
 	_Redisplay();
 	*/
 	CClipVolume::_ReshapeFunc(w, h);	// ADD-BY-LEETEN 02/05/2013
+	#else	// MOD-BY-LEETEN 02/10/2013-TO:
+	CDvrSuiteWin::_ReshapeFunc(w, h);
+	#endif	// MOD-BY-LEETEN 02/10/2013-END
 }
 
 void 
 CSATSepDWT3DView::_GluiFunc(unsigned short usValue)
 {
+	CDvrSuiteWin::_GluiFunc(usValue);	// ADD-BY-LEETEN 02/10/2013
 }
 
 //////////////////////////////////////////////////////
@@ -345,6 +367,7 @@ void
 CSATSepDWT3DView::
 	_BeginDisplay()
 {
+	#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -403,6 +426,9 @@ CSATSepDWT3DView::
 
 	glActiveTexture(GL_TEXTURE0);
 	// ADD-BY-LEETEN 02/05/2013-END
+	#else	// MOD-BY-LEETEN 02/10/2013-TO:
+	CDvrSuiteWin::_BeginDisplay();
+	#endif	// MOD-BY-LEETEN 02/10/2013-END
 }
 
 void 
@@ -458,6 +484,7 @@ CSATSepDWT3DView::
 		double dMinZ, double dMaxZ
 	)
 {
+	#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	glPushAttrib(
 		GL_ENABLE_BIT |
@@ -478,12 +505,25 @@ CSATSepDWT3DView::
 
 	glPopAttrib();	// glPushAttrib(GL_DEPTH_BUFFER_BIT);
 	// ADD-BY-LEETEN 02/05/2013-END
+	#else	// MOD-BY-LEETEN 02/10/2013-TO:
+	CDvrSuiteWin::_RenderSlab(
+		iSlab, iNrOfSlabs,
+		pdModelviewMatrix, pdProjectionMatrix, piViewport,
+		dMinX, dMaxX, 
+		dMinY, dMaxY, 
+		dMinZ, dMaxZ);
+	#endif	// MOD-BY-LEETEN 02/10/2013-END
 }
 
 //////////////////// Constructors/Destructors //////////////////// 
 CSATSepDWT3DView::
 	CSATSepDWT3DView(void)
+	// ADD-BY-LEETEN 02/10/2013-BEGIN
+	:
+	CDvrSuiteWin()
+	// ADD-BY-LEETEN 02/10/2013-END
 {
+	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	ibIsFboEnabled = 1;							// enable the rendering to FBO
 
@@ -495,6 +535,7 @@ CSATSepDWT3DView::
 
 	_AddGluiWin();	// with a separate GLUI window
 	// ADD-BY-LEETEN 02/05/2013-END
+	#endif	// DEL-BY-LEETEN 02/10/2013-END
 }
 
 CSATSepDWT3DView::

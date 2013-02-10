@@ -281,9 +281,10 @@ CSATSepDWTHistView::_RenderBlock
 	// display other children that do not have its own color
 	// display the children that has its own color
 
+	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 	// queue of the children of its own color
 	vector<size_t> vuChildrenWithColor;
-
+	#endif	// DEL-BY-LEETEN 02/10/2013-END
 	vector<size_t> vuNextGlobalCoefBase, vuNextLocalCoefLengths;
 	this->_ConvertWaveletSubToLevels(vuNextWaveletSub, vuNextGlobalCoefBase, vuNextLocalCoefLengths);
 	// ADD-BY-LEETEN 02/03/2013-END
@@ -319,7 +320,7 @@ CSATSepDWTHistView::_RenderBlock
 			bIsHighLighting);
 			// MOD-BY-LEETEN 02/03/2013-END
 	}
-
+	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	vector<size_t> 
 		// MOD-BY-LEETEN 02/06/2013-FROM:		vuBlobalCoefBase,	// not used
@@ -371,6 +372,7 @@ CSATSepDWTHistView::_RenderBlock
 		// ADD-BY-LEETEN 02/06/2013-END
 	}
 	// ADD-BY-LEETEN 02/03/2013-END
+	#endif	// DEL-BY-LEETEN 02/10/2013-END
 }
 
 //////////////////// CGlutWin methods //////////////////// 
@@ -582,6 +584,7 @@ CSATSepDWTHistView::_DisplayFunc()
 	// reset the block colors
 	vpairBlockColors.clear();
 	// ADD-BY-LEETEN 02/06/2013-END
+	vuChildrenWithColor.clear();	// ADD-BY-LEETEN 02/10/2013
 	_RenderBlock
 		(
 			0, 
@@ -592,6 +595,58 @@ CSATSepDWTHistView::_DisplayFunc()
 			false
 			// MOD-BY-LEETEN 02/03/2013-END
 		);
+
+	// ADD-BY-LEETEN 02/10/2013-BEGIN
+	// render all blocks with its own colors from all levels here
+	vector<size_t> 
+		vuLevel, 
+		vuLocalCoefSubs,
+		vuGlobalCoefBase,
+		vuLocalCoefLengths;	// not used
+	for(size_t c = 0; c < vuChildrenWithColor.size(); c++)
+	{
+		size_t uGlobal = vuChildrenWithColor[c];
+		this->_ConvertIndexToLevels(
+			uGlobal, 
+			vuLevel, 
+			vuLocalCoefSubs, 
+			vuGlobalCoefBase,		// not used
+			vuLocalCoefLengths);	// not used
+			
+		// if this child has its own cluster, use the color of this cluster
+
+		// otherwise, use the passed colors
+		_RenderBlock(
+			vuLevel[0], 
+			vuLevel, 
+			vuLocalCoefSubs, 
+			this->vpairCoefColors[uGlobal].second,
+			false);
+
+		// append the blocks with its own color to vpairBlockColors
+		float4 f4Left, f4Size;
+		float* pfLeft = (float*)&f4Left.x;
+		float* pfSize = (float*)&f4Size.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+		{
+			float fWaveletLength = (float)vuCoefLengths[d] / (float)vuLocalCoefLengths[d];
+			pfLeft[d] = (float)vuLocalCoefSubs[d] * fWaveletLength;
+			pfSize[d] = (float)fWaveletLength;
+		}
+		for(size_t d = UGetNrOfDims(); d < 4; d++)
+		{
+			pfLeft[d] = 0.0f;
+			pfSize[d] = 1.0f;
+		}
+		vpairBlockColors.push_back(
+				make_pair<pair<float4, float4>, float4>
+				(
+					make_pair<float4, float4>(f4Left, f4Size), 
+					this->vpairCoefColors[vuChildrenWithColor[c]].second
+				)
+			);
+	}
+	// ADD-BY-LEETEN 02/10/2013-END
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	if( cColorEditor.iIsActive )
