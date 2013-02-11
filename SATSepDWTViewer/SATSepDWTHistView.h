@@ -16,6 +16,8 @@ protected:
 		// event for GLUI
 		GLUI_EVENT_BASE = 0x901,
 
+		GLUI_EVENT_PLOT_BOXES,	// ADD-BY-LEETEN 02/11/2013
+
 		// ADD-BY-LEETEN 02/03/2013-BEGIN
 		GLUI_EVENT_COLOR_ASSIGN,	
 		GLUI_EVENT_COLOR_RESET,		
@@ -76,7 +78,9 @@ protected:
 			iBlock(0),
 			iIsActive(0)
 		{
-			memset(&f4Color, 0, sizeof(f4Color));
+			// MOD-BY-LEETEN 02/11/2013-FROM:			memset(&f4Color, 0, sizeof(f4Color));
+			f4Color = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+			// MOD-BY-LEETEN 02/11/2013-END
 		}
 
 		void
@@ -238,6 +242,15 @@ protected:
 	vector<size_t> vuChildrenWithColor;
 	// ADD-BY-LEETEN 02/10/2013-END
 
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	float4 f4DefaultColor;
+
+	// if this flag is not 0, the traverse of block will stop at hte blocks of its own color
+	int iIsNotRecursive;
+
+	// if this flag is not 0, the max. prob. after iMinbin will be shown
+	int iIsShowingMaxProb;
+	// ADD-BY-LEETEN 02/11/2013-END
 public:
 
 	// ADD-BY-LEETEN 02/06/2013-BEGIN
@@ -289,7 +302,9 @@ public:
 	// ADD-BY-LEETEN 02/03/2013-END
 
 	void
-	CSATSepDWTHistView::_RenderBlock
+	// MOD-BY-LEETEN 02/11/2013-FROM:	CSATSepDWTHistView::_RenderBlock
+	_RenderBlock
+	// MOD-BY-LEETEN 02/11/2013-END
 	(
 		size_t uLevel,
 		const vector<size_t>& vuWaveletSub,
@@ -297,6 +312,7 @@ public:
 		// MOD-BY-LEETEN 02/03/2013-FROM:	const float pfColor[]
 		const	float4 f4Color,
 		bool	bIsHightLighting,
+		bool	bIsNotRecursive = false,	// ADD-BY-LEETEN 02/11/2013
 		void	*_Reserved = NULL
 		// MOD-BY-LEETEN 02/03/2013-END
 	);

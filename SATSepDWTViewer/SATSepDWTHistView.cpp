@@ -187,6 +187,7 @@ CSATSepDWTHistView::_RenderBlock
 	// MOD-BY-LEETEN 02/03/2013-FROM:	const float pfColor[]
 	const float4 f4Color,
 	bool	bIsHighLighting,
+	bool	bIsNotRecursive,	// ADD-BY-LEETEN 02/11/2013
 	void	*_Reserved
 	// MOD-BY-LEETEN 02/03/2013-END
 )
@@ -259,6 +260,10 @@ CSATSepDWTHistView::_RenderBlock
 		bIsHighLighting
 	);
 	#endif	// MOD-BY-LEETEN 02/03/2013-END
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	if(bIsNotRecursive)
+		return;
+	// ADD-BY-LEETEN 02/11/2013-END
 	///////////////////////////////////////////
 	// now plot the children
 
@@ -457,8 +462,25 @@ CSATSepDWTHistView::_InitFunc()
 		pcSpinner_MaxLevel->set_int_limits(0, (int)uMaxLevel);
 	GLUI_Spinner* pcSpinner_MinBin = pcGlui->add_spinner("Min Bin", GLUI_SPINNER_INT, &iMinBin);
 		pcSpinner_MinBin->set_int_limits(0, UGetNrOfBins());
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	{
+		GLUI_Panel *pcPanel_Color = pcGlui->add_panel("Default Color");
+		static char* pszChannels[] = {"R", "G", "B", "A"};
+		float *pfColor = &f4DefaultColor.x;
+		for(int c = 0; c < sizeof(pszChannels)/sizeof(pszChannels[0]); c++)
+		{
+			GLUI_Spinner* pcSpinner = pcGlui->add_spinner_to_panel(pcPanel_Color, pszChannels[c], GLUI_SPINNER_FLOAT, &pfColor[c]);
+			pcSpinner->set_float_limits(0.0f, 1.0f);
+		}
+	}
+	// ADD-BY-LEETEN 02/11/2013-END
 
-	pcGlui->add_checkbox("Plotting Box?", &iIsPlottingBoxs);	// ADD-BY-LEETEN 02/06/2013
+	// MOD-BY-LEETEN 02/11/2013-FROM:	pcGlui->add_checkbox("Plotting Box?", &iIsPlottingBoxs);	// ADD-BY-LEETEN 02/06/2013
+	pcGlui->add_checkbox("Plot Boxes?", &iIsPlottingBoxs,
+				IAddWid(GLUI_EVENT_PLOT_BOXES), CGlutWin::_GluiCB_static);
+	pcGlui->add_checkbox("Show Max. Prob.?", &iIsShowingMaxProb);
+	pcGlui->add_checkbox("Not Recursive?", &iIsNotRecursive);
+	// MOD-BY-LEETEN 02/11/2013-END
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	/////////////////////////////////////////////////////////
@@ -559,7 +581,9 @@ CSATSepDWTHistView::_DisplayFunc()
 	for(size_t l = 0; l <= (size_t)iMaxLevel; l++)
 	{
 		glPushMatrix();
-		glTranslatef(0.0f, (float)iMaxLevel - l, 0.0f);
+		// MOD-BY-LEETEN 02/11/2013-FROM:		glTranslatef(0.0f, (float)iMaxLevel - l, 0.0f);
+		glTranslatef(0.0f, (float)l, 0.0f);
+		// MOD-BY-LEETEN 02/11/2013-END
 
 		// plot the axis
 		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
@@ -568,13 +592,28 @@ CSATSepDWTHistView::_DisplayFunc()
 		glVertex2i((int)UGetNrOfBins(), 0);
 		glEnd();
 
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		if( iIsShowingMaxProb )
+		{
+			char szMaxProb[1024];
+			sprintf(szMaxProb, "Prob = %f", vvdLevelBinMax[l][iMinBin]);
+			_DrawString3D(szMaxProb, (float)iMinBin, 0.88f);		
+		}
+		// ADD-BY-LEETEN 02/11/2013-END
 		glPopMatrix();
 	}
 
 	////////////////////////////////////////////////////////////////// 
 	// plot block histograms
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	glPushAttrib(
+		GL_COLOR_BUFFER_BIT |
+		0 );
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	// ADD-BY-LEETEN 02/11/2013-END
 	// MOD-BY-LEETEN 02/03/2013-FROM:	static float pfDefaultColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-	float4 f4DefaultColor = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
+	// DEL-BY-LEETEN 02/11/2013:	float4 f4DefaultColor = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
 	// MOD-BY-LEETEN 02/03/2013-END
 	vector<size_t> vuWaveletSub;
 	vuWaveletSub.assign(UGetNrOfDims(), 0);
@@ -621,7 +660,11 @@ CSATSepDWTHistView::_DisplayFunc()
 			vuLevel, 
 			vuLocalCoefSubs, 
 			this->vpairCoefColors[uGlobal].second,
-			false);
+			// MOD-BY-LEETEN 02/11/2013-FROM:			false);
+			false,	// do not highlight
+			(iIsNotRecursive)?true:false	// not recursive
+			);
+			// MOD-BY-LEETEN 02/11/2013-END
 
 		// append the blocks with its own color to vpairBlockColors
 		float4 f4Left, f4Size;
@@ -647,10 +690,22 @@ CSATSepDWTHistView::_DisplayFunc()
 			);
 	}
 	// ADD-BY-LEETEN 02/10/2013-END
-
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	glPopAttrib();
+		// GL_COLOR_BUFFER_BIT |
+	// ADD-BY-LEETEN 02/11/2013-END
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	if( cColorEditor.iIsActive )
 	{
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		// plot the current histogram as a dashed lin
+		glPushAttrib(
+			GL_LINE_BIT | 
+			0);
+		glLineWidth(4.0f);
+		glLineStipple(4, 0xCCCC);
+		glEnable(GL_LINE_STIPPLE);
+		// ADD-BY-LEETEN 02/11/2013-END
 		bool bIsValid;
 		vector<size_t> vuWaveletSub, vuLocalSub, vuGlobalSub;
 		size_t uGlobal;
@@ -695,6 +750,10 @@ CSATSepDWTHistView::_DisplayFunc()
 				);
 			// ADD-BY-LEETEN 02/06/2013-END
 		}
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		glPopAttrib();
+			// GL_LINE_BIT | 
+		// ADD-BY-LEETEN 02/11/2013-END
 	}
 	// ADD-BY-LEETEN 02/03/2013-END
 
@@ -708,7 +767,9 @@ CSATSepDWTHistView::_DisplayFunc()
 			GL_LINE_BIT | 
 			0);
 		glLineWidth(4.0f);
-		glLineStipple(4, 0x0F0F);
+		// MOD-BY-LEETEN 02/11/2013-FROM:		glLineStipple(4, 0x0F0F);
+		glLineStipple(4, 0xCCCC);
+		// MOD-BY-LEETEN 02/11/2013-END
 		glEnable(GL_LINE_STIPPLE);
 		glPushMatrix();
 		#if	0	// MOD-BY-LEETEN 02/03/2013-FROM:
@@ -835,6 +896,21 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 {
 	switch(usValue)
 	{
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	case GLUI_EVENT_PLOT_BOXES:
+	{
+		if( !iIsPlottingBoxs )
+		{
+			CGlutWin::_GlobalCB(
+				IGetId(), 
+				CGlutWin::CB_MANUAL, 
+				EVENT_PLOTTING_BOX, 
+				iIsPlottingBoxs,
+				(vector< pairBlockColor >*)&vpairBlockColors,
+				NULL);		
+		}
+	} break;
+	// ADD-BY-LEETEN 02/11/2013-END
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	case GLUI_EVENT_COLOR_ASSIGN:
 	{
@@ -864,6 +940,7 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	case GLUI_EVENT_CLUSTER_RESET_PROB:
 		cClusterEditor.f2Prob = make_float2(0.0f, 1.0f);
+		cClusterEditor.vf2BinRanges[cClusterEditor.iBin] = cClusterEditor.f2Prob;	// ADD-BY-LEETEN 02/11/2013
 		break;
 
 	case GLUI_EVENT_CLUSTER_ASSIGN:
@@ -949,6 +1026,8 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 CSATSepDWTHistView::
 	CSATSepDWTHistView(void)
 {
+	f4DefaultColor = make_float4(0.0f, 0.0f, 0.0f, 0.1f);	// ADD-BY-LEETEN 02/11/2013
+
 	// add a panel for the UI control
 	_AddGluiSubwin(GLUI_SUBWINDOW_LEFT);
 }
