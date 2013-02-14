@@ -536,6 +536,11 @@ CSATSepDWT3DView::
 	_AddGluiWin();	// with a separate GLUI window
 	// ADD-BY-LEETEN 02/05/2013-END
 	#endif	// DEL-BY-LEETEN 02/10/2013-END
+
+	// ADD-BY-LEETEN 02/14/2013-BEGIN
+	fThicknessGain = 4.0f;
+	iNrOfSlices = 32;
+	// ADD-BY-LEETEN 02/14/2013-END
 }
 
 CSATSepDWT3DView::

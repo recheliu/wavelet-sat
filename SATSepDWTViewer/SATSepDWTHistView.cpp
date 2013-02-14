@@ -19,6 +19,158 @@ CSATSepDWTHistView::
 	vpairCoefColors.assign(this->uNrOfCoefs, pair<bool, float4>(false, make_float4(0.0f, 0.0f, 0.0f, 1.0f)));
 }
 
+// ADD-BY-LEETEN 02/14/2013-BEGIN
+void
+CSATSepDWTHistView::
+	_ConvertToCDF
+	(
+		vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairBinValue,
+		void *_Reserved
+	)
+{
+	WaveletSAT::typeWavelet dSum = (WaveletSAT::typeWavelet)0.0;
+	for(size_t b = 0; b < vpairBinValue.size(); b++)
+		dSum += vpairBinValue[b].second;
+
+	// convert it to pdf first
+	for(size_t b = 0; b < vpairBinValue.size(); b++)
+		vpairBinValue[b].second /= dSum;
+
+	// convert the pdf to cdf
+	for(size_t b = 1; b < vpairBinValue.size(); b++)
+		vpairBinValue[b].second += vpairBinValue[b-1].second;
+}
+
+WaveletSAT::typeWavelet
+CSATSepDWTHistView::
+	DCompCoefs
+	(
+		const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF1,
+		const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF2,
+		void *_Reserved
+	)
+{
+	vector<WaveletSAT::typeWavelet> vCDF;
+	vCDF.assign(UGetNrOfBins(), (WaveletSAT::typeWavelet)0);
+	for(size_t b = 0; b < vpairCDF1.size() - 1; b++)
+		for(size_t bj = vpairCDF1[b].first; bj < vpairCDF1[b+1].first; bj++)
+			vCDF[bj] = vpairCDF1[b].second;
+	for(size_t b = vpairCDF1[vpairCDF1.size()-1].first; b < UGetNrOfBins(); b++)
+		vCDF[b] = 1.0;
+
+	for(size_t b = 0; b < vpairCDF2.size() - 1; b++)
+		for(size_t bj = vpairCDF2[b].first; bj < vpairCDF2[b+1].first; bj++)
+			vCDF[bj] -= vpairCDF2[b].second;
+	for(size_t b = vpairCDF2[vpairCDF2.size()-1].first; b < UGetNrOfBins(); b++)
+		vCDF[b] -= 1.0;
+
+	WaveletSAT::typeWavelet dDiff = (WaveletSAT::typeWavelet)0;
+	for(size_t b = 0; b < vCDF.size(); b++)
+		dDiff += vCDF[b] * vCDF[b];
+	dDiff = (WaveletSAT::typeWavelet)sqrt((double)dDiff / (double)vCDF.size());
+
+	return dDiff;
+}
+
+void
+CSATSepDWTHistView::
+	_CompWithChild
+(
+	const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairParentCDF,
+	const size_t uLevel,
+	const vector<size_t>& vuLocalSub,
+	void	*_Reserved
+)
+{
+	vector<size_t> vuWaveletSub;
+	vuWaveletSub.assign(UGetNrOfDims(), uLevel);
+	vector<size_t> vuGlobalBase, vuLocalLengths;
+	this->_ConvertWaveletSubToLevels(
+		vuWaveletSub, 
+		vuGlobalBase, 
+		vuLocalLengths);
+	vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> > vpairCDF;
+	this->_GetCoefSparse(
+		WaveletSAT::UConvertSubToIndex(vuWaveletSub,	vuDimLevels),
+		WaveletSAT::UConvertSubToIndex(vuLocalSub,		vuLocalLengths),
+		vpairCDF);
+	_ConvertToCDF(vpairCDF);
+
+	double dDiff = DCompCoefs(vpairParentCDF, vpairCDF);
+
+	vvdDiffWithParent[uLevel]
+		[WaveletSAT::UConvertSubToIndex(vuLocalSub, vuLocalLengths)] = dDiff;
+
+	if( uLevel == uMaxLevel )
+		return;
+
+	// scan through each child, 
+	size_t uNrOfChildren = (size_t)1 << UGetNrOfDims();
+	vector<size_t> vuChildVol;
+	vuChildVol.assign(UGetNrOfDims(), 2);
+	vector<size_t> vuChildSub;
+	
+	for(size_t c = 0; c < uNrOfChildren; c++)
+	{
+		WaveletSAT::_ConvertIndexToSub(c, vuChildSub, vuChildVol);
+			
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+			vuChildSub[d] += vuLocalSub[d] * 2;
+
+		_CompWithChild
+		(
+			vpairCDF,
+			uLevel + 1,
+			vuChildSub
+		);
+	}
+}
+
+void
+CSATSepDWTHistView::
+	_CompMaxProb
+(
+	void	*_Reserved
+)
+{
+	vector<size_t> vuLevel, vuLocalCoefSub, vuGlobalCoefBase, vuLocalCoefLengths;
+	vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> > vpairCoefBinValues;
+	vdLevelBinMax.assign(this->uMaxLevel, (double)-HUGE_VAL);
+	for(size_t l = 0; l <= this->uMaxLevel; l++)
+	{
+		vuLevel.assign(UGetNrOfDims(), l);
+		this->_ConvertWaveletSubToLevels(vuLevel, vuGlobalCoefBase, vuLocalCoefLengths);
+		size_t uNrOfLocalCoefs = 1;
+		for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
+			uNrOfLocalCoefs *= vuLocalCoefLengths[d];
+		for(size_t lc = 0; lc < uNrOfLocalCoefs; lc++)
+		{
+			this->_GetCoefSparse(
+				WaveletSAT::UConvertSubToIndex(vuLevel, vuDimLevels),
+				lc, 
+				vpairCoefBinValues);
+
+			WaveletSAT::typeWavelet dSum = 0.0;
+			for(vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >::iterator 
+					ivpairCoefBinValues = vpairCoefBinValues.begin();
+				ivpairCoefBinValues != vpairCoefBinValues.end();
+				ivpairCoefBinValues ++)
+				dSum += ivpairCoefBinValues->second;
+
+			for(size_t bi = 0; bi < vpairCoefBinValues.size(); bi++)
+			{
+				WaveletSAT::typeBin uBin = vpairCoefBinValues[bi].first;
+				if((int)uBin < i2BinRange.x || (int)uBin > i2BinRange.y )
+					continue;
+				WaveletSAT::typeWavelet dValue = vpairCoefBinValues[bi].second;
+				WaveletSAT::typeWavelet dProb = dValue / dSum;
+				vdLevelBinMax[l] = max(vdLevelBinMax[l], dProb);
+			}
+		}
+	}
+}
+// ADD-BY-LEETEN 02/14/2013-END
+
 // ADD-BY-LEETEN 02/06/2013-BEGIN
 void
 CSATSepDWTHistView::
@@ -36,13 +188,16 @@ CSATSepDWTHistView::
 	// MOD-BY-LEETEN 02/03/2013-END
 	for(size_t d = 0; d < UGetNrOfDims(); d++)
 	{
-		size_t uLevel = vuDimLevels[d] - 2;
+		// MOD-BY-LEETEN 02/14/2013-FROM:		size_t uLevel = vuDimLevels[d] - 2;
+		size_t uLevel = vuDimLevels[d] - 1;
+		// MOD-BY-LEETEN 02/14/2013-END
 		if( !uMaxLevel )
 			uMaxLevel = uLevel;
 		else
 			uMaxLevel = min(uMaxLevel, uLevel);
 	}
 
+	#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 	// now decide the range for each bin
 	vvdLevelBinMax.resize(this->uMaxLevel + 1);
 
@@ -87,8 +242,42 @@ CSATSepDWTHistView::
 			dCurrentMax = max(dCurrentMax, vvdLevelBinMax[l][b - 1]);
 			vvdLevelBinMax[l][b - 1] = dCurrentMax;
 		}
+	}	
+	#else	// MOD-BY-LEETEN 02/14/2013-TO:
+	i2BinRange = make_int2(0, UGetNrOfBins() - 1);
+	_CompMaxProb();
+	#endif	// MOD-BY-LEETEN 02/14/2013-END
+
+	// ADD-BY-LEETEN 02/14/2013-BEGIN
+	vector<size_t> vuLevel, vuLocalCoefSub, vuGlobalCoefBase, vuLocalCoefLengths;
+	vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> > vpairCDF;
+	this->_GetCoefSparse(0, 0, vpairCDF);
+	this->_ConvertToCDF(vpairCDF);
+	vector<size_t> vuLocalSub;
+	vuLocalSub.assign(UGetNrOfDims(), 0);
+
+	vvdDiffWithParent.resize(this->uMaxLevel + 1);
+	for(size_t l = 0; l <= this->uMaxLevel; l++)
+	{
+		vector<size_t> vuWaveletSub;
+		vuWaveletSub.assign(UGetNrOfDims(), l);
+		this->_ConvertWaveletSubToLevels(vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+		size_t uNrOfLocals = 1;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+			uNrOfLocals *= vuLocalCoefLengths[d];
+		vvdDiffWithParent[l].resize(uNrOfLocals);
 	}
 
+	_CompWithChild(vpairCDF, 1, vuLocalSub);
+
+	CSepDWTHeader *pcSepDWTHeader = (CSepDWTHeader*)&cSATSepDWTPCPView;
+	pcSepDWTHeader->_Set(
+			vuDimLengths,
+			UGetNrOfBins()
+			);
+	cSATSepDWTPCPView._SetDiffWithParent(vvdDiffWithParent);
+	cSATSepDWTPCPView.ICreate("PCP View");
+	// ADD-BY-LEETEN 02/14/2013-END
 }
 // ADD-BY-LEETEN 02/06/2013-END
 
@@ -145,8 +334,13 @@ CSATSepDWTHistView::
 		ivpairBinCoef++)
 	{
 		int iBin = (int)ivpairBinCoef->first;
+		#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 		if( iBin < iMinBin )
 			continue;
+		#else	// MOD-BY-LEETEN 02/14/2013-TO:
+		if( iBin < i2BinRange.x || iBin > i2BinRange.y )
+			continue;
+		#endif	// MOD-BY-LEETEN 02/14/2013-END
 
 		if( iBin - iPrevBin > 1 )
 		{
@@ -160,7 +354,9 @@ CSATSepDWTHistView::
 		glVertex2f((float)iBin+1, fCount/fSum);
 		#else	// MOD-BY-LEETEN 02/06/2013-TO:
 		float fProb = fCount/fSum;
-		float fY = fProb / vvdLevelBinMax[uLevel][iMinBin];
+		// MOD-BY-LEETEN 02/14/2013-FROM:		float fY = fProb / vvdLevelBinMax[uLevel][iMinBin];
+		float fY = fProb / vdLevelBinMax[uLevel];
+		// MOD-BY-LEETEN 02/14/2013-END
 		glVertex2f((float)iBin, fY);
 		glVertex2f((float)iBin+1, fY);
 		#endif	// MOD-BY-LEETEN 02/06/2013-END
@@ -264,6 +460,10 @@ CSATSepDWTHistView::_RenderBlock
 	if(bIsNotRecursive)
 		return;
 	// ADD-BY-LEETEN 02/11/2013-END
+	// ADD-BY-LEETEN 02/14/2013-BEGIN
+	if( (int)uLevel >= iMaxLevel )
+		return;
+	// ADD-BY-LEETEN 02/14/2013-END
 	///////////////////////////////////////////
 	// now plot the children
 
@@ -460,8 +660,19 @@ CSATSepDWTHistView::_InitFunc()
 		}
 	#endif	// DEL-BY-LEETEN 02/06/2013-END	
 		pcSpinner_MaxLevel->set_int_limits(0, (int)uMaxLevel);
+	#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 	GLUI_Spinner* pcSpinner_MinBin = pcGlui->add_spinner("Min Bin", GLUI_SPINNER_INT, &iMinBin);
 		pcSpinner_MinBin->set_int_limits(0, UGetNrOfBins());
+	#else	// MOD-BY-LEETEN 02/14/2013-TO:
+	GLUI_Spinner* pcSpinner_MaxBin = pcGlui->add_spinner(
+			"Max Bin", GLUI_SPINNER_INT, &i2BinRange.y, 
+			IAddWid(GLUI_EVENT_BIN_RANGE), CGlutWin::_GluiCB_static);
+		pcSpinner_MaxBin->set_int_limits(0, UGetNrOfBins() - 1);
+	GLUI_Spinner* pcSpinner_MinBin = pcGlui->add_spinner(
+			"Min Bin", GLUI_SPINNER_INT, &i2BinRange.x,
+			IAddWid(GLUI_EVENT_BIN_RANGE), CGlutWin::_GluiCB_static);
+		pcSpinner_MinBin->set_int_limits(0,	 UGetNrOfBins() - 1);
+	#endif	// MOD-BY-LEETEN 02/14/2013-END
 	// ADD-BY-LEETEN 02/11/2013-BEGIN
 	{
 		GLUI_Panel *pcPanel_Color = pcGlui->add_panel("Default Color");
@@ -573,8 +784,13 @@ CSATSepDWTHistView::_DisplayFunc()
 
 	glTranslatef(-1.0, -1.0, 0.0f);
 	glScalef(2.0, 2.0, 1.0f);
+	#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 	glScalef(1.0f/((float)UGetNrOfBins() - 1.0f - (float)iMinBin), 1.0f/(float)(iMaxLevel + 1), 1.0f);
 	glTranslatef(-(float)iMinBin, 0.0f, 0.0f);
+	#else	// MOD-BY-LEETEN 02/14/2013-TO:
+	glScalef(1.0f/(float)(i2BinRange.y - i2BinRange.x), 1.0f/(float)(iMaxLevel + 1), 1.0f);
+	glTranslatef(-(float)i2BinRange.x, 0.0f, 0.0f);
+	#endif	// MOD-BY-LEETEN 02/14/2013-END
 
 	////////////////////////////////////////////////////////////////
 	// plot the axis
@@ -596,8 +812,13 @@ CSATSepDWTHistView::_DisplayFunc()
 		if( iIsShowingMaxProb )
 		{
 			char szMaxProb[1024];
+			#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 			sprintf(szMaxProb, "Prob = %f", vvdLevelBinMax[l][iMinBin]);
 			_DrawString3D(szMaxProb, (float)iMinBin, 0.88f);		
+			#else	// MOD-BY-LEETEN 02/14/2013-TO:
+			sprintf(szMaxProb, "Prob = %f", vdLevelBinMax[l]);
+			_DrawString3D(szMaxProb, (float)i2BinRange.x, 0.88f);		
+			#endif	// MOD-BY-LEETEN 02/14/2013-END
 		}
 		// ADD-BY-LEETEN 02/11/2013-END
 		glPopMatrix();
@@ -784,13 +1005,20 @@ CSATSepDWTHistView::_DisplayFunc()
 		for(size_t i = 0; i < 2; i++)
 		{
 			glBegin(GL_LINE_STRIP);
-			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
+			// MOD-BY-LEETEN 02/14/2013-FROM:			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
+			for(size_t b = i2BinRange.x; b <= i2BinRange.y; b++)
+			// MOD-BY-LEETEN 02/14/2013-END
 			{
 				// MOD-BY-LEETEN 02/03/2013-FROM:	float fProb = (i)?this->cEditing.cCluster.vf2BinRanges[b].x:this->cEditing.cCluster.vf2BinRanges[b].y;
 				float fProb = (i)?this->cClusterEditor.vf2BinRanges[b].x:cClusterEditor.vf2BinRanges[b].y;
 				// ADD-BY-LEETEN 02/06/2013-BEGIN
+				#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 				fProb = max(min(fProb, (float)vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin]), 0.0f);
 				fProb /= vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin];
+				#else	// MOD-BY-LEETEN 02/14/2013-TO:
+				fProb = max(min(fProb, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f);
+				fProb /= vdLevelBinMax[cClusterEditor.iLevel];
+				#endif	// MOD-BY-LEETEN 02/14/2013-END
 				// ADD-BY-LEETEN 02/06/2013-END
 				// MOD-BY-LEETEN 02/03/2013-END
 				glVertex2f((float)b, fProb);
@@ -806,10 +1034,15 @@ CSATSepDWTHistView::_DisplayFunc()
 		float b = cClusterEditor.f2Prob.x;
 		float t = cClusterEditor.f2Prob.y;
 		// ADD-BY-LEETEN 02/06/2013-BEGIN
+		#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
 		b = max(min(b, (float)vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin]), 0.0f) 
 			/ vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin];
 		t = max(min(t, (float)vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin]), 0.0f)
 			/ vvdLevelBinMax[cClusterEditor.iLevel][this->iMinBin];
+		#else	// MOD-BY-LEETEN 02/14/2013-TO:
+		b = max(min(b, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f) / vdLevelBinMax[cClusterEditor.iLevel];
+		t = max(min(t, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f) / vdLevelBinMax[cClusterEditor.iLevel];
+		#endif	// MOD-BY-LEETEN 02/14/2013-END
 		// ADD-BY-LEETEN 02/06/2013-END
 		glBegin(GL_LINE_STRIP);
 		glVertex2f(l, b);
@@ -896,6 +1129,12 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 {
 	switch(usValue)
 	{
+	// ADD-BY-LEETEN 02/14/2013-BEGIN
+	case GLUI_EVENT_BIN_RANGE:
+	{
+		_CompMaxProb();
+	}	break;
+	// ADD-BY-LEETEN 02/14/2013-END
 	// ADD-BY-LEETEN 02/11/2013-BEGIN
 	case GLUI_EVENT_PLOT_BOXES:
 	{
@@ -968,7 +1207,9 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 
 			vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator ivpairBinCoef = vpairBinCoefs.begin();
 			bool bIsIn = true;
-			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
+			// MOD-BY-LEETEN 02/14/2013-FROM:			for(size_t b = this->iMinBin; b < this->UGetNrOfBins(); b++)
+			for(size_t b = i2BinRange.x; b <= i2BinRange.y; b++)
+			// MOD-BY-LEETEN 02/14/2013-END
 			{
 				// update the bin
 				float fProb = 0.0f;

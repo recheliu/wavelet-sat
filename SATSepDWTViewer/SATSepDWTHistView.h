@@ -6,6 +6,8 @@
 
 #include "SATSepDWT.h"
 
+#include "SATSepDWTPCPView.h"	// ADD-BY-LEETEN 02/14/2013
+
 struct 
 CSATSepDWTHistView:	
 	virtual public CSATSepDWT,
@@ -17,6 +19,8 @@ protected:
 		GLUI_EVENT_BASE = 0x901,
 
 		GLUI_EVENT_PLOT_BOXES,	// ADD-BY-LEETEN 02/11/2013
+
+		GLUI_EVENT_BIN_RANGE,	// ADD-BY-LEETEN 02/14/2013
 
 		// ADD-BY-LEETEN 02/03/2013-BEGIN
 		GLUI_EVENT_COLOR_ASSIGN,	
@@ -190,7 +194,9 @@ protected:
 			GLUI_Spinner* pcSpinner_Bin = pcGlui->add_spinner_to_panel(
 				pcPanel, "Bin",	GLUI_SPINNER_INT, &iBin,
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_EDITING), CGlutWin::_GluiCB_static);
-			pcSpinner_Bin->set_int_limits(0, uNrOfBins);
+			// MOD-BY-LEETEN 02/14/2013-FROM:			pcSpinner_Bin->set_int_limits(0, uNrOfBins);
+			pcSpinner_Bin->set_int_limits(0, uNrOfBins - 1);
+			// MOD-BY-LEETEN 02/14/2013-END
 
 			pcGlui->add_button_to_panel(pcPanel, "Assign", 
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_ASSIGN), CGlutWin::_GluiCB_static);
@@ -218,7 +224,9 @@ protected:
 	//! The current pressed button (0 means that no button is pressed now).
 	int iButton;
 
-	int iMinBin;
+	// MOD-BY-LEETEN 02/14/2013-FROM:	int iMinBin;
+	int2 i2BinRange;
+	// MOD-BY-LEETEN 02/14/2013-END
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	size_t uMaxLevel;
@@ -235,7 +243,9 @@ protected:
 	vector< pairBlockColor > vpairBlockColors;
 	// ADD-BY-LEETEN 02/06/2013-END
 
-	vector< vector<WaveletSAT::typeWavelet> > vvdLevelBinMax;	// ADD-BY-LEETEN 02/06/2013
+	// MOD-BY-LEETEN 02/14/2013-FROM:	vector< vector<WaveletSAT::typeWavelet> > vvdLevelBinMax;	// ADD-BY-LEETEN 02/06/2013
+	vector<WaveletSAT::typeWavelet> vdLevelBinMax;	
+	// MOD-BY-LEETEN 02/14/2013-END
 
 	// ADD-BY-LEETEN 02/10/2013-BEGIN
 	// queue of the children of its own color
@@ -251,7 +261,45 @@ protected:
 	// if this flag is not 0, the max. prob. after iMinbin will be shown
 	int iIsShowingMaxProb;
 	// ADD-BY-LEETEN 02/11/2013-END
+
+	// ADD-BY-LEETEN 02/14/2013-BEGIN
+	vector< vector<double> > vvdDiffWithParent;
+
+	void
+	_ConvertToCDF
+	(
+		vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairBinValue,
+		void *_Reserved = NULL
+	);
+
+	WaveletSAT::typeWavelet
+	DCompCoefs
+		(
+			const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF1,
+			const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF2,
+			void *_Reserved = NULL
+		);
+
+	void
+	CSATSepDWTHistView::
+		_CompWithChild
+	(
+		const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF,
+		const size_t uLevel, 
+		const vector<size_t>& vuChildLocalSub,
+		void	*_Reserved = NULL
+	);
+
+	void
+	CSATSepDWTHistView::
+		_CompMaxProb
+	(
+		void	*_Reserved = NULL
+	);
+	// ADD-BY-LEETEN 02/14/2013-END
 public:
+
+	CSATSepDWTPCPView cSATSepDWTPCPView;	// ADD-BY-LEETEN 02/14/2013
 
 	// ADD-BY-LEETEN 02/06/2013-BEGIN
 	enum {

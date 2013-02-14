@@ -30,7 +30,10 @@ _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 		// the passed information: bounding box and color
 	// vpairBoxColor
 
-	if( cSATSepDWTHistView.IGetId() == iWid )
+	// MOD-BY-LEETEN 02/14/2013-FROM:	if( cSATSepDWTHistView.IGetId() == iWid )
+	if( cSATSepDWTHistView.IGetId() == iWid ||
+		cSATSepDWTHistView.cSATSepDWTPCPView.IGetId() == iWid )
+	// MOD-BY-LEETEN 02/14/2013-END
 	{
 		switch(uiCbId)	{
 		case CGlutWin::CB_MANUAL:	// not a default GlutWin event
