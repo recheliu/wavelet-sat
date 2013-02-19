@@ -18,7 +18,7 @@
 #endif	// #if	!defined(WITH_COEF_POOL) || !WITH_COEF_POOL
 // ADD-BY-LEETEN 01/27/2013-END
 
-#include <map>	
+// DEL-By-LEETEN 02/19/2013-FROM:	#include <map>	
 
 #include <vector>
 using namespace std;

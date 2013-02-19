@@ -106,7 +106,7 @@ main(int argn, char* argv[])
 {
 	bool bIsPrintingTiming = true;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	// DEL-BY-LEETEN 02/19/2012:	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	_OPTInit();			// initialize the option parser
 
@@ -215,9 +215,60 @@ main(int argn, char* argv[])
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	#if	0	// MOD-By-LEETEN 02/19/2013-FROM:
 	if(iIsTestingQuery)
 	{
 	assert(szVolFilePath); // ADD-BY-LEETEN 12/30/2012
+	#else	// MOD-By-LEETEN 02/19/2013-TO:
+	if(iIsTestingQuery)
+	{
+		if(!szVolFilePath)
+		{
+			LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+
+			cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+			////////////////////////////////////////////////////////////////////////////
+			// Now we can start to query SATs
+			// load the data for testing
+
+			size_t uNrOfDims = cSimpleNDFile.UGetNrOfDims();
+			size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
+			size_t uWinSize = iQueryWinLength;
+			size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
+
+			vector<size_t> vuDimLengths;
+			cSimpleNDFile._GetDataSize(vuDimLengths);
+			size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+			for(size_t d = 0; d < uNrOfDims; d++)
+				uNrOfValues *= vuDimLengths[d];
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			for(size_t t = 0; t < uNrOfTestingValues; t++)
+			{
+				vector<size_t> vuBase;
+				vuBase.resize(uNrOfDims);
+				for(size_t d = 0; d < uNrOfDims; d++)
+					vuBase[d] = uWinSize + rand() % (vuDimLengths[d] - uWinSize);
+
+				vector<WaveletSAT::typeSum> vdH;
+				vdH.resize(uNrOfBins);
+
+				vector<size_t> vuOffset;
+				vuOffset.resize(uNrOfDims);
+				for(size_t d = 0; d < uNrOfDims; d++)
+					vuOffset[d] = vuBase[d] - uWinSize;
+				cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
+			}
+
+			LIBCLOCK_END(bIsPrintingTiming);
+			long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+			long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+			long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		}
+		else
+		{
+		#endif	// MOD-By-LEETEN 02/19/2013-END
 		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
 
 		cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
@@ -307,6 +358,7 @@ main(int argn, char* argv[])
 		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
 		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 	}
+	}	// ADD-By-LEETEN 02/19/2013
 
 	    if( iIsComputingEntropy )
 	      {
@@ -405,6 +457,7 @@ main(int argn, char* argv[])
 		#endif	// MOD-BY-LEETEN 01/23/2013-END
 	}
 
+	#if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
 	// ADD-BY-LEETEN 01/23/2013-BEGIN
 	if( iIsComputingBlockStat ) // iIsComputingBlockStatistics )
 	{
@@ -424,6 +477,7 @@ main(int argn, char* argv[])
 		LIBCLOCK_END(bIsPrintingTiming);	
 	}
 	// ADD-BY-LEETEN 01/23/2013-END
+	#endif	 // #if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
 
 	// ADD-BY-LEETEN 01/05/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);

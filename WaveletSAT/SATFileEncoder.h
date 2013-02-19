@@ -224,6 +224,11 @@ public:
 					b < UGetNrOfBins(); 
 					b++)
 			{
+				// ADD-By-LEETEN 02/19/2013-BEGIN
+				static int iPrintTiming;
+				LIBCLOCK_INIT(iPrintTiming, __FUNCTION__);	
+				LIBCLOCK_BEGIN(iPrintTiming);	
+				// ADD-By-LEETEN 02/19/2013-END
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
 					const map<BT, ST>& mapHist = vmapHists[i];
@@ -231,6 +236,10 @@ public:
 					pSAT[i] = (double)( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
+				// ADD-By-LEETEN 02/19/2013-BEGIN
+				LIBCLOCK_END(iPrintTiming);	
+				LIBCLOCK_BEGIN(iPrintTiming);	
+				// ADD-By-LEETEN 02/19/2013-END
 				for(size_t uOffset = 1, d = 0; d < this->UGetNrOfDims(); uOffset *= vuDimLengths[d], d++)
 				{
 					size_t uNrOfScanLines = this->uDataSize / this->vuDimLengths[d];
@@ -253,7 +262,10 @@ public:
 							pSAT[uIndex + uOffset] += pSAT[uIndex];
 					}
 				}
-
+				// ADD-By-LEETEN 02/19/2013-BEGIN
+				LIBCLOCK_END(iPrintTiming);	
+				LIBCLOCK_BEGIN(iPrintTiming);	
+				// ADD-By-LEETEN 02/19/2013-END
 				// dump this SAT
 				size_t puStart[NC_MAX_DIMS];
 				size_t puCount[NC_MAX_DIMS];
@@ -275,6 +287,10 @@ public:
 						   puStart,
 						   puCount,
 						   (void*)&pSAT[0]));
+				// ADD-By-LEETEN 02/19/2013-BEGIN
+				LIBCLOCK_END(iPrintTiming);	
+				LIBCLOCK_PRINT(iPrintTiming);	
+				// ADD-By-LEETEN 02/19/2013-END
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 

@@ -45,7 +45,7 @@ using namespace std;
 // ADD-BY-LEETEN 12/28/2012-END
 
 // ADD-BY-LEETEN 01/05/2013-BEGIN
-// If this is non-0, the coefficient for a region query will be merged to gether to reduce the access of coefficients
+// If this is non-0, the coefficient for a region query will be merged together to reduce the access of coefficients
 #define MERGE_COEFFICIENTS_PER_REGION			1
 // ADD-BY-LEETEN 01/05/2013-END
 

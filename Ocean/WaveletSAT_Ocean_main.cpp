@@ -111,6 +111,10 @@ main(int argn, char* argv[])
 	cVector2D._SetInteger(cVector2D.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
 	#endif	// #if	WITH_CUDA
 
+	// ADD-By-LEETEN 02/19/2013-BEGIN
+	LIBCLOCK_END(bIsPrintingTiming);
+	LIBCLOCK_BEGIN(bIsPrintingTiming);
+	// ADD-By-LEETEN 02/19/2013-END
 	cVector2D._Load(
 		szVecDirPath,
 		szUVecFileName,

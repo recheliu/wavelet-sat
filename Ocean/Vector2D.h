@@ -246,8 +246,10 @@ public:
 	{
 	  // ADD-BY-LEETEN 01/31/2013-BEGIN
 	  const size_t& uDataSize = this->uDataSize;
-	  const vector<size_t>& vuDimLengths = vuDimLengths;
-	  // ADD-BY-LEETEN 01/31/2013-END
+		// MOD-By-LEETEN 02/19/2013-FROM:	  const vector<size_t>& vuDimLengths = vuDimLengths;
+	  const vector<size_t>& vuDimLengths = this->vuDimLengths;
+		// MOD-By-LEETEN 02/19/2013-END
+		// ADD-BY-LEETEN 01/31/2013-END
 
 		for(size_t d = 0; d < uDataSize; d++)
 		{
