@@ -4,9 +4,13 @@
 
 template<
 	typename DT = WaveletSAT::typeBin,		//!< Type of the data. Here the data is the bin
-	typename ST = WaveletSAT::typeSum,		//!< Type of the sum
+	// MOD-BY-LEETEN 03/16/2013-FROM:	typename ST = WaveletSAT::typeSum,		//!< Type of the sum
+	typename ST = float,		//!< Type of the sum
+	// MOD-BY-LEETEN 03/16/2013-END
 	typename BT = WaveletSAT::typeBin,		//!< Type of the bin
-	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
+	// MOD-BY-LEETEN 03/16/2013-FROM:	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
+	typename WT = float						//!< Type of the wavelet coefficientsd
+	// MOD-BY-LEETEN 03/16/2013-END
 >
 class CVector2D:
 		virtual public CSimpleND<DT, ST, BT, WT>
@@ -250,7 +254,6 @@ public:
 	  const vector<size_t>& vuDimLengths = this->vuDimLengths;
 		// MOD-By-LEETEN 02/19/2013-END
 		// ADD-BY-LEETEN 01/31/2013-END
-
 		for(size_t d = 0; d < uDataSize; d++)
 		{
 			vector<size_t> vuPos;

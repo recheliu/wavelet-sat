@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #if	0	// DEL-BY-LEETEN 01/27/2013-BEGIN
 #define WITH_VECTORS_FOR_COUNTED_COEFS	0
@@ -11,6 +11,27 @@
 // ADD-BY-LEETEN 11/11/2012-BEGIN
 #define WITH_COEF_POOL			1
 // ADD-BY-LEETEN 11/11/2012-END
+
+// ADD-BY-LEETEN 03/16/2013-BEGIN
+//! Pre-clloate the entire buffer so the memory will be not appeneded during the run time. 
+/*!
+Nevertheless, it does not help the performance much and thus it can be 0.
+*/
+#define SAVEFILE_PREALLOC_COEFS	0	
+
+//! Access the reference of the sparse array to avoid the copy of data.
+/*!
+Nevertheless, it does not help the performance much and thus it can be 0.
+*/
+#define SAVEFILE_WITH_REF		0
+
+//! Skip the coefficients with zero value.
+/*!
+This should be 1 to optimize up the performance.
+*/
+#define SAVEFILE_SKIP_EMPTY		1
+// ADD-BY-LEETEN 03/16/2013-END
+
 
 // ADD-BY-LEETEN 01/27/2013-BEGIN
 #if	!defined(WITH_COEF_POOL) || !WITH_COEF_POOL
@@ -370,6 +391,16 @@ public:
 
 				vector< pair<BT, WT> > vpairLocalCoefBinValue;
 
+				// ADD-BY-LEETEN 03/16/2013-BEGIN
+				#if	SAVEFILE_PREALLOC_COEFS
+				size_t uFullSize;
+				size_t uSparseSize;
+				this->vcCoefPools[c]._GetArraySize(uFullSize, uSparseSize, (WT)dWaveletThreshold);
+				vpairLocalCoefBinValue.resize(uFullSize + uSparseSize);
+				size_t uLocalBase = 0; 
+				#endif	// #if SAVEFILE_PREALLOC_COEFS
+				// ADD-BY-LEETEN 03/16/2013-END
+
 				// ADD-BY-LEETEN 12/30/2012-BEGIN
 				#if	!WITH_SMART_PTR
 				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
@@ -384,10 +415,40 @@ public:
 
 				for(size_t bc = 0; bc < uNrOfLocalCoefs; bc++)
 				{
+					// ADD-BY-LEETEN 03/16/2013-BEGIN
+					#if	SAVEFILE_SKIP_EMPTY
+					if( this->vcCoefPools[c].BIsEmpty(bc) )
+						continue;
+					#endif	// #if SAVEFILE_SKIP_EMPTY
+					// ADD-BY-LEETEN 03/16/2013-END
+
 					vector<size_t> vuLocalCoefSub;
 					_ConvertIndexToSub(bc, vuLocalCoefSub, vuLocalCoefLengths);
 
+					// ADD-BY-LEETEN 03/16/2013-BEGIN
+					#if	SAVEFILE_WITH_REF
+					if( this->vcCoefPools[c].BIsSparse() )
+					{
+						const vector< pair<BT, WT> >& vpairCoefBinValue = 
+							this->vcCoefPools[c].VGetCoefSparse(vuLocalCoefSub);
+
+						pLocalCoefCounts[bc] = (TYPE_COEF_COUNT)vpairCoefBinValue.size();
+						#if	!SAVEFILE_PREALLOC_COEFS
+						pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
+						vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
+						#else	// #if	!SAVEFILE_PREALLOC_COEFS
+						pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)(uNrOfWrittenValues + uLocalBase);
+						copy(vpairCoefBinValue.begin(), vpairCoefBinValue.end(),
+							vpairLocalCoefBinValue.begin() + uLocalBase);
+						uLocalBase += vpairCoefBinValue.size();
+						#endif	// #if	!SAVEFILE_PREALLOC_COEFS
+					}
+					else
+					{
+					#endif	// #if SAVEFILE_WITH_REF
+					// ADD-BY-LEETEN 03/16/2013-END
 					vector< pair<BT, WT> > vpairCoefBinValue;
+
 					this->vcCoefPools[c]._GetCoefSparse
 					(
 						vuLocalCoefSub,
@@ -395,8 +456,23 @@ public:
 					);
 
 					pLocalCoefCounts[bc] = (TYPE_COEF_COUNT)vpairCoefBinValue.size();
+					#if	!SAVEFILE_PREALLOC_COEFS	// ADD-BY-LEETEN 03/16/2013
 					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
 					vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
+					// ADD-BY-LEETEN 03/16/2013-BEGIN
+					#else	// #if	!SAVEFILE_PREALLOC_COEFS	
+					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)(uNrOfWrittenValues + uLocalBase);
+					copy(vpairCoefBinValue.begin(), vpairCoefBinValue.end(),
+						vpairLocalCoefBinValue.begin() + uLocalBase);
+					uLocalBase += vpairCoefBinValue.size();
+					#endif	// #if	!SAVEFILE_PREALLOC_COEFS	
+					// ADD-BY-LEETEN 03/16/2013-END
+
+					// ADD-BY-LEETEN 03/16/2013-BEGIN
+					#if	SAVEFILE_WITH_REF	
+					}	
+					#endif	// #if	SAVEFILE_WITH_REF	
+					// ADD-BY-LEETEN 03/16/2013-END
 				}
 				// ADD-BY-LEETEN 12/15/2012-BEGIN
 				// write the header
@@ -634,7 +710,6 @@ public:
 				_ConvertIndexToSub(c, vuLocalCoefSub, this->vuDimLevels);
 
 				bool bIsSparse = false;
-
 				// decide the pool size
 				for(size_t d = 0; d < this->UGetNrOfDims(); d++)
 				{
@@ -648,7 +723,6 @@ public:
 				if( !uNrOfCoefsInFullArray )
 				  bIsSparse = true;
 				// ADD-BY-LEETEN 11/11/2012-END
-
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),
 					vuPoolDimLengths,

@@ -158,6 +158,7 @@ namespace WaveletSAT
 				vvFull.resize(uNrOfBins);
 				for(size_t b = 0; b < (size_t)uNrOfBins; b++)
 					vvFull[b].resize(this->uSize);
+
 			}
 			else
 			{	// ADD-BY-LEETEN 11/11/2012
@@ -179,10 +180,11 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 				#if	WITH_SPARSE_AS_VECTOR
 				this->vvpairSparse.resize(this->uSize);
-				this->vuCounts.resize(this->uSize);
+				// DEL-BY-LEETEN 03/16/2013:	this->vuCounts.resize(this->uSize);
 				#endif	// #if	WITH_SPARSE_AS_VECTOR
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
+			this->vuCounts.resize(this->uSize);	// ADD-BY-LEETEN 03/16/2013
 
 			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
@@ -398,7 +400,7 @@ namespace WaveletSAT
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 			// ADD-By-LEETEN 11/11/2012-BEGIN
 			#if	WITH_SPARSE_AS_VECTOR		
-			if( bIsSparse )
+			// DEL-BY-LEETEN 03/16/2013:	if( bIsSparse )
 				vuCounts[uIndex] += uCount;
 			#endif	// #if	WITH_SPARSE_AS_VECTOR	
 
@@ -504,6 +506,10 @@ namespace WaveletSAT
 		{
 			if(!bIsSparse)
 			{
+				// ADD-BY-LEETEN 03/16/2013-BEGIN
+				if( (WT)1.0 == WaveletWeight )
+					return;
+				// ADD-BY-LEETEN 03/16/2013-END
 				for(typename vector< vector<WT> >::iterator 
 					ivvFull = this->vvFull.begin();
 					ivvFull != this->vvFull.end();
@@ -628,6 +634,67 @@ namespace WaveletSAT
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
 		}
+
+		// ADD-BY-LEETEN 03/16/2013-BEGIN
+		const 
+		bool
+		BIsEmpty(
+			size_t uIndex,
+			void* _Reserved = NULL
+		) const
+		{
+			return (vuCounts[uIndex])?false:true;
+		}
+
+		const 
+		bool
+		BIsEmpty(
+			const vector<size_t> vuSubs,
+			void* _Reserved = NULL
+		) const
+		{
+			return BIsEmpty(UConvertSubToIndex(vuSubs, vuLengths));
+		}
+
+		virtual
+		const 
+		vector< pair<BT, WT> >&
+		VGetCoefSparse
+		(
+			size_t uIndex,
+			void* _Reserved = NULL
+		) const
+		{
+			if( !bIsSparse )
+			{
+				static vector< pair<BT, WT> > vpairCoefs;
+				vpairCoefs.clear();
+
+				for(size_t b = 0; b < this->vvFull.size(); b++)
+				{
+					WT Coef = vvFull[b][uIndex];
+					if( Coef )
+						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
+				}
+				return vpairCoefs;
+			}
+			else
+				return this->vvpairSparse[uIndex];
+		}
+		
+		virtual
+		const 
+		vector< pair<BT, WT> >&
+		VGetCoefSparse
+		(
+			const vector<size_t> vuSubs,
+			void* _Reserved = NULL
+		) const
+		{
+			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
+			return VGetCoefSparse(uIndex);
+		}
+		// ADD-BY-LEETEN 03/16/2013-END
 
 		void
 		_GetCoefSparse
