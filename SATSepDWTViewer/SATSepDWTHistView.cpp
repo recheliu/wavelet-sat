@@ -7,6 +7,8 @@
 
 #include "SATSepDWTHistView.h"
 
+using namespace WaveletSAT;	// ADD-BY-LEETEN 03/17/2013
+
 // ADD-BY-LEETEN 02/03/2013-BEGIN
 void
 CSATSepDWTHistView::
@@ -270,6 +272,7 @@ CSATSepDWTHistView::
 
 	_CompWithChild(vpairCDF, 1, vuLocalSub);
 
+	#if	0	// DEL-BY-LEETEN 03/17/2013-BEGIN
 	CSepDWTHeader *pcSepDWTHeader = (CSepDWTHeader*)&cSATSepDWTPCPView;
 	pcSepDWTHeader->_Set(
 			vuDimLengths,
@@ -277,6 +280,9 @@ CSATSepDWTHistView::
 			);
 	cSATSepDWTPCPView._SetDiffWithParent(vvdDiffWithParent);
 	cSATSepDWTPCPView.ICreate("PCP View");
+	#endif	// DEL-BY-LEETEN 03/17/2013-END
+
+	cSATSepDWTQueryView.ICreate("Query");	// ADD-BY-LEETEN 03/17/2013
 	// ADD-BY-LEETEN 02/14/2013-END
 }
 // ADD-BY-LEETEN 02/06/2013-END
@@ -302,6 +308,9 @@ CSATSepDWTHistView::
 		WaveletSAT::UConvertSubToIndex(vuWaveletSub,	vuDimLevels),
 		WaveletSAT::UConvertSubToIndex(vuLocalSub,		vuLocalCoefLengths),
 		vpairBinCoefs );
+
+	double dWeight = vvdDiffWithParent[uLevel][WaveletSAT::UConvertSubToIndex(vuLocalSub,		vuLocalCoefLengths)];	// ADD-BY-LEETEN 03/17/2013
+
 	float fSum = 0.0f;
 	for(vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator 
 			ivpairBinCoef = vpairBinCoefs.begin();
@@ -357,6 +366,8 @@ CSATSepDWTHistView::
 		// MOD-BY-LEETEN 02/14/2013-FROM:		float fY = fProb / vvdLevelBinMax[uLevel][iMinBin];
 		float fY = fProb / vdLevelBinMax[uLevel];
 		// MOD-BY-LEETEN 02/14/2013-END
+		fY *= (float)dWeight;	// ADD-BY-LEETEN 03/17/2013
+
 		glVertex2f((float)iBin, fY);
 		glVertex2f((float)iBin+1, fY);
 		#endif	// MOD-BY-LEETEN 02/06/2013-END
@@ -644,6 +655,14 @@ CSATSepDWTHistView::_InitFunc()
 	/////////////////////////////////////////////
 	// set up GLUI
 	GLUI *pcGlui = PCGetGluiSubwin();
+
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	GLUI_Panel *pcPanel_Display  = pcGlui->add_panel("Display");
+	GLUI_RadioGroup *pcRadioGroup = pcGlui->add_radiogroup_to_panel(pcPanel_Display, &iDisplay);
+		pcGlui->add_radiobutton_to_group(pcRadioGroup, "Level Histograms");
+		pcGlui->add_radiobutton_to_group(pcRadioGroup, "Parallel Coordinates");
+	// ADD-BY-LEETEN 03/17/2013-END
+
 	GLUI_Spinner* pcSpinner_MaxLevel = pcGlui->add_spinner("Max Level", GLUI_SPINNER_INT, &iMaxLevel);
 	#if	0	// DEL-BY-LEETEN 02/06/2013-BEGIN
 		// decdie the max level
@@ -759,6 +778,14 @@ CSATSepDWTHistView::_InitFunc()
 		uMaxLevel,
 		UGetNrOfBins());
 	#endif	// MOD-BY-LEETEN 02/03/2013-END
+
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	cQuery._AddGlui(
+		(CGlutWin*)this, 
+		pcGlui, 
+		NULL,
+		vuDimLengths);
+	// ADD-BY-LEETEN 03/17/2013-END
 }
 
 void 
@@ -766,6 +793,317 @@ CSATSepDWTHistView::
 	_TimerFunc(unsigned short usEvent)
 {
 }
+
+// ADD-BY-LEETEN 03/17/2013-BEGIN
+void 
+CSATSepDWTHistView::_DisplayLevelHistograms()
+{
+	glTranslatef(-1.0, -1.0, 0.0f);
+	glScalef(2.0, 2.0, 1.0f);
+	glScalef(1.0f/(float)(i2BinRange.y - i2BinRange.x), 1.0f/(float)(iMaxLevel + 1), 1.0f);
+	glTranslatef(-(float)i2BinRange.x, 0.0f, 0.0f);
+
+	////////////////////////////////////////////////////////////////
+	// plot the axis
+	for(size_t l = 0; l <= (size_t)iMaxLevel; l++)
+	{
+		glPushMatrix();
+		// MOD-BY-LEETEN 02/11/2013-FROM:		glTranslatef(0.0f, (float)iMaxLevel - l, 0.0f);
+		glTranslatef(0.0f, (float)l, 0.0f);
+		// MOD-BY-LEETEN 02/11/2013-END
+
+		// plot the axis
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_LINES);
+		glVertex2i(0, 0);
+		glVertex2i((int)UGetNrOfBins(), 0);
+		glEnd();
+
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		if( iIsShowingMaxProb )
+		{
+			char szMaxProb[1024];
+			sprintf(szMaxProb, "Prob = %f", vdLevelBinMax[l]);
+			_DrawString3D(szMaxProb, (float)i2BinRange.x, 0.88f);		
+		}
+		// ADD-BY-LEETEN 02/11/2013-END
+		glPopMatrix();
+	}
+
+	////////////////////////////////////////////////////////////////// 
+	// plot block histograms
+	// ADD-BY-LEETEN 02/11/2013-BEGIN
+	glPushAttrib(
+		GL_COLOR_BUFFER_BIT |
+		0 );
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	// ADD-BY-LEETEN 02/11/2013-END
+	vector<size_t> vuWaveletSub;
+	vuWaveletSub.assign(UGetNrOfDims(), 0);
+	vector<size_t> vuLocalSub;
+	vuLocalSub.assign(UGetNrOfDims(), 0);
+	// ADD-BY-LEETEN 02/06/2013-BEGIN
+	// reset the block colors
+	vpairBlockColors.clear();
+	// ADD-BY-LEETEN 02/06/2013-END
+	vuChildrenWithColor.clear();	// ADD-BY-LEETEN 02/10/2013
+	_RenderBlock
+		(
+			0, 
+			vuWaveletSub,
+			vuLocalSub,
+			f4DefaultColor,
+			false
+		);
+
+	// ADD-BY-LEETEN 02/10/2013-BEGIN
+	// render all blocks with its own colors from all levels here
+	vector<size_t> 
+		vuLevel, 
+		vuLocalCoefSubs,
+		vuGlobalCoefBase,
+		vuLocalCoefLengths;	// not used
+	for(size_t c = 0; c < vuChildrenWithColor.size(); c++)
+	{
+		size_t uGlobal = vuChildrenWithColor[c];
+		this->_ConvertIndexToLevels(
+			uGlobal, 
+			vuLevel, 
+			vuLocalCoefSubs, 
+			vuGlobalCoefBase,		// not used
+			vuLocalCoefLengths);	// not used
+			
+		// if this child has its own cluster, use the color of this cluster
+
+		// otherwise, use the passed colors
+		_RenderBlock(
+			vuLevel[0], 
+			vuLevel, 
+			vuLocalCoefSubs, 
+			this->vpairCoefColors[uGlobal].second,
+			// MOD-BY-LEETEN 02/11/2013-FROM:			false);
+			false,	// do not highlight
+			(iIsNotRecursive)?true:false	// not recursive
+			);
+			// MOD-BY-LEETEN 02/11/2013-END
+
+		// append the blocks with its own color to vpairBlockColors
+		float4 f4Left, f4Size;
+		float* pfLeft = (float*)&f4Left.x;
+		float* pfSize = (float*)&f4Size.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+		{
+			float fWaveletLength = (float)vuCoefLengths[d] / (float)vuLocalCoefLengths[d];
+			pfLeft[d] = (float)vuLocalCoefSubs[d] * fWaveletLength;
+			pfSize[d] = (float)fWaveletLength;
+		}
+		for(size_t d = UGetNrOfDims(); d < 4; d++)
+		{
+			pfLeft[d] = 0.0f;
+			pfSize[d] = 1.0f;
+		}
+		vpairBlockColors.push_back(
+				make_pair<pair<float4, float4>, float4>
+				(
+					make_pair<float4, float4>(f4Left, f4Size), 
+					this->vpairCoefColors[vuChildrenWithColor[c]].second
+				)
+			);
+	}
+	// ADD-BY-LEETEN 02/10/2013-END
+	glPopAttrib();
+		// GL_COLOR_BUFFER_BIT |
+	// ADD-BY-LEETEN 02/03/2013-BEGIN
+	if( cColorEditor.iIsActive )
+	{
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		// plot the current histogram as a dashed lin
+		glPushAttrib(
+			GL_LINE_BIT | 
+			0);
+		glLineWidth(4.0f);
+		glLineStipple(4, 0xCCCC);
+		glEnable(GL_LINE_STIPPLE);
+		// ADD-BY-LEETEN 02/11/2013-END
+		bool bIsValid;
+		vector<size_t> vuWaveletSub, vuLocalSub, vuGlobalSub;
+		size_t uGlobal;
+		_GetColorEditor(bIsValid, vuWaveletSub, vuLocalSub, vuGlobalSub, uGlobal);
+		if(bIsValid)
+		{
+			_RenderBlock
+			(
+				cColorEditor.iLevel, 
+				vuWaveletSub,
+				vuLocalSub,
+				cColorEditor.f4Color,
+				true
+			);
+
+			// ADD-BY-LEETEN 02/06/2013-BEGIN
+			vector<size_t> vuGlobalCoefBase, vuLocalCoefLengths;
+			this->_ConvertWaveletSubToLevels(
+				vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+
+			// append the blocks with its own color to vpairBlockColors
+			float4 f4Left, f4Size;
+			float* pfLeft = (float*)&f4Left.x;
+			float* pfSize = (float*)&f4Size.x;
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				float fWaveletLength = (float)vuCoefLengths[d] / (float)vuLocalCoefLengths[d];
+				pfLeft[d] = (float)vuLocalSub[d] * fWaveletLength;
+				pfSize[d] = (float)fWaveletLength;
+			}
+			for(size_t d = UGetNrOfDims(); d < 4; d++)
+			{
+				pfLeft[d] = 0.0f;
+				pfSize[d] = 1.0f;
+			}
+			vpairBlockColors.push_back(
+					make_pair<pair<float4, float4>, float4>
+					(
+						make_pair<float4, float4>(f4Left, f4Size), 
+						cColorEditor.f4Color
+					)
+				);
+			// ADD-BY-LEETEN 02/06/2013-END
+		}
+		// ADD-BY-LEETEN 02/11/2013-BEGIN
+		glPopAttrib();
+			// GL_LINE_BIT | 
+		// ADD-BY-LEETEN 02/11/2013-END
+	}
+	// ADD-BY-LEETEN 02/03/2013-END
+
+	////////////////////////////////////////////////////////////////
+	// plot the editing cluster
+	// MOD-BY-LEETEN 02/03/2013-FROM:	if( iIsEditingCluster )
+	if( cClusterEditor.iIsActive )
+	// MOD-BY-LEETEN 02/03/2013-END
+	{
+		glPushAttrib(
+			GL_LINE_BIT | 
+			0);
+		glLineWidth(4.0f);
+		glLineStipple(4, 0xCCCC);
+		glEnable(GL_LINE_STIPPLE);
+		glPushMatrix();
+		glTranslatef(0.0f, (float)cClusterEditor.iLevel, 0.0f);
+		// plot the lines
+		glColor4f(cClusterEditor.f4Color.x, cClusterEditor.f4Color.y, cClusterEditor.f4Color.z, 0.1f);
+		for(size_t i = 0; i < 2; i++)
+		{
+			glBegin(GL_LINE_STRIP);
+			for(size_t b = i2BinRange.x; b <= i2BinRange.y; b++)
+			{
+				float fProb = (i)?this->cClusterEditor.vf2BinRanges[b].x:cClusterEditor.vf2BinRanges[b].y;
+				fProb = max(min(fProb, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f);
+				fProb /= vdLevelBinMax[cClusterEditor.iLevel];
+				glVertex2f((float)b, fProb);
+				glVertex2f((float)b + 1.0f, fProb);
+			}
+			glEnd();
+		}
+		// ADD-BY-LEETEN 02/03/2013-BEGIN
+		// plot a rectangle to highlight the current bin
+		glDisable(GL_LINE_STIPPLE);
+		float l = (float)cClusterEditor.iBin;
+		float r = l + 1.0f;
+		float b = cClusterEditor.f2Prob.x;
+		float t = cClusterEditor.f2Prob.y;
+		b = max(min(b, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f) / vdLevelBinMax[cClusterEditor.iLevel];
+		t = max(min(t, (float)vdLevelBinMax[cClusterEditor.iLevel]), 0.0f) / vdLevelBinMax[cClusterEditor.iLevel];
+		glBegin(GL_LINE_STRIP);
+		glVertex2f(l, b);
+		glVertex2f(r, b);
+		glVertex2f(r, t);
+		glVertex2f(l, t);
+		glVertex2f(l, b);
+		glEnd();
+		// ADD-BY-LEETEN 02/03/2013-END
+		glPopMatrix();
+		glPopAttrib(
+			// GL_LINE_BIT
+		);
+	}
+}
+
+void
+CSATSepDWTHistView::
+_RenderPolylines
+(
+	double dParentDist,
+	size_t uLevel,
+	size_t uLocalCoef,
+	vector<size_t>& vuLocalCoefLengths,
+	void* _Reserved
+)
+{
+	double dDist = this->vvdDiffWithParent[uLevel][uLocalCoef];
+	glBegin(GL_LINES);
+	glVertex2d((double)uLevel - 1,	dParentDist);
+	glVertex2d((double)uLevel,		dDist);
+	glEnd();
+	if( this->iMaxLevel == uLevel )
+		return;
+
+	vector<size_t> vuLocalSub;
+	_ConvertIndexToSub(uLocalCoef, vuLocalSub, vuLocalCoefLengths);
+
+	vector<size_t> vuChildLocalCoefLengths;
+	vuChildLocalCoefLengths.assign(vuLocalCoefLengths.begin(), vuLocalCoefLengths.end());
+	for(size_t d = 0; d < UGetNrOfDims(); d++)
+		vuChildLocalCoefLengths[d] *= 2;
+	size_t uNrOfChildren = 1 << UGetNrOfDims();
+	vector<size_t> vuChildVol;
+	vuChildVol.assign(UGetNrOfDims(), 2);
+	vector<size_t> vuChildSub;
+	for(size_t c = 0; c < uNrOfChildren; c++)
+	{
+		_ConvertIndexToSub(c, vuChildSub, vuChildVol);
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+			vuChildSub[d] += vuLocalSub[d] * 2;
+		_RenderPolylines(
+			dDist,
+			uLevel + 1,
+			UConvertSubToIndex(vuChildSub, vuChildLocalCoefLengths),
+			vuChildLocalCoefLengths);
+	}
+}
+
+void
+CSATSepDWTHistView::
+	_DisplayParallelCoordinates()
+{
+	// scale the coordinate sysm s.t. the range of X axis is [-1, uMaxLevel] 
+	size_t uNrOfLevels = this->iMaxLevel + 1;
+	glTranslatef(-1.0f, -1.0f, 0.0f);
+	glScalef(2.0f/(float)(this->iMaxLevel + 2), 2.0f, 1.0f);
+	glTranslatef(+1.0f, 0.0f, 0.0f);
+
+	// plot the axis
+	glBegin(GL_LINES);
+	glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
+	for(size_t l = 0; l < uNrOfLevels; l++)
+	{
+		glVertex2f((float)l, 0.0f);
+		glVertex2f((float)l, 1.0f);
+	}
+	glEnd();
+
+	vector<size_t> vuLocalCoefLengths;
+	vuLocalCoefLengths.assign(UGetNrOfDims(), 1);
+	_RenderPolylines(
+		0.0,
+		1,
+		0,
+		vuLocalCoefLengths
+	);
+
+}
+// ADD-BY-LEETEN 03/17/2013-END
 
 void 
 CSATSepDWTHistView::_DisplayFunc()
@@ -782,6 +1120,7 @@ CSATSepDWTHistView::_DisplayFunc()
 	glPushMatrix();
 	glLoadIdentity();
 
+	#if	0	// MOD-BY-LEETEN 03/17/2013-FROM:
 	glTranslatef(-1.0, -1.0, 0.0f);
 	glScalef(2.0, 2.0, 1.0f);
 	#if	0	// MOD-BY-LEETEN 02/14/2013-FROM:
@@ -1056,8 +1395,18 @@ CSATSepDWTHistView::_DisplayFunc()
 		glPopAttrib(
 			// GL_LINE_BIT
 		);
+	}	
+	#else	// MOD-BY-LEETEN 03/17/2013-TO:
+	switch(iDisplay)
+	{
+	case DISPLAY_LEVEL_HISTOGRAMS:
+		_DisplayLevelHistograms();
+		break;
+	case DISPLAY_PARALLEL_COORDINATES:
+		_DisplayParallelCoordinates();
+		break;
 	}
-
+	#endif	// MOD-BY-LEETEN 03/17/2013-END
 	// restore the coordinate system back
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -1129,6 +1478,39 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 {
 	switch(usValue)
 	{
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	case GLUI_EVENT_QUERY_REGION:
+	{
+		if( !cQuery.iIsActive )
+			return;
+	}
+	case GLUI_EVENT_QUERY:
+	{
+		LIBCLOCK_INIT(cQuery.iIsPrintingTiming, "GLUI_EVENT_QUERY");
+		LIBCLOCK_BEGIN(cQuery.iIsPrintingTiming);
+		vector<size_t> vCorner0, vCorner1;
+		vCorner0.resize(UGetNrOfDims());
+		vCorner1.resize(UGetNrOfDims());
+		int *piLocation =	&cQuery.i4Location.x;
+		int *piSize =		&cQuery.i4Size.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++){
+			vCorner0[d] = min(max(piLocation[d], 0), (int)vuDimLengths[d] - 1);
+			vCorner1[d] = min(max(piLocation[d] + piSize[d], 0), (int)vuDimLengths[d] - 1);
+		}
+
+		vector<WaveletSAT::typeSum> vdH;
+		vdH.resize(uNrOfBins);
+		_GetRegionSums(vCorner0, vCorner1, vdH);
+		LIBCLOCK_END(cQuery.iIsPrintingTiming);
+
+		LIBCLOCK_BEGIN(cQuery.iIsPrintingTiming);
+		// pass the queried histogrm to the histogram window
+		cSATSepDWTQueryView._SetHistgroam(vdH);
+
+		LIBCLOCK_END(cQuery.iIsPrintingTiming);
+		LIBCLOCK_PRINT(cQuery.iIsPrintingTiming);
+	} break;
+	// ADD-BY-LEETEN 03/17/2013-END
 	// ADD-BY-LEETEN 02/14/2013-BEGIN
 	case GLUI_EVENT_BIN_RANGE:
 	{
@@ -1195,6 +1577,8 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 		vector<size_t> vuLocalSub;
 		for(size_t c = 0; c < uNrOfChildren; c++)
 		{
+			double dWeight = vvdDiffWithParent[cClusterEditor.iLevel][c];	// ADD-BY-LEETEN 03/17/2013
+
 			WaveletSAT::_ConvertIndexToSub(c, vuLocalSub, vuLocalCoefLengths);
 			vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > > vpairBinCoefs;
 			_GetCoefSparse( 
@@ -1225,6 +1609,7 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 						ivpairBinCoef++;
 					}
 				}
+				fProb *= (float)dWeight;	// ADD-BY-LEETEN 03/17/2013
 
 				if( fProb < cClusterEditor.vf2BinRanges[b].x || fProb > cClusterEditor.vf2BinRanges[b].y )
 				{

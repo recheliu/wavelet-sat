@@ -8,6 +8,8 @@
 
 #define	WITH_UNORDERED_MAP		1	// ADD-By-LEETEN 02/19/2013
 
+#include	<algorithm>	// ADD-BY-LEETEN 03/17/2013
+
 #if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
 #include <map>	
 // ADD-By-LEETEN 02/19/2013-BEGIN

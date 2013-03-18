@@ -31,8 +31,12 @@ _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 	// vpairBoxColor
 
 	// MOD-BY-LEETEN 02/14/2013-FROM:	if( cSATSepDWTHistView.IGetId() == iWid )
+	#if	0	// MOD-BY-LEETEN 03/17/2013-FROM:
 	if( cSATSepDWTHistView.IGetId() == iWid ||
 		cSATSepDWTHistView.cSATSepDWTPCPView.IGetId() == iWid )
+	#else	// MOD-BY-LEETEN 03/17/2013-TO:
+	if( cSATSepDWTHistView.IGetId() == iWid )
+	#endif	// MOD-BY-LEETEN 03/17/2013-END
 	// MOD-BY-LEETEN 02/14/2013-END
 	{
 		switch(uiCbId)	{

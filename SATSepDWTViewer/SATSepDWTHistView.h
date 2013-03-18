@@ -6,7 +6,9 @@
 
 #include "SATSepDWT.h"
 
-#include "SATSepDWTPCPView.h"	// ADD-BY-LEETEN 02/14/2013
+// DEL-BY-LEETEN 03/17/2013:	#include "SATSepDWTPCPView.h"	// ADD-BY-LEETEN 02/14/2013
+
+#include "SATSepDWTQueryView.h"	// ADD-BY-LEETEN 03/17/2013
 
 struct 
 CSATSepDWTHistView:	
@@ -14,6 +16,13 @@ CSATSepDWTHistView:
 	virtual public CGlutWin
 {
 protected:
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	enum {
+		DISPLAY_LEVEL_HISTOGRAMS,
+		DISPLAY_PARALLEL_COORDINATES,
+	};
+	// ADD-BY-LEETEN 03/17/2013-END
+
 	enum {
 		// event for GLUI
 		GLUI_EVENT_BASE = 0x901,
@@ -33,6 +42,11 @@ protected:
 		GLUI_EVENT_CLUSTER_RESET,		
 		GLUI_EVENT_CLUSTER_RESET_PROB,
 		// ADD-BY-LEETEN 02/03/2013-END
+
+		// ADD-BY-LEETEN 03/17/2013-BEGIN
+		GLUI_EVENT_QUERY,
+		GLUI_EVENT_QUERY_REGION,
+		// ADD-BY-LEETEN 03/17/2013-END
 
 		GLUI_EVENTS_MAX_ID	
 	};
@@ -214,6 +228,65 @@ protected:
 	} cClusterEditor;
 	#endif	// MOD-BY-LEETEN 02/03/2013-END
 
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	//! The data structure for query
+	struct CQuery {
+		int iIsActive;
+		int iIsPrintingTiming;
+		int4 i4Location;
+		int4 i4Size;
+
+		void
+		_AddGlui(
+			CGlutWin* pcWin, 
+			GLUI *pcGlui, 
+			GLUI_Panel* pcParentPanel,
+			const vector<size_t>& vuDimLengths,
+			void *_Reserved = NULL)
+		{
+			GLUI_Panel *pcPanel = NULL;
+			if(!pcParentPanel)
+				pcPanel = pcGlui->add_rollout("Query", 0);
+			else
+				pcPanel = pcGlui->add_rollout_to_panel(pcParentPanel, "Query", 0);
+
+			GLUI_Panel *pcPanel_Region = pcGlui->add_panel_to_panel(pcPanel, "Region");
+
+			//! If this is checked, the reqion will be queried actively
+			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive);	
+
+			//! If this is checked, the query time will be printed
+			pcGlui->add_checkbox_to_panel(pcPanel, "Print Timing?", &iIsPrintingTiming);	
+
+			static char* pszAxes[] = {"X", "Y", "Z"};
+
+			GLUI_Panel *pcPanel_Location = pcGlui->add_panel_to_panel(pcPanel_Region, "Location");
+			int *piLocation = &i4Location.x;
+			for(int c = 0; c < min(vuDimLengths.size(), sizeof(pszAxes)/sizeof(pszAxes[0])); c++)
+			{
+				GLUI_Spinner* pcSpinner = 
+					pcGlui->add_spinner_to_panel(pcPanel_Location, pszAxes[c], GLUI_SPINNER_INT, &piLocation[c], 
+					pcWin->IAddWid(GLUI_EVENT_QUERY_REGION), CGlutWin::_GluiCB_static);
+				pcSpinner->set_int_limits((int)0, (int)vuDimLengths[c] - 1);
+			}
+
+			GLUI_Panel *pcPanel_Size = pcGlui->add_panel_to_panel(pcPanel_Region, "Size");
+			int *piSize = &i4Size.x;
+			for(int c = 0; c < min(vuDimLengths.size(), sizeof(pszAxes)/sizeof(pszAxes[0])); c++)
+			{
+				GLUI_Spinner* pcSpinner = 
+					pcGlui->add_spinner_to_panel(pcPanel_Size, pszAxes[c], GLUI_SPINNER_INT, &piSize[c], 
+					pcWin->IAddWid(GLUI_EVENT_QUERY_REGION), CGlutWin::_GluiCB_static);
+				pcSpinner->set_int_limits((int)0, (int)vuDimLengths[c] - 1);
+			}
+
+			pcGlui->add_button_to_panel(pcPanel, "Query", 
+				pcWin->IAddWid(GLUI_EVENT_QUERY), CGlutWin::_GluiCB_static);
+		}
+
+	} cQuery;
+	// ADD-BY-LEETEN 03/17/2013-END
+
 	#if	0	// DEL-BY-LEETEN 02/03/2013-BEGIN
 	//! Arrays of cluster
 	/*! To simplify the program, each level has its own cluster
@@ -291,15 +364,32 @@ protected:
 	);
 
 	void
-	CSATSepDWTHistView::
+	// DEL-BY-LEETEN 03/17/2013:	CSATSepDWTHistView::
 		_CompMaxProb
 	(
 		void	*_Reserved = NULL
 	);
 	// ADD-BY-LEETEN 02/14/2013-END
+	// ADD-BY-LEETEN 03/17/2013-BEGIN
+	int iDisplay;
+	void _DisplayLevelHistograms();
+	void _DisplayParallelCoordinates();
+
+	void
+	_RenderPolylines
+	(
+		double dParentDist,
+		size_t uLevel,
+		size_t uLocalCoef,
+		vector<size_t>& vuLocalCoefLengths,
+		void* _Reserved = NULL
+	);
+	// ADD-BY-LEETEN 03/17/2013-END
 public:
 
-	CSATSepDWTPCPView cSATSepDWTPCPView;	// ADD-BY-LEETEN 02/14/2013
+	// DEL-BY-LEETEN 03/17/2013:	CSATSepDWTPCPView cSATSepDWTPCPView;	// ADD-BY-LEETEN 02/14/2013
+
+	CSATSepDWTQueryView cSATSepDWTQueryView;	// ADD-BY-LEETEN 03/17/2013
 
 	// ADD-BY-LEETEN 02/06/2013-BEGIN
 	enum {
