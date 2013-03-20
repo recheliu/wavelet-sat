@@ -137,7 +137,9 @@ CSATSepDWTHistView::
 {
 	vector<size_t> vuLevel, vuLocalCoefSub, vuGlobalCoefBase, vuLocalCoefLengths;
 	vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> > vpairCoefBinValues;
-	vdLevelBinMax.assign(this->uMaxLevel, (double)-HUGE_VAL);
+	// MOD-BY-LEETEN 03/19/2013-FROM:	vdLevelBinMax.assign(this->uMaxLevel, (double)-HUGE_VAL);
+	vdLevelBinMax.assign(this->uMaxLevel + 1, (double)-HUGE_VAL);
+	// MOD-BY-LEETEN 03/19/2013-END
 	for(size_t l = 0; l <= this->uMaxLevel; l++)
 	{
 		vuLevel.assign(UGetNrOfDims(), l);
@@ -1509,6 +1511,41 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 
 		LIBCLOCK_END(cQuery.iIsPrintingTiming);
 		LIBCLOCK_PRINT(cQuery.iIsPrintingTiming);
+		// ADD-BY-LEETEN 03/19/2013-BEGIN
+		vpairBlockColors.clear();
+
+		float4 f4Left, f4Size;
+		float* pfLeft = (float*)&f4Left.x;
+		float* pfSize = (float*)&f4Size.x;
+		int* piLeft = (int*)&cQuery.i4Location.x;
+		int* piSize = (int*)&cQuery.i4Size.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+		{
+			pfLeft[d] = (float)piLeft[d];
+			pfSize[d] = (float)piSize[d];
+		}
+
+		for(size_t d = UGetNrOfDims(); d < 4; d++)
+		{
+			pfLeft[d] = 0.0f;
+			pfSize[d] = 1.0f;
+		}
+		vpairBlockColors.push_back(
+				make_pair<pair<float4, float4>, float4>
+				(
+					make_pair<float4, float4>(f4Left, f4Size), 
+					this->cColorEditor.f4Color
+				)
+			);
+
+		CGlutWin::_GlobalCB(
+			IGetId(), 
+			CGlutWin::CB_MANUAL, 
+			EVENT_PLOTTING_BOX, 
+			1,
+			(vector< pairBlockColor >*)&vpairBlockColors,
+			NULL);		
+	// ADD-BY-LEETEN 03/19/2013-END
 	} break;
 	// ADD-BY-LEETEN 03/17/2013-END
 	// ADD-BY-LEETEN 02/14/2013-BEGIN
