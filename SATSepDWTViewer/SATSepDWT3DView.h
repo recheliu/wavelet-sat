@@ -55,9 +55,27 @@ protected:
 	// ADD-BY-LEETEN 02/05/2013-END
 	#endif	// DEL-BY-LEETEN 02/10/2013-END
 
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	// The modelview matrix after the scaling
+	TMatrix tModifiedModelviewMatrix;
+
+	struct {
+		bool bActive;
+		double pdViewRayStep_obj[3];
+		double pdCoord_obj[3];
+	} cCursor3D;
+	// ADD-BY-LEETEN 03/20/2013-END
 	vector< pairBlockColor > vpairBlockColors;	// ADD-BY-LEETEN 02/06/2013
 
 public:
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	enum {
+		// event for GLUI
+		EVENT_BASE = 0x900,
+		EVENT_CURSOR_3D,
+	};
+	// ADD-BY-LEETEN 03/20/2013-END
+
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
 	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
 	vector<float4> vf4TransFunc;

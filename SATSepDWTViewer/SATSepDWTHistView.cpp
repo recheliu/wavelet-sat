@@ -609,6 +609,12 @@ CSATSepDWTHistView::_IdleFunc()
 			NULL);		
 	}
 	// ADD-BY-LEETEN 02/06/2013-END
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	if( cQuery.iIsActive )
+	{
+		_GluiFunc(GLUI_EVENT_QUERY);
+	}
+	// ADD-BY-LEETEN 03/20/2013-END
 }
 
 void 
@@ -1544,7 +1550,7 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 			EVENT_PLOTTING_BOX, 
 			1,
 			(vector< pairBlockColor >*)&vpairBlockColors,
-			NULL);		
+			NULL);	
 	// ADD-BY-LEETEN 03/19/2013-END
 	} break;
 	// ADD-BY-LEETEN 03/17/2013-END

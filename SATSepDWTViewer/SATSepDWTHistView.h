@@ -398,6 +398,20 @@ public:
 	};
 	// ADD-BY-LEETEN 02/06/2013-END
 
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	virtual 
+	void
+	_SetQueryLocation(
+		int4 i4Location,
+		void *_Reversed = NULL)
+	{
+		int* piSrc = &i4Location.x;
+		int* piDst = &cQuery.i4Location.x;
+		for(size_t d = 0; d < UGetNrOfDims(); d++)
+			piDst[d] = piSrc[d];
+	}
+	// ADD-BY-LEETEN 03/20/2013-END
+
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	virtual 
 	void

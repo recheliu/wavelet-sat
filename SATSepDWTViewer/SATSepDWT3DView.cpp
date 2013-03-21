@@ -162,6 +162,36 @@ void
 CSATSepDWT3DView::_IdleFunc()
 {
 	CDvrSuiteWin::_IdleFunc();	// ADD-BY-LEETEN 02/10/2013
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	if( cCursor3D.bActive )
+	{
+		double pdTempCoord3D_obj[3];
+
+		for(int i = 0; i < 3; i++)
+			pdTempCoord3D_obj[i] = 
+				cCursor3D.pdCoord_obj[i] + 
+				cCursor3D.pdViewRayStep_obj[i] * (double)(iCursorY - iBeginY) / (double)piViewport[3];
+
+		if( -1.0 <= pdTempCoord3D_obj[0] && pdTempCoord3D_obj[0] <= 1.0 &&
+			-1.0 <= pdTempCoord3D_obj[1] && pdTempCoord3D_obj[1] <= 1.0 &&
+			-1.0 <= pdTempCoord3D_obj[2] && pdTempCoord3D_obj[2] <= 1.0 )
+		{
+			for(int i = 0; i < 3; i++)
+				cCursor3D.pdCoord_obj[i] = pdTempCoord3D_obj[i];
+
+			int4 i4Location = make_int4(
+				(int)((double)iXDim * (cCursor3D.pdCoord_obj[0] + 1.0)/2.0),
+				(int)((double)iYDim * (cCursor3D.pdCoord_obj[1] + 1.0)/2.0),
+				(int)((double)iZDim * (cCursor3D.pdCoord_obj[2] + 1.0)/2.0),
+				1.0);
+			CGlutWin::_GlobalCB(
+				IGetId(), 
+				CGlutWin::CB_MANUAL, 
+				EVENT_CURSOR_3D, 
+				i4Location);
+		}
+	} // if(bMoving)
+	// ADD-BY-LEETEN 03/20/2013-END
 }
 
 void 
@@ -174,6 +204,105 @@ CSATSepDWT3DView::_MouseFunc
 	)
 {
 	CDvrSuiteWin::_MouseFunc(button, state, x, y);	// ADD-BY-LEETEN 02/10/2013
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	switch(button) 
+	{
+	case GLUT_MIDDLE_BUTTON: // pan
+		cCursor3D.bActive = false;
+		if( GLUT_DOWN == state ) 
+		{
+			switch( eModifier & ~GLUT_ACTIVE_ALT )
+			{
+			case 0:
+				{
+					TMatrix tModelViewMatrix;
+
+					glPushMatrix();
+						glLoadIdentity();
+						glMultMatrixd(tModifiedModelviewMatrix);
+						glGetDoublev(GL_MODELVIEW_MATRIX, tModelViewMatrix);
+					glPopMatrix();
+
+					double pdNearCoord_obj[3];
+					double pdFarCoord_obj[3];
+
+					gluUnProject(
+						(double)iBeginX + 0.5, (double)iBeginY + 0.5, 0.0, 
+						tModelViewMatrix, tProjectionMatrix, piViewport, 
+						&pdNearCoord_obj[0], &pdNearCoord_obj[1], &pdNearCoord_obj[2]);
+					
+					gluUnProject(
+						(double)iBeginX + 0.5, (double)iBeginY + 0.5, +1.0, 
+						tModelViewMatrix, tProjectionMatrix, piViewport, 
+						&pdFarCoord_obj[0], &pdFarCoord_obj[1], &pdFarCoord_obj[2]);
+
+					double *pdViewRayOrigin_obj = pdNearCoord_obj;
+					double pdViewRayDir_obj[3];
+					for(int i = 0; i < 3; i++)
+						pdViewRayDir_obj[i] = pdFarCoord_obj[i] - pdNearCoord_obj[i];
+
+					double dMinT = HUGE_VAL;
+					double dMaxT = -HUGE_VAL;
+					bool bIntersectBox = false;
+					for(int i = 0; i < 3; i++)	// direction x, y, or z
+					{
+						if( pdViewRayDir_obj[i] != 0.0 )
+						{
+							double t;
+							for(int j = 0; j < 2; j++)	// +1 or -1
+							{
+								double w = (double)(j * 2 - 1);	// convert j to +1/-1
+
+								t = (w - pdViewRayOrigin_obj[i]) / pdViewRayDir_obj[i];
+
+								bool bOutsideFace = false;
+								for(int k = 0; k < 3; k++)
+									if( k != i )
+									{
+										double dCoord_obj = pdViewRayOrigin_obj[k] + t * pdViewRayDir_obj[k];
+										if( -1.0 > dCoord_obj || dCoord_obj > 1.0 )
+										{
+											bOutsideFace = true;
+											break;
+										}
+									}
+
+								if( false == bOutsideFace )
+								{
+									bIntersectBox = true;
+									dMinT = min(dMinT, t);
+									dMaxT = max(dMaxT, t);
+								}
+							} // for j 
+						} // if
+					} // for i
+					dMinT = max(dMinT, 0.0);
+					
+					if( true == bIntersectBox )
+					{
+						double dNrOfSteps = 
+							(double)(iXDim * iXDim + iYDim * iYDim + iZDim * iZDim);
+						dNrOfSteps = sqrt(dNrOfSteps);
+						dNrOfSteps /= 10;	// TMP-ADD
+
+						for(int i = 0 ; i < 3; i++ )
+						{
+							double dEnterCoord	= pdViewRayOrigin_obj[i] + dMinT * pdViewRayDir_obj[i];
+							double dExitCoord	= pdViewRayOrigin_obj[i] + dMaxT * pdViewRayDir_obj[i];
+
+							cCursor3D.pdViewRayStep_obj[i] = (dExitCoord - dEnterCoord) / dNrOfSteps;
+							cCursor3D.pdCoord_obj[i] = dEnterCoord;
+						}
+
+						cCursor3D.bActive = true;
+					}
+				}
+				break;
+			}
+		}
+		break;
+	} // switch(eMouseButton) 
+	// ADD-BY-LEETEN 03/20/2013-END
 }
 
 void 
@@ -429,6 +558,8 @@ CSATSepDWT3DView::
 	#else	// MOD-BY-LEETEN 02/10/2013-TO:
 	CDvrSuiteWin::_BeginDisplay();
 	#endif	// MOD-BY-LEETEN 02/10/2013-END
+
+	glGetDoublev(GL_MODELVIEW_MATRIX, tModifiedModelviewMatrix);	// ADD-BY-LEETEN 03/20/2013
 }
 
 void 

@@ -66,6 +66,24 @@ _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 		}
 	}
 	// ADD-BY-LEETEN 02/06/2013-END
+	// ADD-BY-LEETEN 03/20/2013-BEGIN
+	if( cSATSepDWT3DView.IGetId() == iWid )
+	{
+		switch(uiCbId)	{
+		case CGlutWin::CB_MANUAL:	// not a default GlutWin event
+		{
+			unsigned int uEvent = va_arg(vaArgs, unsigned int);
+			switch(uEvent)	{
+			case CSATSepDWT3DView::EVENT_CURSOR_3D:
+			{
+				int4 i4Location = va_arg(vaArgs, int4);
+				cSATSepDWTHistView._SetQueryLocation(i4Location);
+			} break;
+			}
+		} break;
+		}
+	}
+	// ADD-BY-LEETEN 03/20/2013-END
 }
 
 int
