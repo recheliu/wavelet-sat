@@ -8,10 +8,22 @@
 
 // namespace po = boost::program_options;
 
+#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 typedef float typeData;
+// ADD-BY-LEETEN 03/29/2013-BEGIN
+#else	// #if	!WITH_DOUBLE_COEF
+typedef double typeData;
+#endif	// #if	!WITH_DOUBLE_COEF
+// ADD-BY-LEETEN 03/29/2013-END
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
+#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 CSimpleND<typeData, float, WaveletSAT::typeBin, float> cSimpleND;
+// ADD-BY-LEETEN 03/29/2013-BEGIN
+#else	// #if	!WITH_DOUBLE_COEF	
+CSimpleND<typeData, typeData, WaveletSAT::typeBin, typeData> cSimpleND;
+#endif	// #if	!WITH_DOUBLE_COEF
+// ADD-BY-LEETEN 03/29/2013-END
 vector<typeData> vdData;
 vector<size_t> vuDimLengths;
 size_t uNrOfValues;

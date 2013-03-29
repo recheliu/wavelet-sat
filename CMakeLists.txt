@@ -12,6 +12,12 @@ PROJECT(WaveletSAT)
 set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
+# ADD-BY-LEETEN 03/29/2013-BEGIN
+set(WITH_DOUBLE_COEF	ON		CACHE BOOL "Is the coefficients stored in double precision?")	
+if( WITH_DOUBLE_COEF )
+	add_definitions(-DWITH_DOUBLE_COEF=1)
+endif()
+# ADD-BY-LEETEN 03/29/2013-END
 include_directories(
 	${LIB_DIR}/include
 	${MYLIB_DIR}/include

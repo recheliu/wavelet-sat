@@ -7,6 +7,14 @@ using namespace std;
 #include "cuda_macro.h"
 #include "CudaDWT.h"
 
+// ADD-BY-LEETEN 03/29/2013-BEGIN
+#if	WITH_DOUBLE_COEF
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#endif	// #if	WITH_DOUBLE_COEF	
+// ADD-BY-LEETEN 03/29/2013-END
+
 inline const char* SZGetCudppError(const CUDPPResult result)
 {
 	switch(result)
@@ -82,8 +90,10 @@ namespace CudaDWT
 			FREE_MEMORY(puNrOfCompactedKeys_device);
 
 			// free cudpp resources
+			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			if( planSort )
 				ASSERT_CUDPP(cudppDestroyPlan(planSort));  
+			#endif	// #if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			if( planSegScanCoefs )
 				ASSERT_CUDPP(cudppDestroyPlan(planSegScanCoefs));
 			if( planCompactCoefs )
@@ -120,19 +130,32 @@ namespace CudaDWT
 
 		size_t uMaxNrOfElementsOnTheDevice = *puMaxNrOfElementsOnTheDevice;
 
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		configSort.op = CUDPP_ADD;
 		configSort.datatype = CUDPP_UINT;
 		configSort.algorithm = CUDPP_SORT_RADIX;
 		configSort.options = CUDPP_OPTION_KEY_VALUE_PAIRS;
 		ASSERT_CUDPP(cudppPlan(theCudpp, &planSort, configSort, uMaxNrOfElementsOnTheDevice, 1, 0));  
-
+		#endif	// #if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		configSegScanCoefs.op = CUDPP_ADD;
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		configSegScanCoefs.datatype = CUDPP_FLOAT;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		configSegScanCoefs.datatype = CUDPP_DOUBLE;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		configSegScanCoefs.algorithm = CUDPP_SEGMENTED_SCAN;
 		configSegScanCoefs.options = CUDPP_OPTION_BACKWARD | CUDPP_OPTION_INCLUSIVE;
 		ASSERT_CUDPP(cudppPlan(theCudpp, &planSegScanCoefs, configSegScanCoefs, uMaxNrOfElementsOnTheDevice, 1, 0));
 
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		configCompactCoefs.datatype = CUDPP_FLOAT;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF	
+		configCompactCoefs.datatype = CUDPP_DOUBLE;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		configCompactCoefs.algorithm = CUDPP_COMPACT;
 		configCompactCoefs.options = CUDPP_OPTION_FORWARD;
 		ASSERT_CUDPP(cudppPlan(theCudpp, &planCompactCoefs, configCompactCoefs, uMaxNrOfElementsOnTheDevice, 1, 0));
@@ -198,7 +221,13 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		const float			pfValues[],
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		const double		pfValues[],
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
 		void* _Reserved
 	)
@@ -251,7 +280,13 @@ namespace CudaDWT
 		size_t				*puNrOfElements,
 		#if		!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 		unsigned int		puKeys_host[],
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float				pfCoefs_host[],
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		double				pfCoefs_host[],
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		#else	// #if		!WITH_CUDA_MALLOC_HOST
 		unsigned int		puKeys[],
@@ -308,11 +343,19 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/13/2013-END
 		// sort the wavelet projection according to the key composed by the bin and local subscripts
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		ASSERT_CUDPP(cudppSort(
 			planSort,				
 			&puKeys_device[0],		
 			&pfCoefs_device[0],
 			uNrOfElements));
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		thrust::device_ptr<unsigned int> vKeys_device(puKeys_device);
+		thrust::device_ptr<double> vCoefs_device(pfCoefs_device);
+		thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 		}	// ADD-BY-LEETEN 01/13/2013
 

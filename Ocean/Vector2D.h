@@ -5,11 +5,23 @@
 template<
 	typename DT = WaveletSAT::typeBin,		//!< Type of the data. Here the data is the bin
 	// MOD-BY-LEETEN 03/16/2013-FROM:	typename ST = WaveletSAT::typeSum,		//!< Type of the sum
+	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 	typename ST = float,		//!< Type of the sum
+	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#else	// #if	!WITH_DOUBLE_COEF
+	typename ST = double,		//!< Type of the sum
+	#endif	// #if	!WITH_DOUBLE_COEF
+	// ADD-BY-LEETEN 03/29/2013-END
 	// MOD-BY-LEETEN 03/16/2013-END
 	typename BT = WaveletSAT::typeBin,		//!< Type of the bin
 	// MOD-BY-LEETEN 03/16/2013-FROM:	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
-	typename WT = float						//!< Type of the wavelet coefficientsd
+	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
+	typename WT = float						//!< Type of the wavelet coefficients
+	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#else	// #if	!WITH_DOUBLE_COEF
+	typename WT = double					//!< Type of the wavelet coefficients
+	#endif	// #if	!WITH_DOUBLE_COEF
+	// ADD-BY-LEETEN 03/29/2013-END
 	// MOD-BY-LEETEN 03/16/2013-END
 >
 class CVector2D:

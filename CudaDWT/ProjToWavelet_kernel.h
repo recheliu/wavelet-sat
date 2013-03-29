@@ -7,11 +7,23 @@ void
 _ProjToWavelet_kernel
 (
 	const uint4 pu4BinSub_device[],	// the tuples of <bin, data_subscripts> of all elements
+	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 	const float pfCounts_device[],	// the counts of all elements
+	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#else	// #if	!WITH_DOUBLE_COEF
+	const double pfCounts_device[],	// the counts of all elements
+	#endif	// #if	!WITH_DOUBLE_COEF
+	// ADD-BY-LEETEN 03/29/2013-END
 	const unsigned int uNrOfDims, 
 	const unsigned int uNrOfElements,
 	unsigned int puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
+	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 	float pfCoefs_device[]				// output: the wavelet projection of the current wavelet 
+	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#else	// #if	!WITH_DOUBLE_COEF
+	double pfCoefs_device[]				// output: the wavelet projection of the current wavelet 
+	#endif	// #if	!WITH_DOUBLE_COEF
+	// ADD-BY-LEETEN 03/29/2013-END
 )
 {
 	/*
@@ -26,7 +38,13 @@ _ProjToWavelet_kernel
 	if( uElement < uNrOfElements )
 	{
 		uint4 u4BinSub = pu4BinSub_device[uElement];
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float fCount = pfCounts_device[uElement];
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		double fCount = pfCounts_device[uElement];
+		#endif	// #if	!WITH_DOUBLE_COEF	
+		// ADD-BY-LEETEN 03/29/2013-END
 
 		unsigned int uKey = u4BinSub.x;
 		unsigned int* puSub = &u4BinSub.y;
@@ -54,7 +72,13 @@ _ProjToWavelet_kernel
 			uKey += uSub / w;
 		}
 
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		pfCoefs_device[uElement] = fCount * (float)iWavelet;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		pfCoefs_device[uElement] = fCount * (double)iWavelet;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		puKeys_device[uElement] = uKey;
 	}
 }

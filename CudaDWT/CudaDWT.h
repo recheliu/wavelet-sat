@@ -49,8 +49,10 @@ namespace CudaDWT
 		// CUDPP handles
 		CUDPPHandle theCudpp;
 
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		CUDPPConfiguration configSort;
 		CUDPPHandle planSort;
+		#endif	// #if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 
 		CUDPPConfiguration configSegScanCoefs;
 		CUDPPHandle planSegScanCoefs;
@@ -65,12 +67,26 @@ namespace CudaDWT
 
 		//
 		uint4 *pu4BinSub_device;
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float* pfValues_device;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF	
+		double* pfValues_device;
+		#endif	// #if	!WITH_DOUBLE_COEF	
+		// ADD-BY-LEETEN 03/29/2013-END
 		unsigned int* puKeys_device;
 		unsigned int* puiSegFlags_device;
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float* pfCoefs_device;
 		float* pfCoefSums_device;
 		float* pfCompactedCoefs_device;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		double* pfCoefs_device;
+		double* pfCoefSums_device;
+		double* pfCompactedCoefs_device;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		unsigned int* puCompactedKeys_device;
 
 		// ADD-BY-LEETEN 01/13/2013-BEGIN
@@ -123,7 +139,13 @@ namespace CudaDWT
 			// ADD-BY-LEETEN 01/18/2012-END
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
+			#if	!WITH_DOUBLE_COEF				// ADD-BY-LEETEN 03/29/2013
 			const float			pfValues[],
+			// ADD-BY-LEETEN 03/29/2013-BEGIN
+			#else	// #if	!WITH_DOUBLE_COEF
+			const double			pfValues[],
+			#endif	// #if	!WITH_DOUBLE_COEF
+			// ADD-BY-LEETEN 03/29/2013-END
 			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		);
@@ -139,7 +161,13 @@ namespace CudaDWT
 			size_t				*puNrOfElements,
 			#if	!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 			unsigned int		puKeys_host[],
+			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			float				pfCoefs_host[],
+			// ADD-BY-LEETEN 03/29/2013-BEGIN
+			#else	// #if	!WITH_DOUBLE_COEF
+			double				pfCoefs_host[],
+			#endif	// #if	!WITH_DOUBLE_COEF
+			// ADD-BY-LEETEN 03/29/2013-END
 			// ADD-BY-LEETEN 01/11/2013-BEGIN
 			#else	// #if	!WITH_CUDA_MALLOC_HOST
 			unsigned int		puKeys[],

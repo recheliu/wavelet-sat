@@ -34,9 +34,21 @@ protected:
 		size_t uNrOfElements;
 
 		vector<uint4>			vu4BinSubs;
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		vector<float>			vfWeights;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		vector<WT>			vfWeights;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 		vector<unsigned int>	vuKeys;
+		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		vector<float>			vfCoefs;
+		// ADD-BY-LEETEN 03/29/2013-BEGIN
+		#else	// #if	!WITH_DOUBLE_COEF
+		vector<WT>			vfCoefs;
+		#endif	// #if	!WITH_DOUBLE_COEF
+		// ADD-BY-LEETEN 03/29/2013-END
 
 		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
 
@@ -182,7 +194,13 @@ protected:
 			unsigned int* puBinSub = &vu4BinSubs[uNrOfElements].y;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				puBinSub[d] = (unsigned int)vuPos[d];
+			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			vfWeights[uNrOfElements] = (float)dWeight;
+			// ADD-BY-LEETEN 03/29/2013-BEGIN
+			#else	// #if	!WITH_DOUBLE_COEF
+			vfWeights[uNrOfElements] = (WT)dWeight;
+			#endif	// #if	!WITH_DOUBLE_COEF
+			// ADD-BY-LEETEN 03/29/2013-END
 			uNrOfElements++;
 
 			// ADD-BY-LEETEN 01/13/2013-BEGIN
