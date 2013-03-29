@@ -1,100 +1,111 @@
-﻿#include <math.h>
+#include <math.h>
 #include <assert.h>
 #include <stdlib.h> 
 #include "libclock.h"
 #include "libopt.h"
 
-#include "NrrdIO.h"
 #include "SimpleND.h"
 
 // namespace po = boost::program_options;
 
-Nrrd *nin;
 typedef float typeData;
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
-// MOD-BY-LEETEN 03/28/2013-FROM:	CSimpleND<typeData, float, WaveletSAT::typeBin, float> cSimpleND;
-CSimpleND<typeData, typeData, WaveletSAT::typeBin, typeData> cSimpleND;
-// MOD-BY-LEETEN 03/28/2013-END
+CSimpleND<typeData, float, WaveletSAT::typeBin, float> cSimpleND;
 vector<typeData> vdData;
-
-//! Convert the volume to an array of double type
-template<typename T>
-void 
-_ConvertVolume
-(
-	const Nrrd *nin,
-	typeData& dValueMin,
-	typeData& dValueMax,
-	vector<typeData>& vdData
-)
-{	
-	T *data = (T*)nin->data;	
-
-	// search for the range
-	dValueMin = (typeData)HUGE_VAL;
-	dValueMax = (typeData)-HUGE_VAL;
-	for(int v = 0,	z = 0; z < (int)nin->axis[2].size; z++)
-		for(int		y = 0; y < (int)nin->axis[1].size; y++)
-			for(int x = 0; x < (int)nin->axis[0].size; x++, v++)
-			{
-				typeData dValue = (typeData)data[v];
-				vdData.push_back(dValue);
-				dValueMin = min(dValueMin, dValue);
-				dValueMax = max(dValueMax, dValue);
-			}
-	LOG_VAR(dValueMin);
-	LOG_VAR(dValueMax);
-}
+vector<size_t> vuDimLengths;
+size_t uNrOfValues;
 
 void
 _ReadVolume
 (
-	const char* szPathFilename
+	const char *szVecDirPath,
+	const char *szVecFileName,
+	const char *szVecVarName,
+	void* _Reserved = NULL
 )
 {
-	/* create a nrrd; at this point this is just an empty container */
-	nin = nrrdNew();
+	char szVecFilePath[NC_MAX_NAME];
+	sprintf(szVecFilePath, "%s/%s", szVecDirPath, szVecFileName);
 
-	/* tell nrrdLoad to only read the header, not the data */
-	NrrdIoState *nio = nrrdIoStateNew();
-	nrrdIoStateSet(nio, nrrdIoStateSkipData, AIR_TRUE);
+	int ncId;
+	ASSERT_NETCDF(nc_open(
+    	szVecFilePath,
+    	NC_NOWRITE,
+    	&ncId));
 
-	/* read in the nrrd from file */
-	if (nrrdLoad(nin, szPathFilename, nio)) {
-		char *err = biffGetDone(NRRD);
-		LOG_ERROR(fprintf(stderr, "%s", err));
-		free(err);
-		return;
-	}
+	int var;
+	ASSERT_NETCDF(nc_inq_varid(
+		ncId, 
+		szVecVarName, 
+		&var) );
 
-	/* we're done with the nrrdIoState, this sets it to NULL */
-	nio = nrrdIoStateNix(nio);
+	int iNrOfDims;
+	ASSERT_NETCDF(nc_inq_varndims(
+		ncId, 
+		var,
+		&iNrOfDims));
 
-	LOG_VAR(nrrdElementNumber(nin));
-	LOG_VAR(nrrdElementSize(nin));
-	nin->data = calloc(nrrdElementNumber(nin), nrrdElementSize(nin));
+	int pdimIDs[NC_MAX_DIMS];
+	ASSERT_NETCDF(nc_inq_vardimid(
+		ncId, 
+		var,
+		pdimIDs));
 
-	if (nrrdLoad(nin, szPathFilename, NULL)) {
-		char *err = biffGetDone(NRRD);
-		LOG_ERROR(fprintf(stderr, "%s", err));
-		free(err);
-		return;
-	}
-
-	switch(nin->type)
+	vuDimLengths.clear();
+	for(size_t d = 0; d < (size_t) iNrOfDims; d++)
 	{
-	case nrrdTypeChar:	_ConvertVolume<char>(nin, dValueMin, dValueMax, vdData);		break;
-	case nrrdTypeUChar:	_ConvertVolume<unsigned char>(nin, dValueMin, dValueMax, vdData);	break;
-	case nrrdTypeShort:	_ConvertVolume<short>(nin, dValueMin, dValueMax, vdData);		break;
-	case nrrdTypeUShort:	_ConvertVolume<unsigned short>(nin, dValueMin, dValueMax, vdData);	break;
-	case nrrdTypeInt:	_ConvertVolume<int>(nin, dValueMin, dValueMax, vdData);			break;
-	case nrrdTypeUInt:	_ConvertVolume<unsigned int>(nin, dValueMin, dValueMax, vdData);	break;
-	case nrrdTypeFloat:	_ConvertVolume<float>(nin, dValueMin, dValueMax, vdData);		break;
-
-	default:
-		break;
+		size_t uDimLen;
+		ASSERT_NETCDF(nc_inq_dimlen(
+			ncId, 
+			pdimIDs[iNrOfDims - 1 - d], 
+			&uDimLen));
+		vuDimLengths.push_back(uDimLen);
 	}
+
+	// set up the dim length for this slice
+	size_t puStarts[NC_MAX_DIMS];
+	size_t puCounts[NC_MAX_DIMS];
+	for(size_t d = 0; d < (size_t)iNrOfDims; d++)
+	{
+		puStarts[d] = 0;
+		puCounts[d] = vuDimLengths[iNrOfDims - 1 - d];
+	}
+
+	// only consider t = 0;
+	vuDimLengths[iNrOfDims - 1] = puCounts[0] = 1;
+
+	// only consider z = 12;
+	vuDimLengths[iNrOfDims - 1 - 1] = puCounts[1] = 1;
+	puStarts[1] = 12;
+
+
+	uNrOfValues = 1;
+	for(size_t d = 0; d < (size_t)iNrOfDims; d++)
+		uNrOfValues *= (size_t)puCounts[d];
+
+	vdData.resize(uNrOfValues);
+
+	// load the data
+	ASSERT_NETCDF(nc_get_vara(
+		ncId, 
+		var, 
+		&puStarts[0],
+		&puCounts[0], 
+		vdData.data()));
+
+	ASSERT_NETCDF(nc_close(ncId));
+
+	for(size_t v = 0; v < uNrOfValues; v++)
+	{
+		dValueMin = min(dValueMin, vdData[v]);
+		dValueMax = max(dValueMax, vdData[v]);
+	}
+	dValueMin = max(dValueMin, (typeData)0.0);
+
+	// now remove the first two dimensions, which are z and t.
+	vuDimLengths.pop_back();
+	vuDimLengths.pop_back();
 }
 
 int
@@ -102,10 +113,15 @@ main(int argn, char* argv[])
 {
 	_OPTInit();			// initialize the option parser
 
-	char *szVolFilePath = NULL;
+	char *szDirPath = NULL;
+	char *szFileName = NULL;
+	char *szVarName = NULL;
 	_OPTAddStringVector(
-		"--vol-filepath", 1,
-		&szVolFilePath, szVolFilePath);
+		"--data", 3,
+			&szDirPath,		szDirPath,
+			&szFileName,	szFileName,
+			&szVarName,		szVarName
+		);
 
 	int iNrOfBins = 8;	// iValueMax;
 	_OPTAddIntegerVector(
@@ -135,50 +151,44 @@ main(int argn, char* argv[])
 	_OPTAddComment("--netcdf-deflate-level",
 		"Deflate level for NetCDF file. The value is between 0 (store only) and 9 (maximal).");
 
-	// ADD-BY-LEETEN 01/10/2013-BEGIN
 	int iIsUsingGPUs = 0;
 	_OPTAddBoolean("--is-using-gpus", &iIsUsingGPUs, iIsUsingGPUs);
 	_OPTAddComment("--is-using-gpus",
 		"The flag whether GPUs are used.");
-	// ADD-BY-LEETEN 01/10/2013-END
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
+
 	int iMaxNrOfEntriesOnGPUs = 4096;
 	_OPTAddIntegerVector(
 		"--max-n-entries-on-gpus", 1,
 		&iMaxNrOfEntriesOnGPUs, iMaxNrOfEntriesOnGPUs);
 	_OPTAddComment("--max-n-entries-on-gpus",
 		"Max #Entries to be executed per GPU call. The unit is 1024.");
-	// ADD-BY-LEETEN 01/11/2013-END
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
+
 	int iTimingPrintingLevel = 1;
 	_OPTAddIntegerVector(
 		"--timing-printing-level", 1,
 		&iTimingPrintingLevel, iTimingPrintingLevel);
 	_OPTAddComment("--timing-printing-level",
 		"The level to print the performance timing.");
-	// ADD-BY-LEETEN 01/11/2013-END
 
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	int iIsCompBinsOnly = 1;
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
-
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	assert(bIsOptParsed);
-	assert(szVolFilePath);
+	assert(szDirPath);
+	assert(szFileName);
+	assert(szVarName);
 	assert(szNcFilePathPrefix);
 
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
 	bool bIsPrintingTiming = (iTimingPrintingLevel>0)?true:false;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	// ADD-BY-LEETEN 01/11/2013-END
 
-	LOG_VAR(szVolFilePath);
-	_ReadVolume(szVolFilePath);
+	_ReadVolume(szDirPath, szFileName, szVarName);
 
-	size_t uNrOfDims = (size_t)nin->dim;
+	size_t uNrOfDims = vuDimLengths.size();
 	size_t uMaxLevel = 0;
 	size_t uWinSize = 1;
 	size_t uNrOfBins = (size_t)iNrOfBins;
@@ -186,29 +196,19 @@ main(int argn, char* argv[])
 	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
 
 	cSimpleND._SetInteger(CSimpleND<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
-	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+	#if WITH_NETCDF 
 	cSimpleND._SetInteger(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);
-        #endif // #if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+    #endif // #if WITH_NETCDF 
 
 	// ADD-BY-LEETEN 01/10/2012-BEGIN
 	#if	WITH_CUDA
 	cSimpleND._SetInteger(cSimpleND.IS_USING_GPUS, (long)iIsUsingGPUs);
 	cSimpleND._SetInteger(cSimpleND.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	// ADD-BY-LEETEN 01/11/2013
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
 	cSimpleND._SetInteger(cSimpleND.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
-	// ADD-BY-LEETEN 01/11/2013-END
 	#endif	// #if	WITH_CUDA
 	// ADD-BY-LEETEN 01/10/2012-END
 
 	// Step 1: Setup up the data size
-	vector<size_t> vuDimLengths;
-	size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
-	for(size_t d = 0; d < uNrOfDims; d++)
-	{
-		size_t uDimLength = (size_t)nin->axis[d].size;
-		vuDimLengths.push_back( uDimLength );
-		uNrOfValues *= uDimLength;
-	}
 	cSimpleND._Set(vuDimLengths, (WaveletSAT::typeBin)uNrOfBins);
 
 	LOG_VAR(uNrOfBins);
@@ -227,15 +227,14 @@ main(int argn, char* argv[])
 		vector<size_t> vuPos;
 		for(size_t 
 			d = 0, uCoord = i; 
-			d < nin->dim; 
-			uCoord /= (size_t)nin->axis[d].size, d++)
-			vuPos.push_back(uCoord % (size_t)nin->axis[d].size);
+			d < vuDimLengths.size(); 
+			uCoord /= (size_t)vuDimLengths[d], d++)
+			vuPos.push_back(uCoord % (size_t)vuDimLengths[d]);
 
 		cSimpleND._AddValue(vuPos, vdData[i]);
 	}
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	// Step 4: Finalize the SAT computation
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	#if	WITH_SAT_FILE
 	if( iIsCompBinsOnly )
@@ -248,6 +247,7 @@ main(int argn, char* argv[])
 	{
 	#endif	// #if	WITH_SAT_FILE
 	// ADD-BY-LEETEN 03/28/2013-END
+	// Step 4: Finalize the SAT computation
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleND._Finalize();
 	LIBCLOCK_END(bIsPrintingTiming);

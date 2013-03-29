@@ -19,8 +19,44 @@ using namespace boost::filesystem;
 double dValueMin = HUGE_VAL;
 double dValueMax = -HUGE_VAL;
 Nrrd *nin;
-CSimpleNDFile<double, double> cSimpleNDFile;
+// MOD-BY-LEETEN 03/28/2013-FROM:	CSimpleNDFile<double, double> cSimpleNDFile;
+CSimpleNDFile<double, double, WaveletSAT::typeBin, double> cSimpleNDFile;
+// MOD-BY-LEETEN 03/28/2013-END
 vector<double> vdData;
+
+// ADD-BY-LEETEN 03/28/2013-BEGIN
+#include "lognc.h"
+
+vector<WaveletSAT::typeBin> vusBins;
+void
+_ReadBins(
+	const char *szFilepath
+)
+{
+	int iNcId;
+
+	#if !WITH_NETCDF4 
+	ASSERT_NETCDF(nc_open(
+    		szFilepath,
+    		NC_NOWRITE,
+    		&iNcId));
+	#else	// #if !WITH_NETCDF4
+	ASSERT_NETCDF(nc_open(
+    		szFilepath,
+    		NC_NOWRITE | NC_NETCDF4,
+    		&iNcId));
+	#endif // #if !WITH_NETCDF4
+
+	int ncVarBin;
+	ASSERT_NETCDF(
+		nc_inq_varid(iNcId, "BIN", &ncVarBin));
+	ASSERT_NETCDF(
+		nc_get_var(iNcId, ncVarBin, (void*)&vusBins.data()[0]));
+
+	ASSERT_NETCDF(
+		nc_close(iNcId) );
+}
+// ADD-BY-LEETEN 03/28/2013-END
 
 //! Convert the volume to an array of double type
 template<typename T>
@@ -164,6 +200,13 @@ main(int argn, char* argv[])
 		"Filepath prefix of the entropy field");
 	// ADD-BY-LEETEN 12/30/2012-END
 
+	// ADD-BY-LEETEN 03/28/2013-BEGIN
+	char *szBinFilePath = NULL;
+	_OPTAddStringVector(
+		"--bin-filepath", 1,
+		&szBinFilePath, szBinFilePath);
+	// ADD-BY-LEETEN 03/28/2013-END
+
 	int iSizeOfFullArrays = 0;
 	_OPTAddIntegerVector(
 		"--size-of-full-arrays", 1,
@@ -222,6 +265,149 @@ main(int argn, char* argv[])
 	#else	// MOD-By-LEETEN 02/19/2013-TO:
 	if(iIsTestingQuery)
 	{
+		// ADD-BY-LEETEN 03/28/2013-BEGIN
+		if( szBinFilePath )
+		{
+			LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+
+			cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+
+			////////////////////////////////////////////////////////////////////////////
+			// Now we can start to query SATs
+			// load the data for testing
+			LOG_VAR(szBinFilePath);
+			size_t uNrOfDims = cSimpleNDFile.UGetNrOfDims();
+			size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
+			size_t uWinSize = iQueryWinLength;
+			size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
+			vector<size_t> vuDimLengths;
+			cSimpleNDFile._GetDataSize(vuDimLengths);
+			size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+			for(size_t d = 0; d < uNrOfDims; d++)
+				uNrOfValues *= vuDimLengths[d];
+
+			// decide the threshld to filter numerical error
+			double dThreshold = cSimpleNDFile.DGetThreshold();
+
+			vusBins.resize(uNrOfValues);
+			_ReadBins(szBinFilePath);
+
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+
+			vector<size_t> vuWinSize;
+			size_t uWinLength = 1;
+			for(size_t d = 0; d < uNrOfDims; d++)
+			{
+				uWinLength *= uWinSize;
+				vuWinSize.push_back(uWinSize);
+			}
+
+			for(size_t t = 0; t < uNrOfTestingValues; t++)
+			{
+				vector<size_t> vuBase;
+				size_t uIndex = 0;
+
+				for(size_t 
+					d = 0, uDimLengthProduct = 1; 
+					d < uNrOfDims; 
+					uDimLengthProduct *= vuDimLengths[d], d++)
+				{
+					if(uWinSize)
+						vuBase.push_back(uWinSize + rand() % (vuDimLengths[d] - uWinSize));
+					else
+						vuBase.push_back(rand() % vuDimLengths[d]);
+				}
+
+				vector<WaveletSAT::typeSum> vdH;
+				vdH.assign(uNrOfBins, (WaveletSAT::typeSum)0);
+
+				vector<WaveletSAT::typeSum> vdRefH;
+				vdRefH.assign(uNrOfBins, (WaveletSAT::typeSum)0);
+
+				if(uWinSize)
+				{
+					vector<size_t> vuOffset;
+					vuOffset.resize(uNrOfDims);
+					for(size_t d = 0; d < uNrOfDims; d++)
+						vuOffset[d] = vuBase[d] - uWinSize;
+					cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
+
+					for(size_t w = 0; w < uWinLength; w++)
+					{
+						vector<size_t> vuPosInWin;
+						WaveletSAT::_ConvertIndexToSub(w, vuPosInWin, vuWinSize);
+
+						vector<size_t> vuPos;
+						vuPos.resize(uNrOfDims);
+						for(size_t d = 0; d < uNrOfDims; d++)
+							vuPos[d] = vuOffset[d] + 1 + vuPosInWin[d];
+
+						size_t uBin = (size_t)vusBins[WaveletSAT::UConvertSubToIndex(vuPos, vuDimLengths)];
+						vdRefH[uBin] += (WaveletSAT::typeSum)1;
+					}
+				}
+				else
+				{
+					cSimpleNDFile._GetAllSums(vuBase, vdH);
+
+					vector<size_t> vuBaseLengths;
+					vuBaseLengths.resize(uNrOfDims);
+					size_t uBaseSize= 1;
+					for(size_t d = 0; d < uNrOfDims; d++)
+					{
+						uBaseSize *= vuBase[d] + 1;
+						vuBaseLengths[d] = vuBase[d] + 1;
+					}
+
+					vector<size_t> vuB;
+					vuB.resize(uNrOfDims);
+					for(size_t b = 0; b < uBaseSize; b++)
+					{
+						WaveletSAT::_ConvertIndexToSub(b, vuB, vuBaseLengths);
+						size_t uBin = (size_t)vusBins[WaveletSAT::UConvertSubToIndex(vuB, vuDimLengths)];
+						vdRefH[uBin] += (WaveletSAT::typeSum)1;
+					}
+				}
+
+				// truncate the numerical error
+				for(size_t b = 0; b < uNrOfBins; b++)
+					vdH[b] = floor(0.5 + vdH[b]);
+
+				double dError = 0.0;
+				for(size_t b = 0; b < uNrOfBins; b++)
+				{
+					double dD = vdRefH[b] - vdH[b];
+					dError += dD * dD;
+				}
+				double dRMSE = sqrt(dError / (double)uNrOfBins);
+
+				if( dRMSE > 0.0 || iIsVerbose )
+				{
+					printf("Pos:");
+					for(size_t d = 0; d < uNrOfDims; d++)
+						  printf("%d,", vuBase[d]);
+					printf("\n");
+
+					for(size_t b = 0; b < uNrOfBins; b++)
+					{
+						if( vdH[b] == vdRefH[b] )
+							printf( "\t\tH[%d]:%d\n", (unsigned int)b, (int)vdH[b]);
+						else
+							printf( "\t\tH[%d]:%d,\t%d\n", (unsigned int)b, (int)vdH[b], (int)vdRefH[b]);
+					}
+					printf("RMSE:%f\n", dRMSE);
+				}
+			}
+
+			LIBCLOCK_END(bIsPrintingTiming);
+			long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+			long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+			long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
+		}
+		else
+		// ADD-BY-LEETEN 03/28/2013-END
 		if(!szVolFilePath)
 		{
 			LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012

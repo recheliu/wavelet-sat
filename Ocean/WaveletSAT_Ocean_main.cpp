@@ -91,6 +91,11 @@ main(int argn, char* argv[])
 	_OPTAddComment("--timing-printing-level",
 		"The level to print the performance timing.");
 
+	// ADD-BY-LEETEN 03/28/2013-BEGIN
+	int iIsCompBinsOnly = 1;
+	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
+	// ADD-BY-LEETEN 03/28/2013-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	assert(bIsOptParsed);
@@ -126,18 +131,40 @@ main(int argn, char* argv[])
 
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	#if	0	// DEL-BY-LEETEN 03/28/2013-BEGIN
 	// ADD-BY-LEETEN 03/19/2013-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	LIBCLOCK_END(bIsPrintingTiming);
 	// ADD-BY-LEETEN 03/19/2013-END
+	#endif	// DEL-BY-LEETEN 03/28/2013-END
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cVector2D._Encode();
 	LIBCLOCK_END(bIsPrintingTiming);
 
+	// ADD-BY-LEETEN 03/28/2013-BEGIN
+	#if	WITH_SAT_FILE
+	if( iIsCompBinsOnly )
+	{
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cVector2D._SaveBins(szNcFilePathPrefix);
+		LIBCLOCK_END(bIsPrintingTiming);
+	}
+	else
+	{
+	#endif	// #if	WITH_SAT_FILE
+	// ADD-BY-LEETEN 03/28/2013-END
+	cVector2D._Finalize();	// ADD-BY-LEETEN 03/28/2013
+
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cVector2D._SaveFile(szNcFilePathPrefix);
 	LIBCLOCK_END(bIsPrintingTiming);
+
+	// ADD-BY-LEETEN 03/28/2013-BEGIN
+	#if	WITH_SAT_FILE
+	}
+	#endif	// #if	WITH_SAT_FILE
+	// ADD-BY-LEETEN 03/28/2013-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;

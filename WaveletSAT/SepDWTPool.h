@@ -186,7 +186,9 @@ namespace WaveletSAT
 				#endif	// #if	WITH_SPARSE_AS_VECTOR
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
-			this->vuCounts.resize(this->uSize);	// ADD-BY-LEETEN 03/16/2013
+			// MOD-BY-LEETEN 03/28/2013-FROM:			this->vuCounts.resize(this->uSize);	// ADD-BY-LEETEN 03/16/2013
+			this->vuCounts.assign(this->uSize, 0);
+			// MOD-BY-LEETEN 03/28/2013-END
 
 			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
@@ -619,7 +621,6 @@ namespace WaveletSAT
 				#endif	// #if	!WITH_POINTER_TO_MAP	
 				// ADD-BY-LEETEN 11/12/2012-END
 				this->vuCounts.clear();
-
 				for(typename vector< vector< pair<BT, WT> > >::iterator 
 					ivvpairSparse = this->vvpairSparse.begin();
 					ivvpairSparse != this->vvpairSparse.end();

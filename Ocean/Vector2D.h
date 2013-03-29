@@ -260,9 +260,11 @@ public:
 			WaveletSAT::_ConvertIndexToSub(d, vuPos, vuDimLengths);
 			this->_Update(vuPos, vuBins[d]);
 		}
+		#if	0	// DEL-BY-LEETEN 03/28/2013-BEGIN
 	  // MOD-BY-LEETEN 01/31/2013-FROM: 		_Finalize();
 		this->_Finalize();
 	  // MOD-BY-LEETEN 01/31/2013-END
+		#endif	// DEL-BY-LEETEN 03/28/2013-END
 	}
 };
 

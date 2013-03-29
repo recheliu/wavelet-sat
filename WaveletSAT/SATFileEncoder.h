@@ -295,6 +295,7 @@ public:
 			ASSERT_NETCDF(nc_close(iNcId));
 
 			iNcId = 0;
+
 		}
 
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
@@ -319,6 +320,114 @@ public:
 			rename("sat.nc", szFilepath);
 		}
 		// ADD-BY-LEETEN 12/12/2012-END
+
+		// ADD-BY-LEETEN 03/28/2013-BEGIN
+		virtual 
+		void
+		_SaveBins
+		(
+			const char* szFilepathPrefix,
+			void *_Reserved = NULL
+		)
+		{
+			const char* szExt;
+			#if WITH_NETCDF4
+			szExt = "nc4";
+			#else	// #if WITH_NETCDF4
+			szExt = "nc";
+			#endif	// #if WITH_NETCDF4
+			char szBinFilepath[NC_MAX_NAME];
+			sprintf(szBinFilepath, "%s.bin.%s", szFilepathPrefix, szExt);
+
+			// Create the file for the bins.
+			#if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szBinFilepath,
+    				NC_CLOBBER,
+    				&iNcId));
+			#else	// #if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szBinFilepath,
+				NC_CLOBBER | NC_NETCDF4,
+    				&iNcId));
+			#endif	// #if !WITH_NETCDF4 
+
+			// define the dimension for #bins
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimBin,
+						(int)this->UGetNrOfBins(),
+						&ncDimBin) );
+
+			// define the dimension of #dimension.
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimDim,
+						(int)this->UGetNrOfDims(),
+						&ncDimDim ) );
+
+			size_t uNrOfDims = this->UGetNrOfDims();
+			for(int d = 0; d < uNrOfDims; d++)
+			{
+				size_t uDimLength = (size_t)this->vuDimLengths[d];
+				char szNcDimName[NC_MAX_NAME+1];
+				sprintf(szNcDimName, "DATA_DIM_%d", (unsigned int)d);
+				int iNcDimId;
+				ASSERT_NETCDF(nc_def_dim(
+    							iNcId,
+    							szNcDimName,
+    							(int)uDimLength,
+    							&iNcDimId));
+				vncDimData.push_back(iNcDimId);
+			}
+
+			// now define the variable for the bins.
+			int ncVarBin;
+			int piNcDimIds[NC_MAX_DIMS];
+			for(size_t d = 0; d < uNrOfDims; d++)
+				piNcDimIds[d] = vncDimData[uNrOfDims - 1 - d];
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					"BIN", 
+					NC_USHORT,
+					(int)uNrOfDims,
+					piNcDimIds,
+					&ncVarBin));
+
+			#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+					iNcId,
+					ncVarBin, 
+					0, 
+					1, 
+					iDeflateLevel));
+			#endif // #if WITH_NETCDF4
+			// finish the definition mode
+			ASSERT_NETCDF(nc_enddef(iNcId));
+
+			vector<unsigned short> vusBins;
+			vusBins.assign(this->uDataSize, 0);
+			for(size_t i = 0; i < this->uDataSize; i++)
+			{
+				const map<BT, ST>& mapHist = vmapHists[i];
+				typename map<BT, ST>::const_iterator imapHist = mapHist.begin();
+				vusBins[i] = (unsigned short)imapHist->first;
+				/*
+				if( vusBins[i] )
+					LOG_VAR(vusBins[i]);
+				*/
+			}
+				
+			// dump this bins
+			ASSERT_NETCDF(nc_put_var(
+						iNcId,
+						ncVarBin,
+						(void*)&vusBins.data()[0]));
+
+			ASSERT_NETCDF(nc_close(iNcId));
+			iNcId = 0;
+		}
+		// ADD-BY-LEETEN 03/28/2013-END
 
 		//! Allocate the space to store coefficients for all bins. 
 		/*! 

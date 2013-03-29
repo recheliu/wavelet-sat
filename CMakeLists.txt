@@ -90,6 +90,22 @@ include_directories (
 link_directories (
 	"${MYLIB_DIR}/lib" )
 
+# ADD-BY-LEETEN 03/28/2013-BEGIN
+FIND_PACKAGE(CUDA)
+include_directories(
+	${CUDA_TOOLKIT_ROOT_DIR}/include
+	${CUDPP_DIR}/include
+	)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	add_definitions(-DWIN64)
+	link_directories(
+		${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
+else()
+	link_directories(
+		${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
+endif()	
+# ADD-BY-LEETEN 03/28/2013-END
+
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 # ADD-BY-LEETEN 01/18/2012-BEGIN
 set(WITH_SAT_FILE	OFF	CACHE 	BOOL "Is SAT file format used?")	
@@ -106,19 +122,21 @@ if( WITH_CUDA )
 	
 	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
 
-	FIND_PACKAGE(CUDA)
-	include_directories(
-		${CUDA_TOOLKIT_ROOT_DIR}/include
-		${CUDPP_DIR}/include
-		)
-	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-		add_definitions(-DWIN64)
-		link_directories(
-			${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
-	else()
-		link_directories(
-			${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
-    endif()	
+	# # DEL-BY-LEETEN 03/28/2013-BEGIN
+	# FIND_PACKAGE(CUDA)
+	# include_directories(
+		# ${CUDA_TOOLKIT_ROOT_DIR}/include
+		# ${CUDPP_DIR}/include
+		# )
+	# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+		# add_definitions(-DWIN64)
+		# link_directories(
+			# ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
+	# else()
+		# link_directories(
+			# ${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
+    # endif()	
+	# # DEL-BY-LEETEN 03/28/2013-END
 	link_directories(
 		${CUDPP_DIR}/lib
 		)
@@ -146,6 +164,7 @@ add_subdirectory(SimpleNDQuery)
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 
 add_subdirectory(Ocean)		# ADD-BY-LEETEN 01/18/2012
+add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )
@@ -154,8 +173,11 @@ if( WITH_CUDA )
 	add_dependencies(SimpleNDEncoder 	CudaDWT)
 	
 	add_dependencies(Ocean 	CudaDWT)	# ADD-BY-LEETEN 01/18/2012
+	add_dependencies(MJO	CudaDWT)	# ADD-BY-LEETEN 03/28/2013
 endif()
 # ADD-BY-LEETEN 01/10/2012-END
 
+if(NOT WITH_SAT_FILE)	# ADD-BY-LEETEN 03/28/2013-BEGIN
 add_subdirectory(SATSepDWTViewer)	# ADD-BY-LEETEN 01/27/2013
+endif()					# ADD-BY-LEETEN 03/28/2013-END
 
