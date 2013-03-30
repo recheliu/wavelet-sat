@@ -6,11 +6,11 @@ SET ZS=0 1
 if "%1" == "F" (
 	SET ROOT_PATH=!ROOT_PATH!\SATFile
 	SET GS=false
-	SET MS=8192
+	SET MS=0
 ) ELSE (
 	if "%1" == "S" (
 		SET GS=true false
-		SET MS=4096 2048
+		SET MS=8192 4096 2048 0
 		SET BINS=128
 		SET ZS=1
 	) ELSE (	
@@ -26,25 +26,17 @@ for %%g in (!GS!) do (
 	for %%z in (!ZS!) do (
 		for %%m in (!MS!) do (
 			SET ARGLIST=--netcdf-deflate-level %%z --is-using-gpus %%g --size-of-full-arrays %%m
-			
-			REM for /F "eol=# tokens=1,2" %%i in (benchmark.txt) do (
-				REM ECHO ====================================================
-				REM ECHO %%j: !ARGLIST!
-				REM for %%b in (!BINS!) do (
-					REM SET TEST_ARGLIST=--n-bins %%b --vol-filepath D:\data\volumes\rawfiles\%%i\%%j.nhdr   --nc-filepath-prefix D:\projects\WaveletSAT\build\vs2010\x64\output\%%j.b_%%b.z_%%z !ARGLIST!
-					REM ECHO !TEST_ARGLIST!
-					REM %ENCODER% !TEST_ARGLIST!
-				REM )
-			REM )
-
-			ECHO ====================================================
-			SET i=simulated
-			SET j=hydrogenAtom
-			ECHO !j!: !ARGLIST!
-			for %%b in (!BINS!) do (
-				SET TEST_ARGLIST=--n-bins %%b --vol-filepath D:\data\volumes\rawfiles\!i!\!j!.nhdr   --nc-filepath-prefix D:\projects\WaveletSAT\build\vs2010\x64\output\!j!.b_%%b.z_%%z !ARGLIST!
-				ECHO !TEST_ARGLIST!
-				%ENCODER% !TEST_ARGLIST!
+		
+			IF NOT "%1" == "S" (
+				ECHO ====================================================
+				SET i=simulated
+				SET j=hydrogenAtom
+				ECHO !j!: !ARGLIST!
+				for %%b in (!BINS!) do (
+					SET TEST_ARGLIST=--n-bins %%b --vol-filepath D:\data\volumes\rawfiles\!i!\!j!.nhdr   --nc-filepath-prefix D:\projects\WaveletSAT\build\vs2010\x64\output\!j!.b_%%b.z_%%z !ARGLIST!
+					ECHO !TEST_ARGLIST!
+					%ENCODER% !TEST_ARGLIST!
+				)
 			)
 
 			ECHO ====================================================
@@ -65,12 +57,14 @@ for %%g in (!GS!) do (
 				%OCEAN_ENCODER% !TEST_ARGLIST!
 			)
 
-			ECHO ====================================================
-			ECHO MJO: !ARGLIST!
-			for %%b in (!BINS!) do (
-				SET TEST_ARGLIST=--n-bins %%b --nc-filepath-prefix D:\projects\WaveletSAT\build\vs2010\x64\output\MJO.2008-01-01_00-00-00.QVAPOR.b_%%b.z_%%z  --data D:\data\flow\datasets\smhagos\1 wrfout_d01_2008-01-01_00-00-00 QVAPOR --timing-printing-level 1 !ARGLIST!
-				ECHO !TEST_ARGLIST!
-				%MJO_ENCODER% !TEST_ARGLIST!
+			IF NOT "%1" == "S" (
+				ECHO ====================================================
+				ECHO MJO: !ARGLIST!
+				for %%b in (!BINS!) do (
+					SET TEST_ARGLIST=--n-bins %%b --nc-filepath-prefix D:\projects\WaveletSAT\build\vs2010\x64\output\MJO.2008-01-01_00-00-00.QVAPOR.b_%%b.z_%%z  --data D:\data\flow\datasets\smhagos\1 wrfout_d01_2008-01-01_00-00-00 QVAPOR --timing-printing-level 1 !ARGLIST!
+					ECHO !TEST_ARGLIST!
+					%MJO_ENCODER% !TEST_ARGLIST!
+				)
 			)
 		)
 	)

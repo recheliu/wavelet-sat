@@ -92,7 +92,9 @@ main(int argn, char* argv[])
 		"The level to print the performance timing.");
 
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
-	int iIsCompBinsOnly = 1;
+	// MOD-BY-LEETEN 03/30/2013-FROM:	int iIsCompBinsOnly = 1;
+	int iIsCompBinsOnly = 0;
+	// MOD-BY-LEETEN 03/30/2013-END
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 
@@ -154,7 +156,9 @@ main(int argn, char* argv[])
 	{
 	#endif	// #if	WITH_SAT_FILE
 	// ADD-BY-LEETEN 03/28/2013-END
+	LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 03/30/2013
 	cVector2D._Finalize();	// ADD-BY-LEETEN 03/28/2013
+	LIBCLOCK_END(bIsPrintingTiming);	// ADD-BY-LEETEN 03/30/2013
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cVector2D._SaveFile(szNcFilePathPrefix);
