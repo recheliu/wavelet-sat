@@ -8,13 +8,21 @@ using namespace std;
 #include "CudaDWT.h"
 
 // ADD-BY-LEETEN 03/29/2013-BEGIN
+// DEL-BY-LEETEN 04/08/2013:	#if	WITH_DOUBLE_COEF
+#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 #if	WITH_DOUBLE_COEF
+typedef double typeCoef;
+#else
+typedef float typeCoef;
+#endif	// #if	WITH_DOUBLE_COEF
+#endif	// DEL-BY-LEETEN 04/08/2013-END
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
-#endif	// #if	WITH_DOUBLE_COEF	
+// DEL-BY-LEETEN 04/08/2013:	#endif	// #if	WITH_DOUBLE_COEF	
 // ADD-BY-LEETEN 03/29/2013-END
 
+#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 inline const char* SZGetCudppError(const CUDPPResult result)
 {
 	switch(result)
@@ -42,7 +50,8 @@ inline const char* SZGetCudppError(const CUDPPResult result)
 			LOG_ERROR(cerr<<SZGetCudppError(result));	\
 		}	\
 	}	\
-	
+
+#endif	// DEL-BY-LEETEN 04/08/2013-END
 
 #define BLOCK_SIZE_X	16
 #define BLOCK_SIZE_Y	8
@@ -64,17 +73,17 @@ namespace CudaDWT
 			FREE_MEMORY(pu4BinSub_device);
 			FREE_MEMORY(pfValues_device);
 			FREE_MEMORY(puKeys_device);
-			FREE_MEMORY(puiSegFlags_device);
+			// DEL-BY-LEETEN 04/08/2013:	FREE_MEMORY(puiSegFlags_device);
 			FREE_MEMORY(pfCoefs_device);
-			FREE_MEMORY(pfCoefSums_device);
+			// DEL-BY-LEETEN 04/08/2013:	FREE_MEMORY(pfCoefSums_device);
 			FREE_MEMORY(pfCompactedCoefs_device);
 			FREE_MEMORY(puCompactedKeys_device);
 
 			// ADD-BY-LEETEN 01/13/2013-BEGIN
 			FREE_MEMORY(puOnes_device);
-			FREE_MEMORY(puSegCounts_device);
+			// DEL-BY-LEETEN 04/08/2013:	FREE_MEMORY(puSegCounts_device);
 			FREE_MEMORY(puCompactedSegCounts_device);
-			FREE_MEMORY(puNrOfCompactedSegCounts_device);
+			// DEL-BY-LEETEN 04/08/2013:	FREE_MEMORY(puNrOfCompactedSegCounts_device);
 			// ADD-BY-LEETEN 01/13/2013-END
 
 			// ADD-BY-LEETEN 01/11/2013-BEGIN
@@ -86,6 +95,7 @@ namespace CudaDWT
 			#endif	// #if		WITH_CUDA_MALLOC_HOST	
 			// ADD-BY-LEETEN 01/11/2013-END
 
+			#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 			FREE_MEMORY(puNrOfCompactedCoefs_device);
 			FREE_MEMORY(puNrOfCompactedKeys_device);
 
@@ -109,6 +119,7 @@ namespace CudaDWT
 			// ADD-BY-LEETEN 01/13/2013-END
 			if( theCudpp )
 				ASSERT_CUDPP(cudppDestroy(theCudpp));
+			#endif	// DEL-BY-LEETEN 04/08/2013-END
 		}
 	}
 
@@ -120,8 +131,7 @@ namespace CudaDWT
 		void* _Reserved
 	)
 	{
-		ASSERT_CUDPP(cudppCreate(&theCudpp));
-		
+		// DEL-BY-LEETEN 04/08/2013:	ASSERT_CUDPP(cudppCreate(&theCudpp));
 		if( *puMaxNrOfElementsOnTheDevice > CudaDWT::DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE )
 		{
 			LOG_ERROR(cerr<<"uMaxNrOfElementsOnTheDevice is clampped to CudaDWT::DEFAULT_MAX_NR_OF_ELEMENTS_ON_THE_DEVICE");
@@ -129,7 +139,7 @@ namespace CudaDWT
 		}
 
 		size_t uMaxNrOfElementsOnTheDevice = *puMaxNrOfElementsOnTheDevice;
-
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		configSort.op = CUDPP_ADD;
 		configSort.datatype = CUDPP_UINT;
@@ -164,17 +174,18 @@ namespace CudaDWT
 		configCompactKeys.algorithm = CUDPP_COMPACT;
 		configCompactKeys.options = CUDPP_OPTION_FORWARD;
 		ASSERT_CUDPP(cudppPlan(theCudpp, &planCompactKeys, configCompactKeys, uMaxNrOfElementsOnTheDevice, 1, 0));
-
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		// allocate the memory space
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pu4BinSub_device,		sizeof(pu4BinSub_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfValues_device,			sizeof(pfValues_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puKeys_device,			sizeof(puKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&puiSegFlags_device,		sizeof(puiSegFlags_device[0]) * uMaxNrOfElementsOnTheDevice));
+		// DEL-BY-LEETEN 04/08/2013:	CUDA_SAFE_CALL(cudaMalloc((void**)&puiSegFlags_device,		sizeof(puiSegFlags_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCoefs_device,			sizeof(pfCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCoefSums_device,		sizeof(pfCoefSums_device[0]) * uMaxNrOfElementsOnTheDevice));
+		// DEL-BY-LEETEN 04/08/2013:	CUDA_SAFE_CALL(cudaMalloc((void**)&pfCoefSums_device,		sizeof(pfCoefSums_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&pfCompactedCoefs_device,	sizeof(pfCompactedCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puCompactedKeys_device,	sizeof(puCompactedKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
 
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		// ADD-BY-LEETEN 01/13/2013-BEGIN
 		configSegScanCounts.datatype = CUDPP_UINT;
 		configSegScanCounts.algorithm = CUDPP_SEGMENTED_SCAN;
@@ -185,12 +196,11 @@ namespace CudaDWT
 		configCompactSegCounts.algorithm = CUDPP_COMPACT;
 		configCompactSegCounts.options = CUDPP_OPTION_FORWARD;
 		ASSERT_CUDPP(cudppPlan(theCudpp, &planCompactSegCounts, configCompactSegCounts, uMaxNrOfElementsOnTheDevice, 1, 0));
-
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puOnes_device,			sizeof(puOnes_device[0]) * uMaxNrOfElementsOnTheDevice));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&puSegCounts_device,		sizeof(puSegCounts_device[0]) * uMaxNrOfElementsOnTheDevice));
+		// DEL-BY-LEETEN 04/08/2013:	CUDA_SAFE_CALL(cudaMalloc((void**)&puSegCounts_device,		sizeof(puSegCounts_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puCompactedSegCounts_device,			sizeof(puCompactedSegCounts_device[0]) * uMaxNrOfElementsOnTheDevice));
-		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedSegCounts_device,		sizeof(puNrOfCompactedSegCounts_device[0])));
-
+		// DEL-BY-LEETEN 04/08/2013:	CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedSegCounts_device,		sizeof(puNrOfCompactedSegCounts_device[0])));
 		vector<unsigned int> vuOnes;
 		vuOnes.assign(uMaxNrOfElementsOnTheDevice, 1);
 		CUDA_SAFE_CALL(cudaMemcpy(puOnes_device, vuOnes.data(), sizeof(puOnes_device[0]) * vuOnes.size(), cudaMemcpyHostToDevice));
@@ -204,10 +214,10 @@ namespace CudaDWT
 		CUDA_SAFE_CALL(cudaMallocHost((void**)&pfCoefs_host,		sizeof(pfCoefs_host[0]) * uMaxNrOfElementsOnTheDevice));
 		#endif	// #if	WITH_CUDA_MALLOC_HOST	
 		// ADD-BY-LEETEN 01/11/2013-END
-
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedCoefs_device,	sizeof(puNrOfCompactedCoefs_device[0]) * uMaxNrOfElementsOnTheDevice));
 		CUDA_SAFE_CALL(cudaMalloc((void**)&puNrOfCompactedKeys_device,	sizeof(puNrOfCompactedKeys_device[0]) * uMaxNrOfElementsOnTheDevice));
-
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		bIsInitialized = true;
 	}
 
@@ -225,7 +235,9 @@ namespace CudaDWT
 		const float			pfValues[],
 		// ADD-BY-LEETEN 03/29/2013-BEGIN
 		#else	// #if	!WITH_DOUBLE_COEF
-		const double		pfValues[],
+		// MOD-BY-LEETEN 04/08/2013-FROM:		const double		pfValues[],
+		const typeCoef	pfValues[],
+		// MOD-BY-LEETEN 04/08/2013-END
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
 		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
@@ -284,7 +296,9 @@ namespace CudaDWT
 		float				pfCoefs_host[],
 		// ADD-BY-LEETEN 03/29/2013-BEGIN
 		#else	// #if	!WITH_DOUBLE_COEF
-		double				pfCoefs_host[],
+		// MOD-BY-LEETEN 04/08/2013-FROM:		double				pfCoefs_host[],
+		typeCoef			pfCoefs_host[],
+		// MOD-BY-LEETEN 04/08/2013-END
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
 		// ADD-BY-LEETEN 01/11/2013-BEGIN
@@ -343,6 +357,7 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/13/2013-END
 		// sort the wavelet projection according to the key composed by the bin and local subscripts
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		#if	0	// MOD-BY-LEETEN 04/08/2013-FROM:
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		ASSERT_CUDPP(cudppSort(
 			planSort,				
@@ -355,10 +370,16 @@ namespace CudaDWT
 		thrust::device_ptr<double> vCoefs_device(pfCoefs_device);
 		thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
 		#endif	// #if	!WITH_DOUBLE_COEF
+		#else	// MOD-BY-LEETEN 04/08/2013-TO:
+		thrust::device_ptr<unsigned int> vKeys_device(puKeys_device);
+		thrust::device_ptr<typeCoef> vCoefs_device(pfCoefs_device);
+		thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
+		#endif	// MOD-BY-LEETEN 04/08/2013-END
 		// ADD-BY-LEETEN 03/29/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 		}	// ADD-BY-LEETEN 01/13/2013
 
+		#if	0	// MOD-BY-LEETEN 04/08/2013-FROM:
 		// mark the segments. the beginning of a segment is marked as 1, and all other elements are marked as 0
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		_MarkSegments_kernel<<<v3Grid, v3Blk, 0>>>(
@@ -399,7 +420,27 @@ namespace CudaDWT
 				sizeof(uNrOfCompactedSegCounts_host), 
 				cudaMemcpyDeviceToHost));
 		LIBCLOCK_END(bIsPrintingTiming);
-
+		#else	// MOD-BY-LEETEN 04/08/2013-TO:
+		thrust::device_ptr<unsigned int> vuKeys_device(puKeys_device);
+		thrust::device_ptr<unsigned int> vuOnes_device(puOnes_device);
+		thrust::device_ptr<unsigned int> vuCompactedKeys_device(puCompactedKeys_device);
+		thrust::device_ptr<unsigned int> vuCompactedSegCounts_device(puCompactedSegCounts_device);
+		thrust::pair< thrust::device_ptr<unsigned int>, thrust::device_ptr<unsigned int> > pairEnds = 
+			thrust::reduce_by_key<
+				thrust::device_ptr<unsigned int>, 
+				thrust::device_ptr<unsigned int>, 
+				thrust::device_ptr<unsigned int>, 
+				thrust::device_ptr<unsigned int> >
+			(
+				vuKeys_device, 
+				vuKeys_device + uNrOfElements, 
+				vuOnes_device,
+				vuCompactedKeys_device,
+				vuCompactedSegCounts_device
+				);
+		size_t uNrOfCompactedSegCounts_host = size_t(pairEnds.second - vuCompactedSegCounts_device);
+		size_t uNrOfCompactedKeys_host = size_t(pairEnds.first - vuCompactedKeys_device);
+		#endif	// MOD-BY-LEETEN 04/08/2013-END
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		CUDA_SAFE_CALL(
 			cudaMemcpy(
@@ -409,7 +450,7 @@ namespace CudaDWT
 				cudaMemcpyDeviceToHost) );
 		LIBCLOCK_END(bIsPrintingTiming);
 		// ADD-BY-LEETEN 01/13/2013-END
-
+		#if	0	// MOD-BY-LEETEN 04/08/2013-FROM:
 		// compute the sum of the segments
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		ASSERT_CUDPP(cudppSegmentedScan(
@@ -452,7 +493,26 @@ namespace CudaDWT
 		#endif	// #if		!WITH_CUDA_MALLOC_HOST	
 		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
-
+		#else	// MOD-BY-LEETEN 04/08/2013-TO::
+		thrust::device_ptr<typeCoef> vfCoefs_device(pfCoefs_device);
+		thrust::device_ptr<typeCoef> vfCompactedCoefs_device(pfCompactedCoefs_device);
+		size_t uNrOfCompactedCoefs_host;
+		{
+			thrust::pair<thrust::device_ptr<unsigned int>, thrust::device_ptr<typeCoef> > pairEnds = 
+				thrust::reduce_by_key<
+					thrust::device_ptr<unsigned int>, 
+					thrust::device_ptr<typeCoef>, 
+					thrust::device_ptr<unsigned int>, 
+					thrust::device_ptr<typeCoef> >
+				(
+					vuKeys_device, 
+					vuKeys_device + uNrOfElements, 
+					vfCoefs_device,
+					vuCompactedKeys_device,
+					vfCompactedCoefs_device);
+			uNrOfCompactedCoefs_host = size_t(pairEnds.second - vfCompactedCoefs_device);
+		}
+		#endif	// MOD-BY-LEETEN 04/08/2013-END
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		CUDA_SAFE_CALL(
 			cudaMemcpy(
@@ -467,6 +527,7 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		// compact the keys
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		size_t uNrOfCompactedKeys_host;
@@ -499,7 +560,7 @@ namespace CudaDWT
 		#endif	// #if		!WITH_CUDA_MALLOC_HOST	
 		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
-
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		// download the keys and the coefficinets back 
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
 		CUDA_SAFE_CALL(

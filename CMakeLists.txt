@@ -100,7 +100,7 @@ link_directories (
 FIND_PACKAGE(CUDA)
 include_directories(
 	${CUDA_TOOLKIT_ROOT_DIR}/include
-	${CUDPP_DIR}/include
+	# DEL-BY-LEETEN 04/09:	${CUDPP_DIR}/include
 	)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	add_definitions(-DWIN64)
@@ -126,7 +126,7 @@ set(WITH_CUDA	OFF	CACHE 	BOOL "Is CUDA used?")
 if( WITH_CUDA )
 	add_definitions(-DWITH_CUDA)
 	
-	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
+	# DEL-BY-LEETEN 04/09:	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
 
 	# # DEL-BY-LEETEN 03/28/2013-BEGIN
 	# FIND_PACKAGE(CUDA)
@@ -143,9 +143,11 @@ if( WITH_CUDA )
 			# ${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
     # endif()	
 	# # DEL-BY-LEETEN 03/28/2013-END
-	link_directories(
-		${CUDPP_DIR}/lib
-		)
+	# DEL-BY-LEETEN 04/09/2013-BEGIN
+	# link_directories(
+		# ${CUDPP_DIR}/lib
+		# )
+	# DEL-BY-LEETEN 04/09/2013-END
 
 	add_subdirectory(CudaDWT)
 	include_directories(

@@ -5,25 +5,36 @@
 // ADD-BY-LEETEN 01/11/2013-END
 
 #include <cuda_runtime_api.h>
-#include <cudpp.h>
+// DEL-BY-LEETEN 04/08/2013:	#include <cudpp.h>
 
 #if defined(WIN32)
 	#pragma comment (lib, "cudart.lib")
 	#if	defined(_DEBUG)
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		#if	defined(WIN64)
 		#pragma comment (lib, "cudpp64d.lib")
 		#endif	// #if	defined(WIN64)
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		#pragma comment (lib, "CudaDWT_d.lib")
 	#else	// #if	defined(_DEBUG)
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		#if	defined(WIN64)
 		#pragma comment (lib, "cudpp64.lib")
 		#endif	// #if	defined(WIN64)
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 		#pragma comment (lib, "CudaDWT_r.lib")
 	#endif	// #if	defined(_DEBUG)
 #endif	// #if defined(WIN32)
 
 namespace CudaDWT
 {
+	// ADD-BY-LEETEN 04/08/2013-BEGIN
+	#if	WITH_DOUBLE_COEF
+	typedef double typeCoef;
+	#else
+	typedef float typeCoef;
+	#endif	// #if	WITH_DOUBLE_COEF
+	// ADD-BY-LEETEN 04/08/2013-END
 	enum
 	{
 		GPU_MAX_NR_OF_DIMS = 3,
@@ -46,6 +57,7 @@ namespace CudaDWT
 		dim3 v3Grid;
 		// ADD-BY-LEETEN 01/11/2013-END
 
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		// CUDPP handles
 		CUDPPHandle theCudpp;
 
@@ -64,6 +76,7 @@ namespace CudaDWT
 		size_t *puNrOfCompactedCoefs_device;
 		CUDPPConfiguration configCompactKeys;
 		CUDPPHandle planCompactKeys;
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 
 		//
 		uint4 *pu4BinSub_device;
@@ -71,11 +84,15 @@ namespace CudaDWT
 		float* pfValues_device;
 		// ADD-BY-LEETEN 03/29/2013-BEGIN
 		#else	// #if	!WITH_DOUBLE_COEF	
-		double* pfValues_device;
+		// MOD-BY-LEETEN 04/09/2013-FROM:		double* pfValues_device;
+		typeCoef *pfValues_device;
+		// MOD-BY-LEETEN 04/09/2013-END
 		#endif	// #if	!WITH_DOUBLE_COEF	
 		// ADD-BY-LEETEN 03/29/2013-END
 		unsigned int* puKeys_device;
-		unsigned int* puiSegFlags_device;
+		// DEL-BY-LEETEN 04/08/2013:		unsigned int* puiSegFlags_device;
+
+		#if	0	// MOD-BY-LEETEN 04/08/2013-FROM:
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float* pfCoefs_device;
 		float* pfCoefSums_device;
@@ -87,8 +104,13 @@ namespace CudaDWT
 		double* pfCompactedCoefs_device;
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
+		#else	// MOD-BY-LEETEN 04/08/2013-TO:
+		typeCoef* pfCoefs_device;
+		typeCoef* pfCompactedCoefs_device;
+		#endif	// MOD-BY-LEETEN 04/08/2013-END
 		unsigned int* puCompactedKeys_device;
 
+		#if	0	// DEL-BY-LEETEN 04/08/2013-BEGIN
 		// ADD-BY-LEETEN 01/13/2013-BEGIN
 		CUDPPConfiguration configSegScanCounts;
 		CUDPPHandle planSegScanCounts;
@@ -96,9 +118,10 @@ namespace CudaDWT
 		size_t *puNrOfCompactedSegCounts_device;
 		CUDPPConfiguration configCompactSegCounts;
 		CUDPPHandle planCompactSegCounts;
+		#endif	// DEL-BY-LEETEN 04/08/2013-END
 
 		unsigned int *puOnes_device;
-		unsigned int *puSegCounts_device;
+		// DEL-BY-LEETEN 04/08/2013:	unsigned int *puSegCounts_device;
 		unsigned int *puCompactedSegCounts_device;
 		// ADD-BY-LEETEN 01/13/2013-END
 
