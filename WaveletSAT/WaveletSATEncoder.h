@@ -45,6 +45,8 @@ This should be 1 to optimize up the performance.
 using namespace std;
 #include <math.h>
 
+#include <string.h> // ADD-BY-LEETEN 04/11/2013
+
 #include "utils.h"		// ADD-BY-LEETEN 10/29/2012
 #include "SepDWTHeader.h"	
 #include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012

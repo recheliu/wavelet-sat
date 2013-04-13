@@ -123,6 +123,10 @@ else()
 		GLU
 		GLEW
 		glut
+		# ADD-BY-LEETEN 04/11/2013-BEGIN
+		glui 
+		netcdf 
+		# ADD-BY-LEETEN 04/11/2013-END
 		ITKNrrdIO
 	)
 endif()
@@ -148,6 +152,11 @@ else()
 		libclip
 		libshader
 		libtfw	# ADD-BY-LEETEN 02/05/2013
+		# ADD-BY-LEETEN 04/11/2013-BEGIN
+	  libfbo
+	  libfps
+	  lodepng
+		# ADD-BY-LEETEN 04/11/2013-END
 	)
 endif()
 

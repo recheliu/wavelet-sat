@@ -914,8 +914,13 @@ CSATSepDWTHistView::_DisplayLevelHistograms()
 		vpairBlockColors.push_back(
 				make_pair<pair<float4, float4>, float4>
 				(
+#if 0 // MOD-BY-LEETEN 04/11/2013-FROM:
 					make_pair<float4, float4>(f4Left, f4Size), 
 					this->vpairCoefColors[vuChildrenWithColor[c]].second
+#else // MOD-BY-LEETEN 04/11/2013-TO:
+					(pair<float4, float4>)make_pair<float4, float4>((float4)f4Left, (float4)f4Size), 
+					(float4)this->vpairCoefColors[vuChildrenWithColor[c]].second
+#endif // MOD-BY-LEETEN 04/11/2013-END
 				)
 			);
 	}
@@ -972,8 +977,13 @@ CSATSepDWTHistView::_DisplayLevelHistograms()
 			vpairBlockColors.push_back(
 					make_pair<pair<float4, float4>, float4>
 					(
+#if 0 // MOD-BY-LEETEN 04/11/2013-FROM:
 						make_pair<float4, float4>(f4Left, f4Size), 
 						cColorEditor.f4Color
+#else // MOD-BY-LEETEN 04/11/2013-TO:
+						(pair<float4, float4>)make_pair<float4, float4>((float4)f4Left, (float4)f4Size), 
+						(float4)cColorEditor.f4Color
+#endif // MOD-BY-LEETEN 04/11/2013-END
 					)
 				);
 			// ADD-BY-LEETEN 02/06/2013-END
@@ -1539,8 +1549,13 @@ CSATSepDWTHistView::_GluiFunc(unsigned short usValue)
 		vpairBlockColors.push_back(
 				make_pair<pair<float4, float4>, float4>
 				(
+#if 0 // MOD-BY-LEETEN 04/11/2013-FROM:
 					make_pair<float4, float4>(f4Left, f4Size), 
 					this->cColorEditor.f4Color
+#else // MOD-BY-LEETEN 04/11/2013-TO:
+					(pair<float4, float4>)make_pair<float4, float4>((float4)f4Left, (float4)f4Size), 
+					(float4)this->cColorEditor.f4Color
+#endif // MOD-BY-LEETEN 04/11/2013-END
 				)
 			);
 

@@ -354,7 +354,7 @@ protected:
 		);
 
 	void
-	CSATSepDWTHistView::
+	  // DEL-BY-LEETEN 04/11/2013: CSATSepDWTHistView::
 		_CompWithChild
 	(
 		const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF,
