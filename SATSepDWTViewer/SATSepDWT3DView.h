@@ -2,29 +2,13 @@
 
 #include <vector_functions.h>
 
-#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
-#include "libclip/ClipVolume.h"
-#include "libdvr2/DvrWin2.h"
-// ADD-BY-LEETEN 02/05/2013-BEGIN
-#include "libtfw/TfWin.h"
-#include "libtfw/TfUi.h"	
-// ADD-BY-LEETEN 02/05/2013-END
-#include "libtfw/TransFunc.h"
-#else	// MOD-BY-LEETEN 02/10/2013-TO:
 #include "libdvrsuite/DvrSuiteWin.h"
-#endif	// MOD-BY-LEETEN 02/10/2013-END
 
 #include "SATSepDWT.h"
 
 struct 
 CSATSepDWT3DView:	
-	#if	0	// MOD-BY-LEETEN 02/10/2013-FROM:
-	virtual	public CTfUi::CReceiver,	// ADD-BY-LEETEN 02/06/2013
-	virtual public CClipVolume,	// ADD-BY-LEETEN 02/05/2013
-	virtual public CDvrWin2
-	#else	// MOD-BY-LEETEN 02/10/2013-TO:
 	virtual public CDvrSuiteWin
-	#endif	// MOD-BY-LEETEN 02/10/2013-END
 	/*
 	virtual public CClipVolume
 	*/
@@ -37,23 +21,6 @@ protected:
 	};
 
 	CSATSepDWT *pcSATSepDWT;
-
-	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
-	// ADD-BY-LEETEN 02/05/2013-BEGIN
-	//////////////////////////////////////////////////////
-	// fields for volume rendering
-	Nrrd *nin;
-
-	double dValueMin;
-	double dValueMax;
-
-	// histogram
-	vector<float> vfHist;
-	float fMaxCount; // the maximal count of the histogram	
-
-	GLuint pidRayIntegral;
-	// ADD-BY-LEETEN 02/05/2013-END
-	#endif	// DEL-BY-LEETEN 02/10/2013-END
 
 	// ADD-BY-LEETEN 03/20/2013-BEGIN
 	// The modelview matrix after the scaling
@@ -77,22 +44,6 @@ public:
 	// ADD-BY-LEETEN 03/20/2013-END
 
 	// ADD-BY-LEETEN 02/05/2013-BEGIN
-	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
-	vector<float4> vf4TransFunc;
-	CTransFunc cTransFunc;
-
-	CTfWin	cTfWin;
-	CTfUi	cTfUi;
-
-	// ADD-BY-LEETEN 02/06/2013-BEGIN
-	virtual 
-	void
-	_Receive(
-		CTransFunc *pcTransFunc
-	);
-	// ADD-BY-LEETEN 02/06/2013-END
-	#endif	// DEL-BY-LEETEN 02/10/2013-END
-
 	// ADD-BY-LEETEN 02/06/2013-BEGIN
 	void
 	_SetBlockColors
@@ -102,13 +53,6 @@ public:
 		void* _Reserved = NULL
 	);
 	// ADD-BY-LEETEN 02/06/2013-END
-
-	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
-	void 
-	_InitTf
-	(
-	);
-	#endif	// DEL-BY-LEETEN 02/10/2013-END
 	// ADD-BY-LEETEN 02/05/2013-END
 
 	void
@@ -120,23 +64,6 @@ public:
 		this->pcSATSepDWT = pcSATSepDWT;
 	}
 
-	#if	0	// DEL-BY-LEETEN 02/10/2013-BEGIN
-	// ADD-BY-LEETEN 02/05/2013-BEGIN
-	template<typename T>
-	void
-	_ConvertDataToTexture
-	(
-		Nrrd *nin
-	);
-
-	void
-	_LoadData
-	(
-		char* szFilepath,
-		void* _Reserved = NULL
-	);
-	// ADD-BY-LEETEN 02/05/2013-END
-	#endif	// DEL-BY-LEETEN 02/10/2013-END
 	void _InitFunc();
 	void _GluiFunc(unsigned short usValue);
 

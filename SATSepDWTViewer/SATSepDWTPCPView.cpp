@@ -302,13 +302,8 @@ CSATSepDWTPCPView::_GluiFunc(unsigned short usValue)
 			vpairBlockColors.push_back(
 					make_pair<pair<float4, float4>, float4>
 					(
-#if 0 // MOD-BY-LEETEN 04/11/2013-FROM:
-						make_pair<float4, float4>(f4Left, f4Size), 
-						cFilter.f4Color
-#else // MOD-BY-LEETEN 04/11/2013-TO:
 						pair<float4, float4>(make_pair<float4, float4>((float4)f4Left, (float4)f4Size)), 
 						(float4)cFilter.f4Color
-#endif // MOD-BY-LEETEN 04/11/2013-END
 					)
 				);
 		}

@@ -15,13 +15,6 @@ CSATSepDWTHistView cSATSepDWTHistView;
 // CSATSepDWT3DView cSATSepDWT3DView;
 CSATSepDWT3DView cSATSepDWT3DView;	// ADD-BY-LEETEN 02/05/2013
 
-#if	0	// DEL-BY-LEETEN 02/06/2013-BEGIN
-void
-_UpdateTf()
-{
-}
-#endif	// DEL-BY-LEETEN 02/06/2013-END
-
 void 
 _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 {
@@ -30,14 +23,7 @@ _GlobalFunc(int iWid, unsigned int uiCbId, va_list vaArgs)
 		// the passed information: bounding box and color
 	// vpairBoxColor
 
-	// MOD-BY-LEETEN 02/14/2013-FROM:	if( cSATSepDWTHistView.IGetId() == iWid )
-	#if	0	// MOD-BY-LEETEN 03/17/2013-FROM:
-	if( cSATSepDWTHistView.IGetId() == iWid ||
-		cSATSepDWTHistView.cSATSepDWTPCPView.IGetId() == iWid )
-	#else	// MOD-BY-LEETEN 03/17/2013-TO:
 	if( cSATSepDWTHistView.IGetId() == iWid )
-	#endif	// MOD-BY-LEETEN 03/17/2013-END
-	// MOD-BY-LEETEN 02/14/2013-END
 	{
 		switch(uiCbId)	{
 		case CGlutWin::CB_MANUAL:	// not a default GlutWin event

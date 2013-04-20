@@ -6,8 +6,6 @@
 
 #include "SATSepDWT.h"
 
-// DEL-BY-LEETEN 03/17/2013:	#include "SATSepDWTPCPView.h"	// ADD-BY-LEETEN 02/14/2013
-
 #include "SATSepDWTQueryView.h"	// ADD-BY-LEETEN 03/17/2013
 
 struct 
@@ -54,34 +52,6 @@ protected:
 	int iMaxLevel;	// The current #levels to display
 
 	///////////////////////////////////////////////////////////////////////
-	#if	0	// DEL-BY-LEETEN 02/03/2013-BEGIN
-	//! The flag whether the editging is ON
-	int iIsEditingCluster;	
-
-	struct CCluster
-	{
-		enum{
-			NR_OF_CLUSTERS_PER_LEVEL = 16,
-		};
-
-		float pfColor[4];
-		vector<float2> vf2BinRanges;
-
-		CCluster(){}
-
-		CCluster(size_t uNrOfBins)
-		{
-			memset(pfColor, 0, sizeof(pfColor));
-			vf2BinRanges.assign(uNrOfBins, make_float2(0.0f, 1.0f));
-		}
-	};
-	enum 
-	{
-		GLUI_EVENT_CLUSTER_EDITING,
-		NR_OF_GLUI_EVENTS
-	};
-	#endif	// DEL-BY-LEETEN 02/03/2013-END
-
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	struct CColorEditor 
 	{
@@ -96,9 +66,7 @@ protected:
 			iBlock(0),
 			iIsActive(0)
 		{
-			// MOD-BY-LEETEN 02/11/2013-FROM:			memset(&f4Color, 0, sizeof(f4Color));
 			f4Color = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
-			// MOD-BY-LEETEN 02/11/2013-END
 		}
 
 		void
@@ -138,23 +106,6 @@ protected:
 	} cColorEditor;
 	// ADD-BY-LEETEN 02/03/2013-END
 
-	#if	0	// MOD-BY-LEETEN 02/03/2013-FROM:
-	struct CEditing {
-		int iLevel;
-		int iID;
-		int iBin;
-		CCluster cCluster;
-		float2 f2Prob;
-
-		CEditing():
-			iLevel(0),
-			iID(0),
-			iBin(0)
-		{
-			f2Prob = make_float2(0.0f, 1.0f);
-		}
-	} cEditing;
-	#else	// MOD-BY-LEETEN 02/03/2013-TO:
 	struct CClusterEditor
 	{
 		int iIsActive;
@@ -208,9 +159,7 @@ protected:
 			GLUI_Spinner* pcSpinner_Bin = pcGlui->add_spinner_to_panel(
 				pcPanel, "Bin",	GLUI_SPINNER_INT, &iBin,
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_EDITING), CGlutWin::_GluiCB_static);
-			// MOD-BY-LEETEN 02/14/2013-FROM:			pcSpinner_Bin->set_int_limits(0, uNrOfBins);
 			pcSpinner_Bin->set_int_limits(0, uNrOfBins - 1);
-			// MOD-BY-LEETEN 02/14/2013-END
 
 			pcGlui->add_button_to_panel(pcPanel, "Assign", 
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_ASSIGN), CGlutWin::_GluiCB_static);
@@ -226,7 +175,6 @@ protected:
 			f4Color = make_float4(0.0f, 0.0f, 0.0f, 1.0f);
 		}
 	} cClusterEditor;
-	#endif	// MOD-BY-LEETEN 02/03/2013-END
 
 	// ADD-BY-LEETEN 03/17/2013-BEGIN
 	//! The data structure for query
@@ -287,19 +235,10 @@ protected:
 	} cQuery;
 	// ADD-BY-LEETEN 03/17/2013-END
 
-	#if	0	// DEL-BY-LEETEN 02/03/2013-BEGIN
-	//! Arrays of cluster
-	/*! To simplify the program, each level has its own cluster
-	*/
-	vector< vector<CCluster> > vvcClusters;	
-	#endif	// DEL-BY-LEETEN 02/03/2013-END
-
 	//! The current pressed button (0 means that no button is pressed now).
 	int iButton;
 
-	// MOD-BY-LEETEN 02/14/2013-FROM:	int iMinBin;
 	int2 i2BinRange;
-	// MOD-BY-LEETEN 02/14/2013-END
 
 	// ADD-BY-LEETEN 02/03/2013-BEGIN
 	size_t uMaxLevel;
@@ -316,9 +255,7 @@ protected:
 	vector< pairBlockColor > vpairBlockColors;
 	// ADD-BY-LEETEN 02/06/2013-END
 
-	// MOD-BY-LEETEN 02/14/2013-FROM:	vector< vector<WaveletSAT::typeWavelet> > vvdLevelBinMax;	// ADD-BY-LEETEN 02/06/2013
 	vector<WaveletSAT::typeWavelet> vdLevelBinMax;	
-	// MOD-BY-LEETEN 02/14/2013-END
 
 	// ADD-BY-LEETEN 02/10/2013-BEGIN
 	// queue of the children of its own color
@@ -354,7 +291,6 @@ protected:
 		);
 
 	void
-	  // DEL-BY-LEETEN 04/11/2013: CSATSepDWTHistView::
 		_CompWithChild
 	(
 		const vector< pair<WaveletSAT::typeBin, WaveletSAT::typeWavelet> >& vpairCDF,
@@ -364,7 +300,6 @@ protected:
 	);
 
 	void
-	// DEL-BY-LEETEN 03/17/2013:	CSATSepDWTHistView::
 		_CompMaxProb
 	(
 		void	*_Reserved = NULL
@@ -386,8 +321,6 @@ protected:
 	);
 	// ADD-BY-LEETEN 03/17/2013-END
 public:
-
-	// DEL-BY-LEETEN 03/17/2013:	CSATSepDWTPCPView cSATSepDWTPCPView;	// ADD-BY-LEETEN 02/14/2013
 
 	CSATSepDWTQueryView cSATSepDWTQueryView;	// ADD-BY-LEETEN 03/17/2013
 
@@ -454,19 +387,15 @@ public:
 	// ADD-BY-LEETEN 02/03/2013-END
 
 	void
-	// MOD-BY-LEETEN 02/11/2013-FROM:	CSATSepDWTHistView::_RenderBlock
 	_RenderBlock
-	// MOD-BY-LEETEN 02/11/2013-END
 	(
 		size_t uLevel,
 		const vector<size_t>& vuWaveletSub,
 		const vector<size_t>& vuLocalSub,
-		// MOD-BY-LEETEN 02/03/2013-FROM:	const float pfColor[]
 		const	float4 f4Color,
 		bool	bIsHightLighting,
 		bool	bIsNotRecursive = false,	// ADD-BY-LEETEN 02/11/2013
 		void	*_Reserved = NULL
-		// MOD-BY-LEETEN 02/03/2013-END
 	);
 
 	///////////////////////////////////////////////////////////

@@ -183,9 +183,7 @@ main(int argn, char* argv[])
 		"The level to print the performance timing.");
 
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
-	// MOD-BY-LEETEN 03/30/2013-FROM:	int iIsCompBinsOnly = 1;
 	int iIsCompBinsOnly = 0;
-	// MOD-BY-LEETEN 03/30/2013-END
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);

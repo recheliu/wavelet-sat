@@ -19,9 +19,7 @@ typedef double typeData;
 // ADD-BY-LEETEN 03/29/2013-END
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
-// MOD-BY-LEETEN 03/28/2013-FROM:	CSimpleND<typeData, float, WaveletSAT::typeBin, float> cSimpleND;
 CSimpleND<typeData, typeData, WaveletSAT::typeBin, typeData> cSimpleND;
-// MOD-BY-LEETEN 03/28/2013-END
 vector<typeData> vdData;
 
 //! Convert the volume to an array of double type
@@ -165,9 +163,7 @@ main(int argn, char* argv[])
 	// ADD-BY-LEETEN 01/11/2013-END
 
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
-	// MOD-BY-LEETEN 03/29/2013-FROM:	int iIsCompBinsOnly = 1;
 	int iIsCompBinsOnly = 0;
-	// MOD-BY-LEETEN 03/29/2013-END
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 

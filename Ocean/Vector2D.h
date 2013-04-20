@@ -4,7 +4,6 @@
 
 template<
 	typename DT = WaveletSAT::typeBin,		//!< Type of the data. Here the data is the bin
-	// MOD-BY-LEETEN 03/16/2013-FROM:	typename ST = WaveletSAT::typeSum,		//!< Type of the sum
 	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 	typename ST = float,		//!< Type of the sum
 	// ADD-BY-LEETEN 03/29/2013-BEGIN
@@ -12,9 +11,7 @@ template<
 	typename ST = double,		//!< Type of the sum
 	#endif	// #if	!WITH_DOUBLE_COEF
 	// ADD-BY-LEETEN 03/29/2013-END
-	// MOD-BY-LEETEN 03/16/2013-END
 	typename BT = WaveletSAT::typeBin,		//!< Type of the bin
-	// MOD-BY-LEETEN 03/16/2013-FROM:	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
 	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 	typename WT = float						//!< Type of the wavelet coefficients
 	// ADD-BY-LEETEN 03/29/2013-BEGIN
@@ -22,7 +19,6 @@ template<
 	typename WT = double					//!< Type of the wavelet coefficients
 	#endif	// #if	!WITH_DOUBLE_COEF
 	// ADD-BY-LEETEN 03/29/2013-END
-	// MOD-BY-LEETEN 03/16/2013-END
 >
 class CVector2D:
 		virtual public CSimpleND<DT, ST, BT, WT>
@@ -67,9 +63,7 @@ public:
 		case NR_OF_BINS:
 			// here one more bin is allocated for the missing value
 			uNrOfDataBins = (size_t)lValue;	
-			// MOD-BY-LEETEN 01/31/2013-FROM:			uNrOfBins = uNrOfDataBins + NR_OF_DEFAULT_BINS;	
 			this->uNrOfBins = uNrOfDataBins + NR_OF_DEFAULT_BINS;	
-			// MOD-BY-LEETEN 01/31/2013-END
 			break;
 
 		case DEPTH:
@@ -176,9 +170,7 @@ public:
 			return;
 
 		// now set up the encoder
-		// MOD-BY-LEETEN 01/31/2013-FROM:		_Set(vuDimLengths, uNrOfBins);
 		_Set(vuDimLengths, this->uNrOfBins);
-		// MOD-BY-LEETEN 01/31/2013-END
 	}
 
 	virtual
@@ -232,9 +224,7 @@ public:
 		for(size_t d = 0; d < uDataSize; d++)
 			vuBins[d] = (DT)UGetBin(pvfComps[0][d], pvfComps[1][d]);
 
-		// MOD-BY-LEETEN 01/31/2013-FROM:		_Allocate();
 		this->_Allocate();
-		// MOD-BY-LEETEN 01/31/2013-END
 	}
 
 	virtual 
@@ -262,9 +252,7 @@ public:
 	{
 	  // ADD-BY-LEETEN 01/31/2013-BEGIN
 	  const size_t& uDataSize = this->uDataSize;
-		// MOD-By-LEETEN 02/19/2013-FROM:	  const vector<size_t>& vuDimLengths = vuDimLengths;
 	  const vector<size_t>& vuDimLengths = this->vuDimLengths;
-		// MOD-By-LEETEN 02/19/2013-END
 		// ADD-BY-LEETEN 01/31/2013-END
 		for(size_t d = 0; d < uDataSize; d++)
 		{
@@ -272,11 +260,6 @@ public:
 			WaveletSAT::_ConvertIndexToSub(d, vuPos, vuDimLengths);
 			this->_Update(vuPos, vuBins[d]);
 		}
-		#if	0	// DEL-BY-LEETEN 03/28/2013-BEGIN
-	  // MOD-BY-LEETEN 01/31/2013-FROM: 		_Finalize();
-		this->_Finalize();
-	  // MOD-BY-LEETEN 01/31/2013-END
-		#endif	// DEL-BY-LEETEN 03/28/2013-END
 	}
 };
 

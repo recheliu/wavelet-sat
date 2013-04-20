@@ -92,9 +92,7 @@ main(int argn, char* argv[])
 		"The level to print the performance timing.");
 
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
-	// MOD-BY-LEETEN 03/30/2013-FROM:	int iIsCompBinsOnly = 1;
 	int iIsCompBinsOnly = 0;
-	// MOD-BY-LEETEN 03/30/2013-END
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 
@@ -118,12 +116,6 @@ main(int argn, char* argv[])
 	cVector2D._SetInteger(cVector2D.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
 	#endif	// #if	WITH_CUDA
 
-	#if	0	// DEL-BY-LEETEN 03/19/2013-BEGIN
-	// ADD-By-LEETEN 02/19/2013-BEGIN
-	LIBCLOCK_END(bIsPrintingTiming);
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	// ADD-By-LEETEN 02/19/2013-END
-	#endif	// DEL-BY-LEETEN 03/19/2013-END
 	cVector2D._Load(
 		szVecDirPath,
 		szUVecFileName,
@@ -132,13 +124,6 @@ main(int argn, char* argv[])
 		szVVecVarName);
 
 	LIBCLOCK_END(bIsPrintingTiming);
-
-	#if	0	// DEL-BY-LEETEN 03/28/2013-BEGIN
-	// ADD-BY-LEETEN 03/19/2013-BEGIN
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	LIBCLOCK_END(bIsPrintingTiming);
-	// ADD-BY-LEETEN 03/19/2013-END
-	#endif	// DEL-BY-LEETEN 03/28/2013-END
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cVector2D._Encode();

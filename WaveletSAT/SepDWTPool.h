@@ -182,13 +182,10 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 				#if	WITH_SPARSE_AS_VECTOR
 				this->vvpairSparse.resize(this->uSize);
-				// DEL-BY-LEETEN 03/16/2013:	this->vuCounts.resize(this->uSize);
 				#endif	// #if	WITH_SPARSE_AS_VECTOR
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
-			// MOD-BY-LEETEN 03/28/2013-FROM:			this->vuCounts.resize(this->uSize);	// ADD-BY-LEETEN 03/16/2013
 			this->vuCounts.assign(this->uSize, 0);
-			// MOD-BY-LEETEN 03/28/2013-END
 
 			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
@@ -404,7 +401,6 @@ namespace WaveletSAT
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 			// ADD-By-LEETEN 11/11/2012-BEGIN
 			#if	WITH_SPARSE_AS_VECTOR		
-			// DEL-BY-LEETEN 03/16/2013:	if( bIsSparse )
 				vuCounts[uIndex] += uCount;
 			#endif	// #if	WITH_SPARSE_AS_VECTOR	
 

@@ -1,13 +1,5 @@
 ﻿#pragma once
 
-#if	0	// DEL-BY-LEETEN 01/27/2013-BEGIN
-#define WITH_VECTORS_FOR_COUNTED_COEFS	0
-
-// ADD-BY-LEETEN 10/10/2012-BEGIN
-#define	WITH_BOUNDARY_AWARE_DWT		0
-// ADD-BY-LEETEN 10/10/2012-END
-#endif	// DEL-BY-LEETEN 01/27/2013-END
-
 // ADD-BY-LEETEN 11/11/2012-BEGIN
 #define WITH_COEF_POOL			1
 // ADD-BY-LEETEN 11/11/2012-END
@@ -38,8 +30,6 @@ This should be 1 to optimize up the performance.
 #error WITH_COEF_POOL must be 1
 #endif	// #if	!defined(WITH_COEF_POOL) || !WITH_COEF_POOL
 // ADD-BY-LEETEN 01/27/2013-END
-
-// DEL-By-LEETEN 02/19/2013-FROM:	#include <map>	
 
 #include <vector>
 using namespace std;
@@ -604,9 +594,7 @@ public:
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				size_t uF, uS;
-				// MOD-BY-LEETEN 01/12/2013-FROM:				this->vcCoefPools[c]._GetArraySize(uF, uS, dWaveletThreshold);
 				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)dWaveletThreshold);
-				// MOD-BY-LEETEN 01/12/2013-END
 				uNrOfValuesInFullArray += uF;
 				uNrOfValuesOnSparseArray += uS;
 			}

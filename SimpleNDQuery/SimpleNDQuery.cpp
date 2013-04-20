@@ -1,12 +1,3 @@
-#if	0	// DEL-BY-LEETEN 01/23/2013-BEGIN
-// ADD-BY-LEETEN 12/30/2012-BEGIN
-#if		WITH_BOOST
-#include <boost/filesystem.hpp>
-using namespace boost::filesystem;
-#endif	//	#if	WITH_BOOST
-// ADD-BY-LEETEN 12/30/2012-END
-#endif	// DEL-BY-LEETEN 01/23/2013-END
-
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h> 
@@ -19,9 +10,7 @@ using namespace boost::filesystem;
 double dValueMin = HUGE_VAL;
 double dValueMax = -HUGE_VAL;
 Nrrd *nin;
-// MOD-BY-LEETEN 03/28/2013-FROM:	CSimpleNDFile<double, double> cSimpleNDFile;
 CSimpleNDFile<double, double, WaveletSAT::typeBin, double> cSimpleNDFile;
-// MOD-BY-LEETEN 03/28/2013-END
 vector<double> vdData;
 
 // ADD-BY-LEETEN 03/28/2013-BEGIN
@@ -142,7 +131,6 @@ main(int argn, char* argv[])
 {
 	bool bIsPrintingTiming = true;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
-	// DEL-BY-LEETEN 02/19/2012:	LIBCLOCK_BEGIN(bIsPrintingTiming);
 
 	_OPTInit();			// initialize the option parser
 
@@ -258,11 +246,6 @@ main(int argn, char* argv[])
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	#if	0	// MOD-By-LEETEN 02/19/2013-FROM:
-	if(iIsTestingQuery)
-	{
-	assert(szVolFilePath); // ADD-BY-LEETEN 12/30/2012
-	#else	// MOD-By-LEETEN 02/19/2013-TO:
 	if(iIsTestingQuery)
 	{
 		// ADD-BY-LEETEN 03/28/2013-BEGIN
@@ -454,7 +437,6 @@ main(int argn, char* argv[])
 		}
 		else
 		{
-		#endif	// MOD-By-LEETEN 02/19/2013-END
 		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
 
 		cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
@@ -570,69 +552,6 @@ main(int argn, char* argv[])
 		LIBCLOCK_END(bIsPrintingTiming);	
 
 		/////////////////////////////////////////////////////////////
-		#if	0	// MOD-BY-LEETEN 01/23/2013-FROM:
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		// Setup the file name
-		ASSERT_OR_LOG(NULL != szEntropyFilepathPrefix, "");
-		char szEntropyNhdrFilepath[NC_MAX_NAME+1];		sprintf(szEntropyNhdrFilepath,		"%s.nhdr",			szEntropyFilepathPrefix);
-		char szEntropyRawFilepath[NC_MAX_NAME+1];		sprintf(szEntropyRawFilepath,		"%s.raw",			szEntropyFilepathPrefix);
-		#if		WITH_BOOST
-		path pathNhdr(szEntropyNhdrFilepath);
-		path pathNhdrLeaf = pathNhdr.leaf();
-		path pathNhdrDir =	pathNhdr.branch_path();
-		path pathRaw(szEntropyRawFilepath);
-		path pathRawLeaf = pathRaw.leaf();
-		strcpy(szEntropyNhdrFilepath, pathNhdrLeaf.string().c_str());
-		#else	// #if	WITH_BOOST
-		#endif	// #if	WITH_BOOST
-
-		//////////////////////////////////////////////
-		// save the entropy field in Nrrd format
-		#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
-		TBuffer<float> pfEntropyField;		pfEntropyField.alloc(valEntropyField.size());
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		#else	// #if	!WITH_SMART_PTR
-		boost::shared_array<float> pfEntropyField(new float[valEntropyField.size()]);
-		#endif	// #if	!WITH_SMART_PTR
-		// ADD-BY-LEETEN 12/30/2012-END
-		for(size_t d = 0; d < valEntropyField.size(); d++)
-			pfEntropyField[d] = (float)valEntropyField[d];
-		#if	!WITH_SMART_PTR		// ADD-BY-LEETEN 12/30/2012
-		TBuffer<size_t> puSize;				puSize.alloc(cSimpleNDFile.UGetNrOfDims());
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		#else	// #if	!WITH_SMART_PTR	
-		boost::shared_array<size_t> puSize(new size_t[cSimpleNDFile.UGetNrOfDims()]);
-		#endif	// #if	!WITH_SMART_PTR	
-		// ADD-BY-LEETEN 12/30/2012-END
-		vector<size_t> vuDimLengths;
-		cSimpleNDFile._GetDataSize(vuDimLengths);
-		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
-		  puSize[d] = vuDimLengths[d];
-
-		Nrrd *nrrdOut = nrrdNew();
-		nrrdWrap_nva(nrrdOut, &pfEntropyField[0], nrrdTypeFloat, (unsigned int)cSimpleNDFile.UGetNrOfDims(), &puSize[0]);
-		nrrdSave(szEntropyNhdrFilepath, nrrdOut, NULL);
-
-		// nrrdIoStateNix(nioOut);
-		nrrdNix(nrrdOut);
-
-		// now move the .nhdr and .raw to the destination folder
-		#if		WITH_BOOST
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		if( pathNhdrLeaf != pathNhdr )
-		  {
-		    // ADD-BY-LEETEN 12/30/2012-END
-		remove(pathNhdr);
-		remove(pathRaw);
-		rename(pathNhdrLeaf,	pathNhdr);
-		rename(pathRawLeaf,		pathRaw);
-		  } // ADD-BY-LEETEN 12/30/2012
-		#else	// #if	WITH_BOOST
-		#endif	// #if	WITH_BOOST
-		LOG_VAR(szEntropyNhdrFilepath);	// ADD-BY-LEETEN 12/30/2012
-		LIBCLOCK_END(bIsPrintingTiming);
-		// ADD-BY-LEETEN 12/30/2012-END
-		#else	// MOD-BY-LEETEN 01/23/2013-TO:
 		vector<size_t> vuDimLengths;
 		cSimpleNDFile._GetDataSize(vuDimLengths);
 		WaveletSAT::_SaveNrrd<double>(
@@ -640,7 +559,6 @@ main(int argn, char* argv[])
 			valEntropyField.data(),
 			szEntropyFilepathPrefix
 			);
-		#endif	// MOD-BY-LEETEN 01/23/2013-END
 	}
 
 	#if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
