@@ -86,13 +86,7 @@ public:
 		fill(this->vusCachedNextOffsets.begin(), this->vusCachedNextOffsets.end(), (BT)0); 
 		// fill(vusCachedBins.begin(),	vusCachedBins.end(), (unsigned short)0);
 		// fill(vCachedValues.begin(),	vCachedValues.end(), (WT)0);
-		#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-		valarray<ST> vSAT;
-		// ADD-BY-LEETEN 01/21/2013-BEGIN
-		#else	// #if	WITH_VALARRAY	
 		vector<ST> vSAT;
-		#endif	// #if	WITH_VALARRAY	
-		// ADD-BY-LEETEN 01/21/2013-END
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		{
 			// LOG_VAR(b);
@@ -107,13 +101,7 @@ public:
 		vector<int> viLeft,
 		vector<int> viRight,
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-		valarray<ST>& vEntropyField,
-		// ADD-BY-LEETEN 01/21/2013-BEGIN
-		#else	// #if	WITH_VALARRAY	
 		vector<ST>& vEntropyField,
-		#endif	// #if	WITH_VALARRAY	
-		// ADD-BY-LEETEN 01/21/2013-END
 		// ADD-BY-LEETEN 12/30/2012-END
 		void *_Reserved = NULL
 	)
@@ -155,19 +143,10 @@ public:
 
 		/////////////// compute the SAT
 		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
-		#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-		valarray<ST> vSAT;	// ADD-BY-LEETEN 01/09/2013
-		valarray<ST> vLocalHist;	
-		valarray<ST> vTempEntropyField;	
-		valarray<ST> vSum;			
-		// ADD-BY-LEETEN 01/21/2013-BEGIN
-		#else	// #if	WITH_VALARRAY	
 		vector<ST> vSAT;	// ADD-BY-LEETEN 01/09/2013
 		vector<ST> vLocalHist;	
 		vector<ST> vTempEntropyField;	
 		vector<ST> vSum;			
-		#endif	// #if	WITH_VALARRAY	
-		// ADD-BY-LEETEN 01/21/2013-END
 		for(size_t b = 0; b < this->UGetNrOfBins(); b++)
 		{
 			// ADD-BY-LEETEN 01/02/2013-BEGIN
@@ -191,13 +170,7 @@ public:
 			// ADD-BY-LEETEN 01/02/2013-END
 
 			// compute the local sum
-			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013-BEGIN
-			vLocalHist = (ST)0;	
-			// ADD-BY-LEETEN 01/21/2013-BEGIN
-			#else	// #if	WITH_VALARRAY	
 			vLocalHist.assign(vLocalHist.size(), (ST)0);
-			#endif	// #if	WITH_VALARRAY	
-			// ADD-BY-LEETEN 01/21/2013-END
 
 			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 			for(size_t i = 0; i < uNrOfCorners; i++)
@@ -234,18 +207,11 @@ public:
 			LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
 			// ADD-BY-LEETEN 01/02/2013-END
 		}
-		#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-		vTempEntropyField = -vTempEntropyField / vSum + log(vSum);
-		vTempEntropyField /= (ST)M_LN2;
-		// ADD-BY-LEETEN 01/21/2013-BEGIN
-		#else	// #if	WITH_VALARRAY	
 		for(size_t i = 0; i < vTempEntropyField.size(); i++)
 		{
 			vTempEntropyField[i] = -vTempEntropyField[i] / vSum[i] + log(vSum[i]);
 			vTempEntropyField[i] /= (ST)M_LN2;
 		}
-		#endif	// #if	WITH_VALARRAY	
-		// ADD-BY-LEETEN 01/21/2013-END
 		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
 
 		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);

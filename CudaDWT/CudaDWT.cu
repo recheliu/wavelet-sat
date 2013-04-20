@@ -41,15 +41,6 @@ namespace CudaDWT
 			FREE_MEMORY(puOnes_device);
 			FREE_MEMORY(puCompactedSegCounts_device);
 			// ADD-BY-LEETEN 01/13/2013-END
-
-			// ADD-BY-LEETEN 01/11/2013-BEGIN
-			#if		WITH_CUDA_MALLOC_HOST	
-			FREE_MEMORY_ON_HOST(puNrOfCompactedKeys_host);
-			FREE_MEMORY_ON_HOST(puNrOfCompactedCoefs_host);
-			FREE_MEMORY_ON_HOST(pfCoefs_host);
-			FREE_MEMORY_ON_HOST(puKeys_host);
-			#endif	// #if		WITH_CUDA_MALLOC_HOST	
-			// ADD-BY-LEETEN 01/11/2013-END
 		}
 	}
 
@@ -83,14 +74,6 @@ namespace CudaDWT
 		CUDA_SAFE_CALL(cudaMemcpy(puOnes_device, vuOnes.data(), sizeof(puOnes_device[0]) * vuOnes.size(), cudaMemcpyHostToDevice));
 		// ADD-BY-LEETEN 01/13/2013-END
 
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
-		#if		WITH_CUDA_MALLOC_HOST	
-		CUDA_SAFE_CALL(cudaMallocHost((void**)&puNrOfCompactedKeys_host,			sizeof(puNrOfCompactedKeys_host[0])));
-		CUDA_SAFE_CALL(cudaMallocHost((void**)&puNrOfCompactedCoefs_host,			sizeof(puNrOfCompactedCoefs_host[0])));
-		CUDA_SAFE_CALL(cudaMallocHost((void**)&puKeys_host,			sizeof(puKeys_host[0]) * uMaxNrOfElementsOnTheDevice));
-		CUDA_SAFE_CALL(cudaMallocHost((void**)&pfCoefs_host,		sizeof(pfCoefs_host[0]) * uMaxNrOfElementsOnTheDevice));
-		#endif	// #if	WITH_CUDA_MALLOC_HOST	
-		// ADD-BY-LEETEN 01/11/2013-END
 		bIsInitialized = true;
 	}
 
@@ -161,7 +144,6 @@ namespace CudaDWT
 		const unsigned int	puWaveletLengths[],
 
 		size_t				*puNrOfElements,
-		#if		!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 		unsigned int		puKeys_host[],
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		float				pfCoefs_host[],
@@ -170,12 +152,6 @@ namespace CudaDWT
 		typeCoef			pfCoefs_host[],
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
-		#else	// #if		!WITH_CUDA_MALLOC_HOST
-		unsigned int		puKeys[],
-		float				pfCoefs[],
-		#endif	// #if		!WITH_CUDA_MALLOC_HOST
-		// ADD-BY-LEETEN 01/11/2013-END
 
 		unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 
@@ -287,11 +263,6 @@ namespace CudaDWT
 				&pfCompactedCoefs_device[0], 
 				uNrOfCompactedCoefs_host * sizeof(pfCoefs_host[0]),
 				cudaMemcpyDeviceToHost) );
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
-		#if		WITH_CUDA_MALLOC_HOST	
-		memcpy(&pfCoefs[0], &pfCoefs_host[0], uNrOfCompactedCoefs_host * sizeof(pfCoefs[0]));
-		#endif	// #if		WITH_CUDA_MALLOC_HOST	
-		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		// download the keys and the coefficinets back 
@@ -302,11 +273,6 @@ namespace CudaDWT
 				&puCompactedKeys_device[0], 
 				uNrOfCompactedKeys_host * sizeof(puKeys_host[0]),
 				cudaMemcpyDeviceToHost) );
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
-		#if		WITH_CUDA_MALLOC_HOST	
-		memcpy(&puKeys[0], &puKeys_host[0], uNrOfCompactedKeys_host * sizeof(puKeys[0]));
-		#endif	// #if		WITH_CUDA_MALLOC_HOST	
-		// ADD-BY-LEETEN 01/11/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 
 		ASSERT_OR_LOG(uNrOfCompactedKeys_host == uNrOfCompactedCoefs_host, cerr<<"Unmatched #keys and #coefs.");

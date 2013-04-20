@@ -1,32 +1,5 @@
 #pragma once
 
-//! Decide whether a table of the product of wavelet bais is precomputed.
-/*!
-This table is used in the decompression stage.
-*/
-#define	WITH_PRECOMPUTED_WAVELET_BASIS	0	
-
-//! Decide whether a table of the product of wavelet sum is precomputed.
-/*!
-This table is used in the compression stage.
-*/
-#define	WITH_PRECOMPUTED_WAVELET_SUMS	0
-
-// ADD-BY-LEETEN 01/27/2013-BEGIN
-#if	WITH_PRECOMPUTED_WAVELET_BASIS
-#error WITH_PRECOMPUTED_WAVELET_BASIS must be undefined or 0
-#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
-
-#if	WITH_PRECOMPUTED_WAVELET_SUMS
-#error WITH_PRECOMPUTED_WAVELET_SUMS must be 0
-#endif	// #if	WITH_PRECOMPUTED_WAVELET_SUMS
-
-// ADD-BY-LEETEN 01/27/2013-END
-
-//! Decide whether a table that immediately map each updating coefficients and its dimension to the corresponding 1D index in the wavelet table per dimension.
-#define WITH_COEF_DIM_2_WAVELET		1
-// ADD-BY-LEETEN 10/21/2012-END
-
 #include <map>	
 #if defined (WIN32)
 	#include <psapi.h>	
@@ -126,16 +99,6 @@ protected:
 
 		vector< vector<bool> > vvbSliceScanlineValid;	// ADD-BY-LEETEN 01/21/2013
 
-		// ADD-BY-LEETEN 10/18/2012-BEGIN
-		#if	WITH_PRECOMPUTED_WAVELET_BASIS
-		#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
-		// ADD-BY-LEETEN 10/18/2012-END
-
-		// ADD-BY-LEETEN 10/21/2012-BEGIN
-		#if	WITH_PRECOMPUTED_WAVELET_SUMS
-		#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
-		// ADD-BY-LEETEN 10/21/2012-END
-
 		//! A lookup table to map the coefficient to its levels per dim.
 		/*! size: D x C: 
 		Map each coefficients c, c = 0 ... C - 1 = prod l[d] - 1, to the the corresponding D levels
@@ -143,13 +106,11 @@ protected:
 		vector<size_t> vuCoefDim2Level;
 
 		// ADD-BY-LEETEN 10/21/2012-BEGIN
-		#if	WITH_COEF_DIM_2_WAVELET
 		//! A lookup table to map the coefficient to its 1D index in the L x D wavelets
 		/*! size: D x C: 
 		Map each coefficients c, c = 0 ... C - 1 = prod l[d] - 1, to the the corresponding index 
 		*/
 		vector<size_t> vuCoefDim2Wavelet;
-		#endif	// #if	WITH_COEF_DIM_2_WAVELET
 		// ADD-BY-LEETEN 10/21/2012-END
 
 		//! The look up table per dimension to quickly conver dim. subscript to the coefficient indices
@@ -384,33 +345,20 @@ public:
 			}
 
 			this->vuCoefDim2Level.resize(uNrOfUpdatingCoefs * UGetNrOfDims());
-			#if	WITH_COEF_DIM_2_WAVELET			
 			this->vuCoefDim2Wavelet.resize(uNrOfUpdatingCoefs * UGetNrOfDims());
-			#endif	// #if	WITH_COEF_DIM_2_WAVELET		
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
-				#if	!WITH_COEF_DIM_2_WAVELET		// ADD-BY-LEETEN 10/21/2012
-				for(size_t uCoef = c, d = 0; d < UGetNrOfDims(); d++)
-				// ADD-BY-LEETEN 10/21/2012-BEGIN
-				#else	// #if	!WITH_COEF_DIM_2_WAVELET	
 				for(size_t	uCoef = c, uBase = 0,	d = 0; 
 						d < UGetNrOfDims(); 
 						uBase += this->vuDimMaxLevels[d], d++)
-				#endif	// #if	!WITH_COEF_DIM_2_WAVELET	
-				// ADD-BY-LEETEN 10/21/2012-END
 				{
 					size_t uMaxLevel = this->vuDimMaxLevels[d];
 					size_t uLevel = uCoef % uMaxLevel; 
 					uCoef /= uMaxLevel; 
 					this->vuCoefDim2Level[c * UGetNrOfDims() + d] = uLevel;
-					#if	WITH_COEF_DIM_2_WAVELET		
 					this->vuCoefDim2Wavelet[c * UGetNrOfDims() + d] = uBase + uLevel;
-					#endif	// #if	WITH_COEF_DIM_2_WAVELET	
  				}
 
 			// ADD-BY-LEETEN 10/18/2012-BEGIN
-			#if	WITH_PRECOMPUTED_WAVELET_BASIS
-			#endif	// #if	WITH_PRECOMPUTED_WAVELET_BASIS
-
 			for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				size_t uMaxCountPerCoef = 1;	// max # coefficnet
@@ -422,9 +370,6 @@ public:
 				vuMaxCounts.push_back(uMaxCountPerCoef);
 			}
 
-			#if	WITH_PRECOMPUTED_WAVELET_SUMS
-			#endif	// if	WITH_PRECOMPUTED_WAVELET_SUMS
-			
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
 			vvuGlobalBase.resize(uNrOfUpdatingCoefs);
 			vuGlobalBase.resize(uNrOfUpdatingCoefs);

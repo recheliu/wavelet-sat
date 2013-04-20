@@ -1,7 +1,5 @@
 #pragma once
 
-#define	WITH_PRECOMPUTED_SCANLINE_BASE	1	// ADD-BY-LEETEN 01/09/2013
-
 // ADD-BY-LEETEN 12/28/2012-BEGIN
 #if	WITH_BOOST
 #include <boost/filesystem/operations.hpp>
@@ -62,12 +60,8 @@ protected:
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
 
-		// ADD-BY-LEETEN 01/09/2013-BEGIN
-		#if		WITH_PRECOMPUTED_SCANLINE_BASE
 		//! The base of all scanlines for all dimensions
 		vector< vector<size_t> > vvuSliceScanlineBase;
-		#endif	//	#if WITH_PRECOMPUTED_SCANLINE_BASE
-		// ADD-BY-LEETEN 01/09/2013-END
 
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -248,14 +242,7 @@ public:
 
 					for(size_t i = 0; i < uNrOfScanLines; i++)
 					{
-						#if	!WITH_PRECOMPUTED_SCANLINE_BASE	// ADD-BY-LEETEN 01/09/2013
-						_ConvertIndexToSub(i, vuScanLineBase, vuOtherDimLengths);
-						size_t uScanLineBase = UConvertSubToIndex(vuScanLineBase, vuDimLengths);
-						// ADD-BY-LEETEN 01/09/2013-BEGIN
-						#else	// #if !WITH_PRECOMPUTED_SCANLINE_BASE
 						size_t uScanLineBase = vvuSliceScanlineBase[d][i];
-						#endif	// #if !WITH_PRECOMPUTED_SCANLINE_BASE
-						// ADD-BY-LEETEN 01/09/2013-END
 						for(size_t 	j = 1, uIndex = uScanLineBase; 
 								j < vuDimLengths[d]; 
 								j++, uIndex += uOffset)

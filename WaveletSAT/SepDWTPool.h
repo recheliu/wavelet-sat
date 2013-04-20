@@ -1,22 +1,8 @@
 #pragma once
 
-// ADD-BY-LEETEN 11/12/2012-BEGIN
-#define WITH_POINTER_TO_MAP	1
-// ADD-BY-LEETEN 11/12/2012-END
-
-#define WITH_SPARSE_AS_VECTOR	1	// ADD-BY-LEETEN 11/11/2012
-
-#define	WITH_UNORDERED_MAP		1	// ADD-By-LEETEN 02/19/2013
-
 #include	<algorithm>	// ADD-BY-LEETEN 03/17/2013
 
-#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-#include <map>	
-// ADD-By-LEETEN 02/19/2013-BEGIN
-#else	// #if	!WITH_UNORDERED_MAP
 #include <unordered_map>	
-#endif	// #if	!WITH_UNORDERED_MAP
-// ADD-By-LEETEN 02/19/2013-END
 #include <vector>
 using namespace std;
 #include <math.h>
@@ -57,32 +43,17 @@ namespace WaveletSAT
 
 		vector< vector<WT> > vvFull;
 
-		#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETE 11/12/2012
-		vector< map<IT, ST> > vmapSparse;
-
-		// ADD-BY-LEETEN 11/12/2012-BEGIN
-		#else	// #if	!WITH_POINTER_TO_MAP
-		#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-		vector< map<BT, WT>* >* pvpmapSparse;
-		// ADD-By-LEETEN 02/19/2013-BEGIN
-		#else	// #if	!WITH_UNORDERED_MAP	
 		vector< unordered_map<BT, WT>* >* pvpmapSparse;
-		#endif	// #if	!WITH_UNORDERED_MAP	
-		// ADD-By-LEETEN 02/19/2013-END
-		#endif	// #if	!WITH_POINTER_TO_MAP
-		// ADD-BY-LEETEN 11/12/2012-END
 		
 		// ADD-BY-LEETEN 11/11/2012-BEGIN
 		//! Max # that each coefficient is updated
 		size_t uMaxCount;
 
-		#if	WITH_SPARSE_AS_VECTOR
 		//! Record how many time each coefficient has been updated
 		vector<size_t> vuCounts;
 
 		//! 
 		vector< vector< pair<BT, WT> > > vvpairSparse;
-		#endif	// #if	WITH_SPARSE_AS_VECTOR
 		// ADD-BY-LEETEN 11/11/2012-END
 	public:
 		////////////////////////////////////////////////////////////////////
@@ -164,25 +135,11 @@ namespace WaveletSAT
 			}
 			else
 			{	// ADD-BY-LEETEN 11/11/2012
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				this->vmapSparse.resize(this->uSize);
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				this->pvpmapSparse = new vector< map <BT, WT>* >;
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP	
 				this->pvpmapSparse = new vector< unordered_map <BT, WT>* >;
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
 				this->pvpmapSparse->resize(this->uSize);
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
 
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
-				#if	WITH_SPARSE_AS_VECTOR
 				this->vvpairSparse.resize(this->uSize);
-				#endif	// #if	WITH_SPARSE_AS_VECTOR
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
 			this->vuCounts.assign(this->uSize, 0);
@@ -219,44 +176,6 @@ namespace WaveletSAT
 			}
 			else
 			{
-				#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				for(typename vector< map<IT, ST> >::iterator 
-					ivmapSparse = this->vmapSparse.begin();
-					ivmapSparse != this->vmapSparse.end();
-					ivmapSparse++)
-				{
-					map<IT, ST>& vmapBinSparse = *ivmapSparse;
-					for(typename map<IT, ST>::iterator 
-						pair = vmapBinSparse.begin();
-						pair != vmapBinSparse.end();
-						pair++)
-						if( (ST)fabs(pair->second) >= Threshold )
-							uCountInSparseArray++;
-				}
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
-				for(typename vector< map<IT, ST>* >::iterator 
-					ivpmapSparse = this->pvpmapSparse->begin();
-					ivpmapSparse != this->pvpmapSparse->end();
-					ivpmapSparse++)
-				{
-					if(NULL == *ivpmapSparse)
-						continue;
-
-					map<IT, ST>& vmapBinSparse = *(*ivpmapSparse);
-					for(typename map<IT, ST>::iterator 
-						pair = vmapBinSparse.begin();
-						pair != vmapBinSparse.end();
-						pair++)
-						if( (ST)fabs(pair->second) >= Threshold )
-							uCountInSparseArray++;
-				}
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
-
-				// ADD-BY-LEETEN 11/11/2012-BEGIN
-				#else	// #if	!WITH_SPARSE_AS_VECTOR	
 				for(typename vector< vector< pair<BT, WT> > >::iterator 
 					ivvpairSparse = this->vvpairSparse.begin();
 					ivvpairSparse != this->vvpairSparse.end();
@@ -270,7 +189,6 @@ namespace WaveletSAT
 						if( (WT)fabs((double)pair->second) >= (WT)Threshold )
 							uCountInSparseArray++;
 				}
-				#endif	// #if	!WITH_SPARSE_AS_VECTOR	
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
 		}
@@ -280,13 +198,7 @@ namespace WaveletSAT
 		void
 		_AddEntryToSparseArray
 		(
-			#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-			map<BT, WT>& mapSparse,
-			// ADD-By-LEETEN 02/19/2013-BEGIN
-			#else	//	#if	!WITH_UNORDERED_MAP
 			unordered_map<BT, WT>& mapSparse,
-			#endif	//	#if	!WITH_UNORDERED_MAP	
-			// ADD-By-LEETEN 02/19/2013-END
 			const BT& Bin,
 			const WT& Value,
 			void* _Reserved = NULL
@@ -353,33 +265,14 @@ namespace WaveletSAT
 			else
 			{
 				// sparse
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				map<IT, ST>& mapCoef = vmapSparse[uIndex];
-
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
 				if( NULL == (*pvpmapSparse)[uIndex] )
 				{
 					Value = WT(0);
 					return;
 				}
 
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				map<BT, WT>& mapCoef = *(*pvpmapSparse)[uIndex];
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP	
 				unordered_map<BT, WT>& mapCoef = *(*pvpmapSparse)[uIndex];
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				typename map<BT, WT>::iterator ipair = mapCoef.find(Bin);
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP	
 				typename unordered_map<BT, WT>::iterator ipair = mapCoef.find(Bin);
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
 				if( mapCoef.end() == ipair )
 					Value = WT(0);
 				else
@@ -400,9 +293,7 @@ namespace WaveletSAT
 		{
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 			// ADD-By-LEETEN 11/11/2012-BEGIN
-			#if	WITH_SPARSE_AS_VECTOR		
 				vuCounts[uIndex] += uCount;
-			#endif	// #if	WITH_SPARSE_AS_VECTOR	
 
 			if( Value )
 			{
@@ -416,31 +307,10 @@ namespace WaveletSAT
 			else
 			{
 				// sparse
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				map<IT, ST>& mapCoef = vmapSparse[uIndex];
-
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				if(NULL == (*pvpmapSparse)[uIndex])
-					(*pvpmapSparse)[uIndex] = new map<BT, WT>();
-				map<BT, WT>& mapCoef = *(*pvpmapSparse)[uIndex];
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP	
 				if(NULL == (*pvpmapSparse)[uIndex])
 					(*pvpmapSparse)[uIndex] = new unordered_map<BT, WT>();
 				unordered_map<BT, WT>& mapCoef = *(*pvpmapSparse)[uIndex];
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				typename map<BT, WT>::iterator ipair = mapCoef.find(Bin);
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP	
 				typename unordered_map<BT, WT>::iterator ipair = mapCoef.find(Bin);
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
 				if( mapCoef.end() == ipair )
 					_AddEntryToSparseArray
 					(
@@ -454,47 +324,20 @@ namespace WaveletSAT
 			}
 			}	// ADD-By-LEETEN 11/11/2012
 
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#if	WITH_SPARSE_AS_VECTOR	
 			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
 			{
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
-				#if	!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-				const map<BT, WT>& vmapBinSparse = *(*this->pvpmapSparse)[uIndex];
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#else	// #if	!WITH_UNORDERED_MAP
 				const unordered_map<BT, WT>& vmapBinSparse = *(*this->pvpmapSparse)[uIndex];
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
 
 				vvpairSparse[uIndex].resize(vmapBinSparse.size());
 				copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[uIndex].begin());
-				// ADD-By-LEETEN 02/19/2013-BEGIN
-				#if		WITH_UNORDERED_MAP	
 				sort(vvpairSparse[uIndex].begin(), vvpairSparse[uIndex].end());
-				#endif	// #if	!WITH_UNORDERED_MAP	
-				// ADD-By-LEETEN 02/19/2013-END
 				/// now clear this map
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				this->vmapSparse[uIndex].clear();
-
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP
 				// _ShowMemoryUsage();
 				(*this->pvpmapSparse)[uIndex]->clear();
 				delete (*this->pvpmapSparse)[uIndex];
 				(*this->pvpmapSparse)[uIndex] = NULL;
 				// _ShowMemoryUsage();
-				#endif	// #if	!WITH_POINTER_TO_MAP
-				// ADD-BY-LEETEN 11/12/2012-END
 			}	
-			#endif	// #if	WITH_SPARSE_AS_VECTOR	
-			// ADD-BY-LEETEN 11/11/2012-END
 		}
 
 		void
@@ -529,52 +372,7 @@ namespace WaveletSAT
 			}
 			else
 			{
-				#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				for(typename vector< map<IT, ST> >::iterator 
-					ivmapSparse = this->vmapSparse.begin();
-					ivmapSparse != this->vmapSparse.end();
-					ivmapSparse++)
-				{
-					map<IT, ST>& vmapBinSparse = *ivmapSparse;
-
-				// ADD-BY-LEETEN 11/11/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP
-				for(typename vector< map<BT, WT>* >::iterator 
-					ivpmapSparse = this->pvpmapSparse->begin();
-					ivpmapSparse != this->pvpmapSparse->end();
-					ivpmapSparse++)
-				{
-					map<BT, WT>& vmapBinSparse = *(*ivpmapSparse);
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/11/2012-END
-					for(typename map<BT, WT>::iterator 
-									pair = vmapBinSparse.begin();
-						pair != vmapBinSparse.end();
-						pair++)
-						pair->second *= WaveletWeight;
-				}
-				// ADD-BY-LEETEN 11/11/2012-BEGIN
-				#else	// #if	!WITH_SPARSE_AS_VECTOR	
 				// check each element to make sure that no element is left in the map
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				for(size_t e = 0; e < this->vmapSparse.size(); e++)
-				{
-					// ADD-By-LEETEN 11/11/2012-BEGIN
-					// if the vector of pair is not empty, it means that the coefficients has been moved to here
-					if(!vvpairSparse[e].empty())
-						continue;
-					// ADD-By-LEETEN 11/11/2012-END
-
-					const map<IT, ST>& vmapBinSparse = this->vmapSparse[e];
-					vvpairSparse[e].resize(vmapBinSparse.size());
-					copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[e].begin());
-
-					/// now clear this map
-					this->vmapSparse[e].clear();
-				}
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
 				for(size_t e = 0; e < this->pvpmapSparse->size(); e++)
 				{
 					// ADD-By-LEETEN 11/11/2012-BEGIN
@@ -583,39 +381,20 @@ namespace WaveletSAT
 						continue;
 					// ADD-By-LEETEN 11/11/2012-END
 
-					#if		!WITH_UNORDERED_MAP	// ADD-By-LEETEN 02/19/2013
-					const map<BT, WT>& vmapBinSparse = *(*this->pvpmapSparse)[e];
-					// ADD-By-LEETEN 02/19/2013-BEGIN
-					#else	// #if		!WITH_UNORDERED_MAP	
 					const unordered_map<BT, WT>& vmapBinSparse = *(*this->pvpmapSparse)[e];
-					#endif	// #if		!WITH_UNORDERED_MAP	
-					// ADD-By-LEETEN 02/19/2013-END
 					vvpairSparse[e].resize(vmapBinSparse.size());
 					copy(vmapBinSparse.begin(), vmapBinSparse.end(), vvpairSparse[e].begin());
-					// ADD-By-LEETEN 02/19/2013-BEGIN
-					#if		WITH_UNORDERED_MAP	
 					sort(vvpairSparse[e].begin(), vvpairSparse[e].end());
-					#endif	//#if		WITH_UNORDERED_MAP	
-					// ADD-By-LEETEN 02/19/2013-END
 					/// now clear this map
 					(*this->pvpmapSparse)[e]->clear();
 					delete (*this->pvpmapSparse)[e];
 					(*this->pvpmapSparse)[e] = NULL;
 				}
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
 
 				// clear the vector to hold the sparse array and the counts
-				#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-				this->vmapSparse.clear();
-
-				// ADD-BY-LEETEN 11/12/2012-BEGIN
-				#else	// #if	!WITH_POINTER_TO_MAP	
 				this->pvpmapSparse->clear();
 				delete this->pvpmapSparse;
 				this->pvpmapSparse = NULL;
-				#endif	// #if	!WITH_POINTER_TO_MAP	
-				// ADD-BY-LEETEN 11/12/2012-END
 				this->vuCounts.clear();
 				for(typename vector< vector< pair<BT, WT> > >::iterator 
 					ivvpairSparse = this->vvpairSparse.begin();
@@ -629,7 +408,6 @@ namespace WaveletSAT
 						pair++)
 						pair->second *= WaveletWeight;
 				}
-				#endif	// #if	!WITH_SPARSE_AS_VECTOR	
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
 		}
@@ -719,30 +497,9 @@ namespace WaveletSAT
 			// ADD-BY-LEETEN 11/12/2012-END
 
 			// sparse
-			#if	!WITH_SPARSE_AS_VECTOR	// ADD-BY-LEETEN 11/11/2012
-			#if	!WITH_POINTER_TO_MAP	// ADD-BY-LEETEN 11/12/2012
-			const map<IT, ST>& vmapBinSparse = this->vmapSparse[uIndex];
-
-			// ADD-BY-LEETEN 11/12/2012-BEGIN
-			#else	// #if	!WITH_POINTER_TO_MAP	
-			const map<IT, ST>& vmapBinSparse = *(*this->pvpmapSparse)[uIndex];
-			#endif	// #if	!WITH_POINTER_TO_MAP	
-			// ADD-BY-LEETEN 11/12/2012-END
-
-			vpairCoefs.clear();
-			for(typename map<IT, ST>::const_iterator 
-					ipair = vmapBinSparse.begin();
-				ipair != vmapBinSparse.end();
-				ipair++)
-				vpairCoefs.push_back(pair<size_t, ST>((size_t)ipair->first, ipair->second));
-
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_SPARSE_AS_VECTOR	
 			const vector< pair<BT, WT> >& vpairSparse = this->vvpairSparse[uIndex];
 			vpairCoefs.resize(vpairSparse.size());
 			copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
-			#endif	// #if	!WITH_SPARSE_AS_VECTOR	
-			// ADD-BY-LEETEN 11/11/2012-END
 			}	// ADD-BY-LEETEN 11/12/2012
 		}
 		
@@ -767,18 +524,13 @@ namespace WaveletSAT
 
 		CSepDWTPool()
 		{
-			// ADD-BY-LEETEN 11/12/2012-BEGIN
-			#if	WITH_POINTER_TO_MAP	
 			pvpmapSparse = NULL;
-			#endif	// #if	WITH_POINTER_TO_MAP	
-			// ADD-BY-LEETEN 11/12/2012-END
 		}
 
 		// ADD-BY-LEETEN 11/12/2012-BEGIN
 		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSepDWTPool()
 		{
-			#if	WITH_POINTER_TO_MAP	
 			if(this->pvpmapSparse)
 			{	// ADD-BY-LEETEN 11/19/2012
 				for(size_t e = 0; e < this->pvpmapSparse->size(); e++)
@@ -793,7 +545,6 @@ namespace WaveletSAT
 				this->pvpmapSparse = NULL;
 			}
 			// ADD-BY-LEETEN 11/19/2012-END
-			#endif	// #if	WITH_POINTER_TO_MAP
 		}
 		// ADD-BY-LEETEN 11/12/2012-END
 	};

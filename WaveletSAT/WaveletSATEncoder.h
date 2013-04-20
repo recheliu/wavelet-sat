@@ -1,36 +1,5 @@
 ﻿#pragma once
 
-// ADD-BY-LEETEN 11/11/2012-BEGIN
-#define WITH_COEF_POOL			1
-// ADD-BY-LEETEN 11/11/2012-END
-
-// ADD-BY-LEETEN 03/16/2013-BEGIN
-//! Pre-clloate the entire buffer so the memory will be not appeneded during the run time. 
-/*!
-Nevertheless, it does not help the performance much and thus it can be 0.
-*/
-#define SAVEFILE_PREALLOC_COEFS	0	
-
-//! Access the reference of the sparse array to avoid the copy of data.
-/*!
-Nevertheless, it does not help the performance much and thus it can be 0.
-*/
-#define SAVEFILE_WITH_REF		0
-
-//! Skip the coefficients with zero value.
-/*!
-This should be 1 to optimize up the performance.
-*/
-#define SAVEFILE_SKIP_EMPTY		1
-// ADD-BY-LEETEN 03/16/2013-END
-
-
-// ADD-BY-LEETEN 01/27/2013-BEGIN
-#if	!defined(WITH_COEF_POOL) || !WITH_COEF_POOL
-#error WITH_COEF_POOL must be 1
-#endif	// #if	!defined(WITH_COEF_POOL) || !WITH_COEF_POOL
-// ADD-BY-LEETEN 01/27/2013-END
-
 #include <vector>
 using namespace std;
 #include <math.h>
@@ -110,11 +79,7 @@ protected:
 		size_t uNrOfCoefsInFullArray;	
 
 		// ADD-BY-LEETEN 10/29/2012-BEGIN
-		#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-		// ADD-BY-LEETEN 11/11/2012-BEGIN
-		#else	// #if	!WITH_COEF_POOL	
 		vector< CSepDWTPool<WT, BT> > vcCoefPools;
-		#endif	// #if	!WITH_COEF_POOL	
 		// ADD-BY-LEETEN 11/11/2012-END
 		// ADD-BY-LEETEN 10/29/2012-END
 
@@ -130,9 +95,6 @@ protected:
 			void *_Reserved = NULL
 		)
 		{
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL	
 			vector<size_t> vuLocalCoefSub;
 			vuLocalCoefSub.resize(UGetNrOfDims());
 
@@ -160,7 +122,6 @@ protected:
 				WT dWavelet = (WT)dWeight * (WT)lWavelet;
 				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
 			}
-			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
 		}
 public:
@@ -383,16 +344,6 @@ public:
 
 				vector< pair<BT, WT> > vpairLocalCoefBinValue;
 
-				// ADD-BY-LEETEN 03/16/2013-BEGIN
-				#if	SAVEFILE_PREALLOC_COEFS
-				size_t uFullSize;
-				size_t uSparseSize;
-				this->vcCoefPools[c]._GetArraySize(uFullSize, uSparseSize, (WT)dWaveletThreshold);
-				vpairLocalCoefBinValue.resize(uFullSize + uSparseSize);
-				size_t uLocalBase = 0; 
-				#endif	// #if SAVEFILE_PREALLOC_COEFS
-				// ADD-BY-LEETEN 03/16/2013-END
-
 				// ADD-BY-LEETEN 12/30/2012-BEGIN
 				#if	!WITH_SMART_PTR
 				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
@@ -407,38 +358,12 @@ public:
 
 				for(size_t bc = 0; bc < uNrOfLocalCoefs; bc++)
 				{
-					// ADD-BY-LEETEN 03/16/2013-BEGIN
-					#if	SAVEFILE_SKIP_EMPTY
 					if( this->vcCoefPools[c].BIsEmpty(bc) )
 						continue;
-					#endif	// #if SAVEFILE_SKIP_EMPTY
-					// ADD-BY-LEETEN 03/16/2013-END
 
 					vector<size_t> vuLocalCoefSub;
 					_ConvertIndexToSub(bc, vuLocalCoefSub, vuLocalCoefLengths);
 
-					// ADD-BY-LEETEN 03/16/2013-BEGIN
-					#if	SAVEFILE_WITH_REF
-					if( this->vcCoefPools[c].BIsSparse() )
-					{
-						const vector< pair<BT, WT> >& vpairCoefBinValue = 
-							this->vcCoefPools[c].VGetCoefSparse(vuLocalCoefSub);
-
-						pLocalCoefCounts[bc] = (TYPE_COEF_COUNT)vpairCoefBinValue.size();
-						#if	!SAVEFILE_PREALLOC_COEFS
-						pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
-						vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
-						#else	// #if	!SAVEFILE_PREALLOC_COEFS
-						pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)(uNrOfWrittenValues + uLocalBase);
-						copy(vpairCoefBinValue.begin(), vpairCoefBinValue.end(),
-							vpairLocalCoefBinValue.begin() + uLocalBase);
-						uLocalBase += vpairCoefBinValue.size();
-						#endif	// #if	!SAVEFILE_PREALLOC_COEFS
-					}
-					else
-					{
-					#endif	// #if SAVEFILE_WITH_REF
-					// ADD-BY-LEETEN 03/16/2013-END
 					vector< pair<BT, WT> > vpairCoefBinValue;
 
 					this->vcCoefPools[c]._GetCoefSparse
@@ -448,23 +373,8 @@ public:
 					);
 
 					pLocalCoefCounts[bc] = (TYPE_COEF_COUNT)vpairCoefBinValue.size();
-					#if	!SAVEFILE_PREALLOC_COEFS	// ADD-BY-LEETEN 03/16/2013
 					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
 					vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
-					// ADD-BY-LEETEN 03/16/2013-BEGIN
-					#else	// #if	!SAVEFILE_PREALLOC_COEFS	
-					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)(uNrOfWrittenValues + uLocalBase);
-					copy(vpairCoefBinValue.begin(), vpairCoefBinValue.end(),
-						vpairLocalCoefBinValue.begin() + uLocalBase);
-					uLocalBase += vpairCoefBinValue.size();
-					#endif	// #if	!SAVEFILE_PREALLOC_COEFS	
-					// ADD-BY-LEETEN 03/16/2013-END
-
-					// ADD-BY-LEETEN 03/16/2013-BEGIN
-					#if	SAVEFILE_WITH_REF	
-					}	
-					#endif	// #if	SAVEFILE_WITH_REF	
-					// ADD-BY-LEETEN 03/16/2013-END
 				}
 				// ADD-BY-LEETEN 12/15/2012-BEGIN
 				// write the header
@@ -549,9 +459,6 @@ public:
 			
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL
 			{
 				for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 				{
@@ -579,7 +486,6 @@ public:
 					// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
 				}
 			}	
-			#endif	// #if	!WITH_COEF_POOL
 			// ADD-BY-LEETEN 11/11/2012-END
 
 			_ShowMemoryUsage(false);
@@ -588,9 +494,6 @@ public:
 			uNrOfNonZeroValues = 0;
 			uNrOfValuesInFullArray = 0;
 			uNrOfValuesOnSparseArray = 0;
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				size_t uF, uS;
@@ -598,7 +501,6 @@ public:
 				uNrOfValuesInFullArray += uF;
 				uNrOfValuesOnSparseArray += uS;
 			}
-			#endif	// #if	!WITH_COEF_POOL	
 			uNrOfNonZeroValues = uNrOfValuesInFullArray + uNrOfValuesOnSparseArray;
 			// ADD-BY-LEETEN 12/15/2012-END
 		}
@@ -634,9 +536,6 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL
 			// compute the #coef in the full array per bin SAT
 			uNrOfCoefsInFullArray = min(
 				(size_t)floor( (double)uSizeOfFullArrays/(double)(UGetNrOfBins() * sizeof(WT))), 
@@ -719,7 +618,6 @@ public:
 					this->vuMaxCounts[c],	// ADD-BY-LEETEN 11/11/2012
 					bIsSparse);
 			}
-			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
 
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
@@ -735,9 +633,6 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			#if	!WITH_COEF_POOL	// ADD-BY-LEETEN 11/11/2012
-			// ADD-BY-LEETEN 11/11/2012-BEGIN
-			#else	// #if	!WITH_COEF_POOL	
 			vector<size_t> vuEmpty;	// this empty vector is used to speed up the access of elements
 
 			vdSums.resize(UGetNrOfBins());
@@ -796,7 +691,6 @@ public:
 					}
 				}
 			}
-			#endif	// #if	!WITH_COEF_POOL	
 			// ADD-BY-LEETEN 11/11/2012-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= (ST)dWaveletDenomiator;

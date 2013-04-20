@@ -1,9 +1,5 @@
 #pragma once
 
-// ADD-BY-LEETEN 01/11/2013-BEGIN
-#define WITH_CUDA_MALLOC_HOST	0
-// ADD-BY-LEETEN 01/11/2013-END
-
 #include <cuda_runtime_api.h>
 
 #if defined(WIN32)
@@ -65,15 +61,6 @@ namespace CudaDWT
 		unsigned int *puCompactedSegCounts_device;
 		// ADD-BY-LEETEN 01/13/2013-END
 
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
-		#if	WITH_CUDA_MALLOC_HOST 
-		size_t *puNrOfCompactedKeys_host;
-		size_t *puNrOfCompactedCoefs_host;
-		unsigned int* puKeys_host;
-		float*	pfCoefs_host;
-		#endif	// #if	WITH_CUDA_MALLOC_HOST 
-		// ADD-BY-LEETEN 01/11/2013-END
-
 		bool bIsInitialized;
 
 		bool bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
@@ -122,7 +109,6 @@ namespace CudaDWT
 			const unsigned int	puWaveletLengths[],
 
 			size_t				*puNrOfElements,
-			#if	!WITH_CUDA_MALLOC_HOST	// ADD-BY-LEETEN 01/11/2013
 			unsigned int		puKeys_host[],
 			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			float				pfCoefs_host[],
@@ -131,12 +117,6 @@ namespace CudaDWT
 			double				pfCoefs_host[],
 			#endif	// #if	!WITH_DOUBLE_COEF
 			// ADD-BY-LEETEN 03/29/2013-END
-			// ADD-BY-LEETEN 01/11/2013-BEGIN
-			#else	// #if	!WITH_CUDA_MALLOC_HOST
-			unsigned int		puKeys[],
-			float				pfCoefs[],
-			#endif	// #if	!WITH_CUDA_MALLOC_HOST
-			// ADD-BY-LEETEN 01/11/2013-END
 
 			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 

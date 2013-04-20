@@ -5,8 +5,6 @@
 using namespace CudaDWT;
 #endif	// #if	WITH_CUDA
 
-#define	WITH_CPU_BUCKET_SORT	0	// ADD-BY-LEETEN 01/13/2013
-
 #include "WaveletSATEncoder.h"	// ADD-BY-LEETEN 12/16/2012
 
 namespace WaveletSAT
@@ -52,17 +50,6 @@ protected:
 
 		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
 
-		// ADD-BY-LEETEN 01/13/2013-BEGIN
-		#if		WITH_CPU_BUCKET_SORT
-		vector<uint4>			vu4SortedBinSubs;
-		vector<float>			vfSortedWeights;
-
-		vector<size_t>			vuBucketCounts;
-
-		vector<size_t>			vuBucketBases;
-		#endif	// #if	WITH_CPU_BUCKET_SORT
-		// ADD-BY-LEETEN 01/13/2013-END
-
 		virtual
 		void
 		_UpdateBinsOnGPUs
@@ -74,7 +61,6 @@ protected:
 			unsigned int puLevels[CudaDWT::GPU_MAX_NR_OF_DIMS];
 			unsigned int puWaveletLengths[CudaDWT::GPU_MAX_NR_OF_DIMS];
 				
-			#if		!WITH_CPU_BUCKET_SORT	// ADD-BY-LEETEN 01/13/2013
 			// ADD-BY-LEETEN 01/18/2012-BEGIN
 			unsigned int puCoefLengths[CudaDWT::GPU_MAX_NR_OF_DIMS];
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
@@ -89,31 +75,6 @@ protected:
 				vu4BinSubs.data(),
 				vfWeights.data()
 				);
-			// ADD-BY-LEETEN 01/13/2013-BEGIN
-			#else	// #if	!WITH_CPU_BUCKET_SORT	
-			vuBucketBases[0] = 0;
-			for(size_t b = 1; b < vuBucketCounts.size(); b++)
-				vuBucketBases[b] = vuBucketBases[b - 1] + vuBucketCounts[b - 1];
-			fill(vuBucketCounts.begin(), vuBucketCounts.end(), 0);	// reuse this buffer to hold the count
-			for(size_t d = 0; d < vu4BinSubs.size(); d++)
-			{
-				size_t uBin = vu4BinSubs[d].x;
-				size_t uSortedIndex = vuBucketBases[uBin] + vuBucketCounts[uBin];
-				vu4SortedBinSubs[uSortedIndex] = vu4BinSubs[d];
-				vfSortedWeights[uSortedIndex] = vfWeights[d];
-				vuBucketCounts[uBin]++;
-			}
-			// now reset the counts to 0
-			fill(vuBucketCounts.begin(), vuBucketCounts.end(), 0);
-
-			CCudaDWT::_InitEncoder(
-				uNrOfElements,
-				vu4SortedBinSubs.data(),
-				vfSortedWeights.data(),
-				true
-				);
-			#endif	// #if	!WITH_CPU_BUCKET_SORT	
-			// ADD-BY-LEETEN 01/13/2013-END
 
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
@@ -202,13 +163,6 @@ protected:
 			#endif	// #if	!WITH_DOUBLE_COEF
 			// ADD-BY-LEETEN 03/29/2013-END
 			uNrOfElements++;
-
-			// ADD-BY-LEETEN 01/13/2013-BEGIN
-			#if	WITH_CPU_BUCKET_SORT
-			// update the bucket size of this bin
-			vuBucketCounts[uBin]++;
-			#endif	// #if	WITH_CPU_BUCKET_SORT
-			// ADD-BY-LEETEN 01/13/2013-END
 
 			// otherwise, 
 			if( uNrOfElements == uMaxNrOfElementsOnTheDevice )
@@ -299,19 +253,6 @@ public:
 			vuKeys.resize(uMaxNrOfElementsOnTheDevice);
 			vfCoefs.resize(uMaxNrOfElementsOnTheDevice);
 			vuSegCounts.resize(uMaxNrOfElementsOnTheDevice);	// ADD-BY-LEETEN 01/13/2013
-
-			// ADD-BY-LEETEN 01/13/2013-BEGIN
-			#if		WITH_CPU_BUCKET_SORT
-			// allocate the buffer to hold the sorted and consecutive keys
-			vu4SortedBinSubs.resize(uMaxNrOfElementsOnTheDevice);
-			// allocate the buffer to hold the corresponding values
-			vfSortedWeights.resize(uMaxNrOfElementsOnTheDevice);
-
-			// allocate the buffers for bucket sort
-			vuBucketBases.assign(UGetNrOfBins(), 0);
-			vuBucketCounts.assign(UGetNrOfBins(), 0);
-			#endif	// #if	WITH_CPU_BUCKET_SORT
-			// ADD-BY-LEETEN 01/13/2013-END
 		}
 		
 		CWaveletSATGPUEncoder():

@@ -541,13 +541,7 @@ main(int argn, char* argv[])
 			viLeft.push_back(-iEntropyWinRadius);
 			viRight.push_back(+iEntropyWinRadius);
 		}
-		#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-		valarray<double> valEntropyField;
-		// ADD-BY-LEETEN 01/21/2013-BEGIN
-		#else	// #if	WITH_VALARRAY	
 		vector<double> valEntropyField;
-		#endif	// #if	WITH_VALARRAY	
-		// ADD-BY-LEETEN 01/21/2013-END
 		cSimpleNDFile._ComputeEntropy(viLeft, viRight, valEntropyField);
 		LIBCLOCK_END(bIsPrintingTiming);	
 

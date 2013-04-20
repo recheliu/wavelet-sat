@@ -27,24 +27,9 @@ using namespace std;
 #include "lognc.h"
 #endif	// #if	WITH_NETCDF
 
-// ADD-BY-LEETEN 12/28/2012-BEGIN
-// if this is non-0, the header with most coefficients will be place in core first
-#define	IS_SELECTING_LONGEST_FIRST					1
-
-// if this is non-0, when a coefficient is chosen, other coefficients of the same wavelet will be chosen as well
-#define IS_SELECTING_THE_SAME_WAVELET			1
-// ADD-BY-LEETEN 12/28/2012-END
-
 // ADD-BY-LEETEN 01/05/2013-BEGIN
 // If this is non-0, the coefficient for a region query will be merged together to reduce the access of coefficients
 #define MERGE_COEFFICIENTS_PER_REGION			1
-// ADD-BY-LEETEN 01/05/2013-END
-
-// ADD-BY-LEETEN 01/05/2013-BEGIN
-#if		MERGE_COEFFICIENTS_PER_REGION	
-// If this is non-0, the queue to hold the coefficient will be pre-allocated, whose size is (log n)^d * 2^d.
-#define WITH_PRE_ALLOCATED_QUEUES				1
-#endif	// #if		MERGE_COEFFICIENTS_PER_REGION	
 // ADD-BY-LEETEN 01/05/2013-END
 
 namespace WaveletSAT
@@ -64,11 +49,7 @@ namespace WaveletSAT
 protected:	
 			bool bIsPrintingTiming;	// ADD-BY-LEETEN 01/27/2013
 
-			// ADD-BY-LEETEN 01/05/2013-BEGIN
-			#if		WITH_PRE_ALLOCATED_QUEUES	
 			vector< pair<size_t, WT> > vpairLocalWaveletQueues; 
-			#endif	// #if	WITH_PRE_ALLOCATED_QUEUES
-			// ADD-BY-LEETEN 01/05/2013-END
 
 			// ADD-BY-LEETEN 01/05/2012-BEGIN
 			size_t uMinNrOfCoefQueries;
@@ -219,19 +200,10 @@ public:
 			vector<size_t> vuGlobalCoef;	vuGlobalCoef.resize(UGetNrOfDims());
 			size_t uNrOfValuesInCore = 0;
 
-			#if				IS_SELECTING_LONGEST_FIRST
 			reverse(vpairCoefCountIndex.begin(), vpairCoefCountIndex.end());
-			#endif	// #if	IS_SELECTING_LONGEST_FIRST
 
 			for(size_t c = 0; c < uNrOfCoefs && uNrOfValuesInCore <= uMaxNrOfValuesInCore; c++)
 			{
-				#if		!IS_SELECTING_THE_SAME_WAVELET
-				if( uNrOfValuesInCore + vpairCoefCountIndex[c].first > uNrOfValuesInCore )
-					break;
-
-				vbFlagsCoefInCore[abs(vpairCoefCountIndex[c].second)] = true;
-				uNrOfValuesInCore += vpairCoefCountIndex[c].first; 
-				#else	// #if		!IS_SELECTING_THE_SAME_WAVELET
 				size_t uCoef = abs(vpairCoefCountIndex[c].second);
 				if( vbFlagsCoefInCore[uCoef] )
 					continue;
@@ -260,7 +232,6 @@ public:
 					}
 					uNrOfValuesInCore += this->vuLocalValueCount[uWavelet];
 				}
-				#endif	// #if		!IS_SELECTING_THE_SAME_WAVELET
 			}
 			LOG_VAR(uNrOfNonZeroValues);
 			LOG_VAR(uMaxNrOfValuesInCore);
@@ -268,12 +239,8 @@ public:
 
 			this->vpcCoefPools.resize(this->uNrOfUpdatingCoefs);	// allocate the pools
 
-			// ADD-BY-LEETEN 01/05/2013-BEGIN
-			#if		WITH_PRE_ALLOCATED_QUEUES
 			size_t uNrOfQueries = (size_t) 1 << UGetNrOfDims();
 			vpairLocalWaveletQueues.resize(uNrOfQueries * this->uNrOfUpdatingCoefs);
-			#endif	// #if	WITH_PRE_ALLOCATED_QUEUES
-			// ADD-BY-LEETEN 01/05/2013-END
 		}
 
 		
@@ -716,11 +683,6 @@ public:
 			}
 			uNrOfCoefQueries = uNrOfQueries * this->uNrOfUpdatingCoefs;
 			#else	// #if	!MERGE_COEFFICIENTS_PER_REGION
-			#if	!WITH_PRE_ALLOCATED_QUEUES				// ADD-BY-LEETEN 01/05/2013
-			vector< map< size_t, WT> > vmapLocalWavelet;
-			vmapLocalWavelet.resize(uNrOfUpdatingCoefs);
-			#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
-
 			size_t uNrOfQueries = (size_t)1 << this->UGetNrOfDims();
 			vector<size_t> vuQueryPos;
 			vuQueryPos.resize(this->UGetNrOfDims());
@@ -760,48 +722,10 @@ public:
 					}
 					size_t uLocalCoef = UConvertSubToIndex(vuLocalCoefSub, vvuLocalLengths[c]);
 
-					#if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
-					typename map<size_t, WT>::iterator ivmapLocalWavelet = vmapLocalWavelet[c].find(uLocalCoef);
-					if(vmapLocalWavelet[c].end() == ivmapLocalWavelet)
-						vmapLocalWavelet[c].insert(pair<size_t, WT>(uLocalCoef, (WT)iSign * (WT)dWavelet));
-					else
-						ivmapLocalWavelet->second += (WT)iSign * (WT)dWavelet;
-					// ADD-BY-LEETEN 01/05/2013-BEGIN
-					#else	// #if	!WITH_PRE_ALLOCATED_QUEUES	
 					this->vpairLocalWaveletQueues[c * uNrOfQueries + q] = pair<size_t, WT>(uLocalCoef, (WT)iSign * (WT)dWavelet);
-					#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES	
-					// ADD-BY-LEETEN 01/05/2013-END
 				}
 			}
 
-			#if	!WITH_PRE_ALLOCATED_QUEUES	// ADD-BY-LEETEN 01/05/2013
-			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
-			{
-				for(typename map<size_t, WT>::iterator 
-					ivmapLocalWavelet = vmapLocalWavelet[c].begin();
-					ivmapLocalWavelet != vmapLocalWavelet[c].end();
-					ivmapLocalWavelet++)
-				{
-					vector< pair<BT, WT> > vpairCoefBinValues;
-					if(	this->dWaveletThreshold < fabs((double)ivmapLocalWavelet->second) )
-					{
-						this->_GetCoefSparse
-						(
-							c,
-							ivmapLocalWavelet->first,
-							vpairCoefBinValues
-						);
-						for(typename vector< pair<BT, WT> >::iterator
-							ivpairCoefs = vpairCoefBinValues.begin();
-							ivpairCoefs != vpairCoefBinValues.end();
-							ivpairCoefs++ )
-								vdSums[ivpairCoefs->first] += ivpairCoefs->second * ivmapLocalWavelet->second;
-						uNrOfCoefQueries++;
-					}
-				}
-			}
-			// ADD-BY-LEETEN 01/05/2013-BEGIN
-			#else	// #if	!WITH_PRE_ALLOCATED_QUEUES	
 			for(size_t i = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				sort(	vpairLocalWaveletQueues.begin() + i,
@@ -847,8 +771,6 @@ public:
 					}
 				}
 			}
-			#endif	// #if	!WITH_PRE_ALLOCATED_QUEUES
-			// ADD-BY-LEETEN 01/05/2013-END
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= dWaveletDenomiator;
 			#endif	// #if	!MERGE_COEFFICIENTS_PER_REGION
@@ -884,13 +806,7 @@ public:
 		_DecodeBin
 		(
 			const BT& usBin,
-			#if WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-			valarray<ST> &vSAT,
-			// ADD-BY-LEETEN 01/21/2013-BEGIN
-			#else	// #if WITH_VALARRAY	
 			vector<ST>& vSAT,
-			#endif	// #if WITH_VALARRAY	
-			// ADD-BY-LEETEN 01/21/2013-END
 			void *_Reserved = NULL
 		)
 		{
@@ -987,19 +903,9 @@ public:
 				if( 1 == uCoefLength )
 					continue;
 
-				#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-				valarray<ST> vSrc;
-				vSrc.resize(uCoefLength);
-				valarray<ST> pvDsts[2];
-				for(size_t i = 0; i < 2; i++)
-					pvDsts[i].resize(uCoefLength);
-				// ADD-BY-LEETEN 01/21/2013-BEGIN
-				#else	// #if	WITH_VALARRAY	
 				vector<ST> pvDsts[2];
 				for(size_t i = 0; i < 2; i++)
 					pvDsts[i].resize(uCoefLength);
-				#endif	// #if	WITH_VALARRAY	
-				// ADD-BY-LEETEN 01/21/2013-END
 
 				/*
 				vector<size_t> vuScanLineIndices;
@@ -1012,21 +918,6 @@ public:
 				for(size_t i = 0; i < uNrOfScanLines; i++)
 				{
 					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
-					#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-					slice sliceScanline = slice(uScanlineBase, uCoefLength, uOffset);
-					vSrc = vSAT[sliceScanline];
-					pvDsts[0][0] = vSrc[0];
-					_IDWT1D(
-						vSrc, 
-						pvDsts[0], 
-						pvDsts[1], 
-						vuCoefLengths[d],
-						vuDimLengths[d],
-						2, 
-						uNrOfLevels - 1);
-					vSAT[sliceScanline] = pvDsts[uNrOfLevels%2];
-					// ADD-BY-LEETEN 01/21/2013-BEGIN	
-					#else	// #if	WITH_VALARRAY
 					ST *vSrc = &vSAT.data()[uScanlineBase];
 					pvDsts[0][0] = vSrc[0];
 					_IDWT1D(
@@ -1041,8 +932,6 @@ public:
 					vector<ST>& vDST = pvDsts[uNrOfLevels%2];
 					for(size_t si = 0, di = 0; di < uCoefLength; di++, si += uOffset)
 							vSrc[si] = vDST[di];
-					#endif	// #if	WITH_VALARRAY	
-					// ADD-BY-LEETEN 01/21/2013-END
 				}
 			}
 			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
@@ -1054,15 +943,8 @@ public:
 		virtual
 		void
 		_ClampToDataSize(
-			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-			const valarray<ST>& vCoefField,
-			valarray<ST>& vDataField,
-			// ADD-BY-LEETEN 01/21/2013-BEGIN
-			#else	// #if	WITH_VALARRAY
 			const vector<ST>& vCoefField,
 			vector<ST>& vDataField,
-			#endif	// #if	WITH_VALARRAY
-			// ADD-BY-LEETEN 01/21/2013-END
 			void* _Reserved = NULL
 			)
 		{
@@ -1080,13 +962,7 @@ public:
 		virtual
 		void
 		_ClampBorder(
-			#if	WITH_VALARRAY	// ADD-BY-LEETEN 01/21/2013
-			valarray<ST>& vField,
-			// ADD-BY-LEETEN 01/21/2013-BEGIN
-			#else	// #if	WITH_VALARRAY	
 			vector<ST>& vField,	
-			#endif	// #if	WITH_VALARRAY	
-			// ADD-BY-LEETEN 01/21/2013-END
 			const vector<int>& viLeft, 
 			const vector<int>& viRight, 
 			void* _Reserved = NULL
