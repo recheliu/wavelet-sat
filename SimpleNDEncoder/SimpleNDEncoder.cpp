@@ -167,6 +167,14 @@ main(int argn, char* argv[])
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 
+	// ADD-BY-LEETEN 04/20/2013-BEGIN
+	int iIsUsingContourSpectrum = 0;
+	_OPTAddBoolean(
+		"--is-using-contour-spectrum", &iIsUsingContourSpectrum, iIsUsingContourSpectrum);
+	_OPTAddComment("--is-using-contour-spectrum", 
+		"Is the contour spectrum algorithm enabled?");
+	// ADD-BY-LEETEN 04/20/2013-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	assert(bIsOptParsed);
@@ -222,6 +230,10 @@ main(int argn, char* argv[])
 	// Step 2: Allocate the needed #SATs
 	cSimpleND._SetHistogram(dValueMin, dValueMax);
 	cSimpleND._Allocate();
+	// ADD-BY-LEETEN 04/20/2013-BEGIN
+	cSimpleND._SetData(&vdData);
+	cSimpleND._SetInteger(CSimpleND<double>::WITH_CONTOUR_SPECTRUM, iIsUsingContourSpectrum);
+	// ADD-BY-LEETEN 04/20/2013-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);

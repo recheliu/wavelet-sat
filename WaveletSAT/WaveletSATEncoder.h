@@ -198,6 +198,7 @@ public:
 						szDimValue,
 						uNrOfNonZeroValues,
 						&ncDimValue) );
+
 			// define the dimension for #bins
 			ASSERT_NETCDF(nc_def_dim(
 						iNcId,
@@ -420,7 +421,6 @@ public:
 				    pLocalCoefBins[c] = (TYPE_COEF_BIN)vpairLocalCoefBinValue[c].first;
 				    pLocalCoefValues[c] = (TYPE_COEF_VALUE)vpairLocalCoefBinValue[c].second;
 				  }
-
 				ASSERT_NETCDF(nc_put_vara(
 							      iNcId,
 							      ncVarCoefBin,
@@ -434,7 +434,6 @@ public:
 								 puStart,
 								 puCount,
 								 (void*)&pLocalCoefValues[0]));
-
 				uNrOfWrittenValues += vpairLocalCoefBinValue.size();
 				// ADD-BY-LEETEN 12/15/2012-END
 			}
@@ -497,7 +496,9 @@ public:
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				size_t uF, uS;
-				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)dWaveletThreshold);
+				// MOD-BY-LEETEN 04/20/2013-FROM:				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)dWaveletThreshold);
+				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)DGetThreshold());
+				// MOD-BY-LEETEN 04/20/2013-END
 				uNrOfValuesInFullArray += uF;
 				uNrOfValuesOnSparseArray += uS;
 			}

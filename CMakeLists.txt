@@ -167,6 +167,7 @@ add_subdirectory(SimpleND)
 add_subdirectory(SimpleNDWithNrrd)
 
 add_subdirectory(SimpleNDEncoder)
+add_subdirectory(ContourSpectrum3D) # ADD-BY-LEETEN 04/20/2013
 add_subdirectory(SimpleNDQuery)
 
 add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012

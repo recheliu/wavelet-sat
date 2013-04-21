@@ -52,6 +52,10 @@ CSATSepDWTHistView::
 		void *_Reserved
 	)
 {
+	// ADD-BY-LEETEN 04/21/2013-BEGIN
+	if( vpairCDF1.empty() || vpairCDF2.empty() )
+		return ( vpairCDF1.empty() && vpairCDF2.empty() )?0.0:1.0;
+	// ADD-BY-LEETEN 04/21/2013-END
 	vector<WaveletSAT::typeWavelet> vCDF;
 	vCDF.assign(UGetNrOfBins(), (WaveletSAT::typeWavelet)0);
 	for(size_t b = 0; b < vpairCDF1.size() - 1; b++)
