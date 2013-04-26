@@ -83,6 +83,27 @@ protected:
 		// ADD-BY-LEETEN 11/11/2012-END
 		// ADD-BY-LEETEN 10/29/2012-END
 
+		// ADD-BY-LEETEN 04/26/2013-BEGIN
+		virtual	
+		void 
+		_Update
+		(
+			const vector<size_t>& vuPos,
+			const DT& value,
+			void *_Reserved = NULL
+		)
+		{
+			vector< pair<BT, ST> > vpBins;
+			_MapValueToBins(vuPos, value, vpBins);
+			if( vpBins.size() > 1 )
+				for(size_t p = 0, c = 0; c < uNrOfUpdatingCoefs; c++)
+					this->vcCoefPools[c]._IncreaseCount(vpBins.size() - 1);
+
+			for(typename vector< pair<BT, ST> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
+				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
+		}
+		// ADD-BY-LEETEN 04/26/2013-END
+
 		//! Update the specified bin.
 		virtual // ADD-BY-LEETEN 01/03/2013
 		void 

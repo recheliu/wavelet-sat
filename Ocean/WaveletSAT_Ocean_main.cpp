@@ -91,12 +91,28 @@ main(int argn, char* argv[])
 	_OPTAddComment("--timing-printing-level",
 		"The level to print the performance timing.");
 
+	// ADD-BY-LEETEN 04/21/2013-BEGIN
+	int iIsUsingContourSpectrum = 0;
+	_OPTAddBoolean(
+		"--is-using-contour-spectrum", &iIsUsingContourSpectrum, iIsUsingContourSpectrum);
+	_OPTAddComment("--is-using-contour-spectrum", 
+		"Is the contour spectrum algorithm enabled?");
+	// ADD-BY-LEETEN 04/21/2013-END
+
 	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	int iIsCompBinsOnly = 0;
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
 	// ADD-BY-LEETEN 03/28/2013-END
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
+
+	// ADD-BY-LEETEN 04/21/2013-BEGIN
+	if(iIsUsingContourSpectrum)
+	{
+		LOG_ERROR(fprintf(stderr, "Contour Spectrum mode is only supported for 3D scalar field. Skip it."));
+		return 1;
+	}
+	// ADD-BY-LEETEN 04/21/2013-END
 
 	assert(bIsOptParsed);
 	assert(szNcFilePathPrefix);

@@ -280,6 +280,18 @@ namespace WaveletSAT
 			}
 		}
 
+		// ADD-BY-LEETEN 04/26/2013-BEGIN
+		void
+		_IncreaseCount
+		(
+			size_t uExtraCount,
+			void *_Reserved = NULL
+		)
+		{
+			uMaxCount += uExtraCount;
+		}
+		// ADD-BY-LEETEN 04/26/2013-END
+
 		//! Add value to the location specified by the 1D index
 		void
 		_AddAt
@@ -326,6 +338,10 @@ namespace WaveletSAT
 
 			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
 			{
+				// ADD-BY-LEETEN 04/21/2013-BEGIN
+				if( !(*this->pvpmapSparse)[uIndex] )
+					return;
+				// ADD-BY-LEETEN 04/21/2013-END
 				const unordered_map<BT, WT>& vmapBinSparse = *(*this->pvpmapSparse)[uIndex];
 
 				vvpairSparse[uIndex].resize(vmapBinSparse.size());

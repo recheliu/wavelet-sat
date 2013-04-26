@@ -108,7 +108,12 @@ public:
 	{
 	  const size_t& uNrOfBins = this->uNrOfBins; // ADD-BY-LEETEN 01/04/2013
 		// ADD-BY-LEETEN 04/20/2013-BEGIN
+		#if	0	// MOD-BY-LEETEN 04/21/2013-FROM:
 		if( 3 == vuPos.size() && this->bIsWithContourSpectrum )
+		#else	// TO:
+		if( this->bIsWithContourSpectrum && 
+			(3 == vuPos.size() || 2 == vuPos.size() ) )
+		#endif	// MOD-BY-LEETEN 04/21/2013-END
 		{
 			if(vdBinEdges.empty())
 			{
@@ -157,7 +162,23 @@ public:
 					double dScalar = (double)(*pvData)[WaveletSAT::UConvertSubToIndex(vuCorner, this->vuDimLengths)];
 					vCorners.push_back(make_pair<double, glm::dvec4>(dScalar, vd4));
 				}
+				#if	0	// MOD-BY-LEETEN 04/26/2013-FROM:
 				unordered_map<size_t, double> hashSpectrum;
+				// ADD-BY-LEETEN 04/21/2013-BEGIN
+				switch(vuPos.size())
+				{
+				case 2:
+					ContourSpectrum::_ComputeFor2DCell
+					(
+						vdBinEdges,
+						vCorners,
+						hashSpectrum,
+						uOrientation
+					);
+					break;
+
+				case 3:
+				// ADD-BY-LEETEN 04/21/2013-END
 				ContourSpectrum::_ComputeFor3DCell
 				(
 					vdBinEdges,
@@ -165,6 +186,10 @@ public:
 					hashSpectrum,
 					uOrientation
 				);
+				// ADD-BY-LEETEN 04/21/2013-BEGIN
+				break;
+				}
+				// ADD-BY-LEETEN 04/21/2013-END
 				for(unordered_map<size_t, double>::iterator
 						ihashSpectrum = hashSpectrum.begin();
 					ihashSpectrum != hashSpectrum.end();
@@ -173,6 +198,42 @@ public:
 					vpBins.push_back(pair<BT, ST>((BT)ihashSpectrum->first, (ST)ihashSpectrum->second));
 					dMinSum = min(dMinSum, ihashSpectrum->second);
 				}
+				#else	// MOD-BY-LEETEN 04/26/2013-TO:	
+				vector<double> vdSpectrum;
+				vdSpectrum.assign(uNrOfBins, 0.0);
+				size_t uFirstBin = uNrOfBins;
+				switch(vuPos.size())
+				{
+				case 2:
+					ContourSpectrum::_ComputeFor2DCell
+					(
+						vdBinEdges,
+						vCorners,
+						uFirstBin,
+						vdSpectrum,
+						uOrientation
+					);
+					break;
+
+				case 3:
+					ContourSpectrum::_ComputeFor3DCell
+					(
+						vdBinEdges,
+						vCorners,
+						uFirstBin,
+						vdSpectrum,
+						uOrientation
+					);
+					break;
+				}
+				for(size_t b = uFirstBin; b < uNrOfBins; b++)
+				{
+					if( !vdSpectrum[b] )
+						break;
+					vpBins.push_back(pair<BT, ST>((BT)b, (ST)vdSpectrum[b]));
+					dMinSum = min(dMinSum, vdSpectrum[b]);
+				}
+				#endif	// MOD-BY-LEETEN 04/26/2013-END
 			}
 		}
 		else
