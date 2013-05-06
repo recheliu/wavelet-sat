@@ -162,9 +162,9 @@ endif()
 endif()	# ADD-BY-LEETEN 01/18/2012
 
 add_subdirectory(WaveletSAT)
-add_subdirectory(SimpleND)
+# DEL-BY-LEETEN 05/05/2013:	add_subdirectory(SimpleND)
 
-add_subdirectory(SimpleNDWithNrrd)
+# DEL-BY-LEETEN 05/05/2013:	add_subdirectory(SimpleNDWithNrrd)
 
 add_subdirectory(SimpleNDEncoder)
 add_subdirectory(ContourSpectrum3D) # ADD-BY-LEETEN 04/20/2013
@@ -177,8 +177,8 @@ add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )
-	add_dependencies(SimpleND 			CudaDWT)
-	add_dependencies(SimpleNDWithNrrd 	CudaDWT)
+	# DEL-BY-LEETEN 05/05/2013:		add_dependencies(SimpleND 			CudaDWT)
+	# DEL-BY-LEETEN 05/05/2013:		add_dependencies(SimpleNDWithNrrd 	CudaDWT)
 	add_dependencies(SimpleNDEncoder 	CudaDWT)
 	
 	add_dependencies(Ocean 	CudaDWT)	# ADD-BY-LEETEN 01/18/2012
@@ -187,6 +187,8 @@ endif()
 # ADD-BY-LEETEN 01/10/2012-END
 
 if(NOT WITH_SAT_FILE)	# ADD-BY-LEETEN 03/28/2013-BEGIN
-add_subdirectory(SATSepDWTViewer)	# ADD-BY-LEETEN 01/27/2013
+	# MOD-BY-LEETEN 05/05/2013-FROM:	 	add_subdirectory(SATSepDWTViewer)	# ADD-BY-LEETEN 01/27/2013
+	add_subdirectory(SATSepDWTViewer2)	
+	# MOD-BY-LEETEN 05/05/2013-END
 endif()					# ADD-BY-LEETEN 03/28/2013-END
 

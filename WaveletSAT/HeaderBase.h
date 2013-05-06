@@ -47,6 +47,16 @@ protected:
 public:
 		////////////////////////////////////////////////////////////////////
 		//! Data Size
+		// ADD-BY-LEETEN 05/05/2013-BEGIN
+		const vector<size_t>&
+		VGetDimLengths
+		(
+			void *_Reserved = NULL
+		) const
+		{
+			return vuDimLengths;
+		}
+		// ADD-BY-LEETEN 05/05/2013-END
 		virtual 
 		void
 		_GetDataSize

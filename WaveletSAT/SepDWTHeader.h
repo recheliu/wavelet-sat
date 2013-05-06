@@ -143,6 +143,26 @@ public:
 			PARAMETER_END
 		};
 
+		// ADD-BY-LEETEN 05/05/2013-BEGIN
+		const vector<size_t>& 
+		VGetDimLevels
+		(
+			void *_Reserved = NULL
+		) const 
+		{	
+			return vuDimLevels;
+		}
+
+		const vector<size_t>& 
+		VGetCoefLengths
+		(
+			void *_Reserved = NULL
+		) const 
+		{	
+			return this->vuCoefLengths;
+		}
+		// ADD-BY-LEETEN 05/05/2013-END
+
 		//! Retunr the smallest value. 
 		/*!
 		This can be used to filter too small value caused by numerical error.

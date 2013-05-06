@@ -520,7 +520,7 @@ public:
 			size_t uLocalCoef,
 			vector< pair<BT, WT> >& vpairCoefBinValues,
 			void* _Reserved = NULL
-		)
+		) 
 		{
 			if( this->vpcCoefPools[uWavelet] )
 			{
@@ -764,9 +764,9 @@ public:
 								ivpairCoefs != vpairCoefBinValues.end();
 								ivpairCoefs++ )
 								vdSums[ivpairCoefs->first] += ivpairCoefs->second * vpairPrevLocalCoefQueues.second;
-
 							uNrOfCoefQueries++;
 						}
+						if( i < vpairLocalWaveletQueues.size() )	// ADD-BY-LEETEN 05/05/2013
 						vpairPrevLocalCoefQueues = vpairLocalWaveletQueues[i];
 					}
 				}
