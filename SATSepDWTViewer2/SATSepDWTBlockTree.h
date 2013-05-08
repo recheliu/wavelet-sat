@@ -139,6 +139,29 @@ namespace SATSepDWT
 			pcRoot->_RenderBlock(eMode);
 		}
 
+		// ADD-BY-LEETEN 05/07/2013-BEGIN
+		virtual
+		void
+		_FilteredPaths(
+			const CBlock::EFilterAction eAction,
+			const vector<float2>& vf2Filter,
+			const size_t uFilterLevel,
+			const float4 f4Color,
+			void* _Reserved = NULL
+		)
+		{
+			pcRoot->BFilterPaths
+			(
+				eAction, 
+				uFilterLevel,
+				vf2Filter, 
+				true,
+				0.0,
+				f4Color
+			);
+		}
+		// ADD-BY-LEETEN 05/07/2013-END
+
 		virtual
 		void
 		_SelectByHist

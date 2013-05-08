@@ -227,6 +227,12 @@ C3DView::
 	(
 		CBlock::MODE_ASSIGNED 
 	);
+	// ADD-BY-LEETEN 05/07/2013-BEGIN
+	pcBlockTree->_RenderBlock
+	(
+		CBlock::MODE_SELECTED_BY_HIST
+	);
+	// ADD-BY-LEETEN 05/07/2013-END
 
 	// Plot the querying box
 	if( cCursor3D.bActive )

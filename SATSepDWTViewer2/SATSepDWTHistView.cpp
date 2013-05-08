@@ -163,6 +163,21 @@ CHistView::_DisplayLevelHistograms()
 
 	if( cClusterEditor.iIsActive )
 	{
+		// ADD-BY-LEETEN 05/07/2013-BEGIN
+		glPushAttrib(
+			GL_COLOR_BUFFER_BIT |
+			0 );
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_BLEND);
+		pcBlockTree->_RenderHistograms(
+			CBlock::MODE_SELECTED_BY_HIST,
+			(size_t)iNrOfLevelsToDisplay,
+			i2BinRange,
+			cClusterEditor.f4Color
+			);
+		glPopAttrib();
+			// GL_COLOR_BUFFER_BIT |
+		// ADD-BY-LEETEN 05/07/2013-END
 		glPushAttrib(
 			GL_LINE_BIT | 
 			0);
@@ -340,10 +355,13 @@ CHistView::_GluiFunc(unsigned short usValue)
 	case GLUI_EVENT_CLUSTER_RESET_PROB:
 	{
 		cClusterEditor.f2Prob = make_float2(0.0f, 1.0f);
-	} break;
+	// MOD-BY-LEETEN 05/07/2013-FROM:	} break;
+	}
+	// MOD-BY-LEETEN 05/07/2013-END
 	case GLUI_EVENT_CLUSTER_EDITING:
 	{
 		cClusterEditor.vf2BinRanges[cClusterEditor.iBin] = cClusterEditor.f2Prob;
+		#if	0	// MOD-BY-LEETEN 05/07/2013-FROM:
 		/*
 		pcBlockTree->_ResetSelection(CBlock::MODE_SELECTED_BY_HIST);
 		pcBlockTree->_SelectByHist(
@@ -354,6 +372,19 @@ CHistView::_GluiFunc(unsigned short usValue)
 			cClusterEditor.vf2BinRanges, 
 			cClusterEditor.iLevel);
 		*/
+		#else	// MOD-BY-LEETEN 05/07/2013-TO:
+		if( cClusterEditor.iIsActive )
+		{
+			pcBlockTree->_ResetSelection(CBlock::MODE_SELECTED_BY_HIST);
+			pcBlockTree->_SelectByHist(
+				CBlock::MODE_SELECTED_BY_HIST, 
+				true, 
+				cClusterEditor.f4Color,
+				i2BinRange, 
+				cClusterEditor.vf2BinRanges, 
+				cClusterEditor.iLevel);
+		}
+		#endif	// MOD-BY-LEETEN 05/07/2013-END
 	} break;
 	}
 }

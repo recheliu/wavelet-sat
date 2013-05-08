@@ -31,7 +31,9 @@ CPCPView::_InitFunc()
 	GLUI_Spinner* pcSpinner_Width = pcGlui->add_spinner_to_panel(pcPanel_Line, "Width", GLUI_SPINNER_FLOAT, &fWidth);
 		pcSpinner_Width->set_float_limits(1.0f, 16.0f);
 
-	cFilter._AddGlui(this, pcGlui, NULL, pcBlockTree->uMaxLevel);
+	// MOD-BY-LEETEN 05/07/2013-FROM:	cFilter._AddGlui(this, pcGlui, NULL, pcBlockTree->uMaxLevel);
+	cFilter._AddGlui(this, pcGlui, NULL, pcBlockTree->uMaxLevel + 1);
+	// MOD-BY-LEETEN 05/07/2013-END
 }
 
 void 
@@ -52,7 +54,9 @@ CPCPView::_DisplayFunc()
 	// scale the coordinate sysm s.t. the range of X axis is [-1, uMaxLevel] 
 	size_t uNrOfLevels = pcBlockTree->uMaxLevel;
 	glTranslatef(-1.0f, -1.0f, 0.0f);
-	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
+	// MOD-BY-LEETEN 05/07/2013-FROM:	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
+	glScalef(2.0f/(float)(uNrOfLevels + 2), 2.0f, 1.0f);
+	// MOD-BY-LEETEN 05/07/2013-END
 	glTranslatef(+1.0f, 0.0f, 0.0f);
 
 	// plot the axis
@@ -74,9 +78,51 @@ CPCPView::_DisplayFunc()
 	pcBlockTree->_RenderPolylines(CBlock::MODE_NONE, this->f4Color);
 	pcBlockTree->_RenderPolylines(CBlock::MODE_ASSIGNED, this->f4Color);
 
+	// ADD-BY-LEETEN 05/07/2013-BEGIN
+	// plot the filter boxes
+	if( cFilter.iIsActive )
+	{
+		glColor4fv(&cFilter.f4Color.x);
+		pcBlockTree->_FilteredPaths(
+			CBlock::FILTER_ACTION_RENDER,
+			cFilter.vf2LevelProb,
+			(size_t)cFilter.iTarget,
+			cFilter.f4Color);
+	}
+	// ADD-BY-LEETEN 05/07/2013-END
+
 	glPopAttrib();	
 	//	GL_COLOR_BUFFER_BIT |
 
+	// ADD-BY-LEETEN 05/07/2013-BEGIN
+	// plot the filter boxes
+	if( cFilter.iIsActive )
+	{
+		glPushAttrib(
+			GL_LINE_BIT |
+			0);
+		glLineStipple(1, 0xcccc);
+		glEnable(GL_LINE_STIPPLE);
+		glColor4fv(&cFilter.f4Color.x);
+		for(size_t l = 0; l < cFilter.vf2LevelProb.size(); l++)
+		{
+			glBegin(GL_LINE_LOOP);
+			glVertex2f((float)l - cFilter.fWidth, cFilter.vf2LevelProb[l].x);
+			glVertex2f((float)l + cFilter.fWidth, cFilter.vf2LevelProb[l].x);
+			glVertex2f((float)l + cFilter.fWidth, cFilter.vf2LevelProb[l].y);
+			glVertex2f((float)l - cFilter.fWidth, cFilter.vf2LevelProb[l].y);
+			glEnd();
+		}
+		glPopAttrib();
+			// GL_LINE_BIT |
+		glBegin(GL_LINE_LOOP);
+		glVertex2f((float)cFilter.iTarget - cFilter.fWidth, cFilter.vf2LevelProb[cFilter.iTarget].x);
+		glVertex2f((float)cFilter.iTarget + cFilter.fWidth, cFilter.vf2LevelProb[cFilter.iTarget].x);
+		glVertex2f((float)cFilter.iTarget + cFilter.fWidth, cFilter.vf2LevelProb[cFilter.iTarget].y);
+		glVertex2f((float)cFilter.iTarget - cFilter.fWidth, cFilter.vf2LevelProb[cFilter.iTarget].y);
+		glEnd();
+	}
+	// ADD-BY-LEETEN 05/07/2013-END
 	// restore the coordinate system back
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -92,7 +138,32 @@ CPCPView::_GluiFunc(unsigned short usValue)
 	{
 	case GLUI_EVENT_FILTER_ASSIGN:
 	{
+		// ADD-BY-LEETEN 05/07/2013-BEGIN
+		if( cFilter.iIsActive )
+		{
+			pcBlockTree->_FilteredPaths(
+				CBlock::FILTER_ACTION_ASSIGN,
+				cFilter.vf2LevelProb,
+				(size_t)cFilter.iTarget,
+				cFilter.f4Color
+				);
+		}
+		// ADD-BY-LEETEN 05/07/2013-END
 	} break;
+	// ADD-BY-LEETEN 05/07/2013-BEGIN
+	case GLUI_EVENT_FILTER_RESET:
+	{
+		if( cFilter.iIsActive )
+		{
+			pcBlockTree->_FilteredPaths(
+				CBlock::FILTER_ACTION_RESET,
+				cFilter.vf2LevelProb,
+				(size_t)cFilter.iTarget,
+				cFilter.f4Color
+				);
+		}
+	} break;
+	// ADD-BY-LEETEN 05/07/2013-END
 	}
 }
 

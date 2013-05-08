@@ -26,6 +26,14 @@ namespace SATSepDWT
 			MODE_SELECTED_BY_HIST = 0x0004,
 		};
 
+		// ADD-BY-LEETEN 05/07/2013-BEGIN
+		enum EFilterAction {
+			FILTER_ACTION_RENDER,
+			FILTER_ACTION_ASSIGN,
+			FILTER_ACTION_RESET,
+		};
+		// ADD-BY-LEETEN 05/07/2013-END
+
 		typedef double typeData;
 		static CSimpleNDFile<typeData>* pcSimpleND;
 
@@ -140,7 +148,9 @@ namespace SATSepDWT
 			}
 			else
 			{
-				return (eMode & eRef > 0);
+				// MOD-BY-LEETEN 05/07/2013-FROM:				return (eMode & eRef > 0);
+				return ( (eMode & eRef) != 0)?true:false;
+				// MOD-BY-LEETEN 05/07/2013-END
 			}
 		}
 
@@ -286,11 +296,21 @@ namespace SATSepDWT
 				for(size_t pdfi = 0, b = i2BinRange.x; b <= i2BinRange.y; b++)
 				{
 					float fProb = 0.0f;
+					#if	0	// MOD-BY-LEETEN 05/07/2013-FROM:
 					for(;vpairPDF[pdfi].first < b && pdfi<vpairPDF.size();pdfi++)
 						;
 					if(vpairPDF[pdfi].first == b)
 						fProb = (float)vpairPDF[pdfi].second;
-
+					#else	// MOD-BY-LEETEN 05/07/2013-TO:
+					for(;pdfi<vpairPDF.size();pdfi++)
+						if(vpairPDF[pdfi].first >= b)
+						{
+							if(vpairPDF[pdfi].first == b)
+								fProb = (float)vpairPDF[pdfi].second;
+							break;
+						}
+					#endif	// MOD-BY-LEETEN 05/07/2013-END
+	
 					if( fProb < vf2BinRanges[b].x || fProb > vf2BinRanges[b].y )
 					{
 						bIsIn = false;
@@ -535,6 +555,67 @@ namespace SATSepDWT
 					);
 				}
 		}
+
+		// ADD-BY-LEETEN 05/07/2013-BEGIN
+		bool
+		BFilterPaths
+		(
+			const EFilterAction eAction,
+			const size_t uFilterLevel, 
+			const vector<float2>& vf2Filter,
+			const bool bIsAscentIn,
+			const double dAscentDist,
+			const float4& f4Color,	// This is only used to assign color
+			void *_Reserved = NULL
+		)
+		{
+			// if any ascent satisfies the result, this is marked as satisfied too
+
+			// otherwise, check whether the parent itself satisies the filter
+			if( !bIsAscentIn ) 
+				return false;
+
+			if( vf2Filter[this->uLevel].x > this->dDistFromParent || this->dDistFromParent > vf2Filter[this->uLevel].y )
+				return false;
+
+			// scan through the children with my result
+			bool bIsDescentIn = false;
+			if( this->vpcChildren.empty() )
+				bIsDescentIn = true;
+			else
+				for(size_t c = 0; c < this->vpcChildren.size(); c++)
+				{
+					if(vpcChildren[c]->BFilterPaths(eAction, uFilterLevel, vf2Filter, true, this->dDistFromParent, f4Color))
+						bIsDescentIn = true;
+				} 
+
+			if( this->uLevel > 0 && bIsDescentIn ) 
+			{
+				switch(eAction) {
+				case FILTER_ACTION_RENDER:
+				{
+					// plot the line
+					glBegin(GL_LINES);
+					glVertex2f((float)this->uLevel - 1, (float)dAscentDist );
+					glVertex2f((float)this->uLevel, (float)this->dDistFromParent);
+					glEnd();
+				} break;
+				case FILTER_ACTION_ASSIGN:
+				{
+					if(uFilterLevel == this->uLevel )
+						this->_ModifyMode(MODE_ASSIGNED, true, f4Color);
+				} break;
+				case FILTER_ACTION_RESET:
+				{
+					if(uFilterLevel == this->uLevel )
+						this->_ModifyMode(MODE_NONE, true, f4Color);
+				} break;
+				}
+			}
+
+			return bIsDescentIn;
+		}
+		// ADD-BY-LEETEN 05/07/2013-END
 
 		CBlock()
 		{

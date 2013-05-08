@@ -19,6 +19,7 @@ protected:
 		// event for GLUI
 		GLUI_EVENT_BASE = 0x1001,
 		GLUI_EVENT_FILTER_ASSIGN,
+		GLUI_EVENT_FILTER_RESET,	// ADD-BY-LEETEN 05/07/2013
 		GLUI_EVENTS_MAX_ID	
 	};
 
@@ -37,6 +38,7 @@ protected:
 		vector< float2 > vf2LevelProb;
 		float4 f4Color;
 		float fWidth;
+		int iIsActive;	// ADD-BY-LEETEN 05/07/2013
 
 		void
 		_AddGlui(
@@ -47,8 +49,15 @@ protected:
 			void* _Reserved = NULL)
 		{
 			GLUI_Panel* pcPanel = pcGlui->add_rollout("Filter");
+			// ADD-BY-LEETEN 05/07/2013-BEGIN
+			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive);
+			GLUI_Spinner* pcSpinner_Width = pcGlui->add_spinner_to_panel(pcPanel, "Width", GLUI_SPINNER_FLOAT, &fWidth);
+				pcSpinner_Width->set_float_limits(0.0f, 0.5f);
+			// ADD-BY-LEETEN 05/07/2013-END
 			GLUI_Spinner* pcSpinner_Target = pcGlui->add_spinner_to_panel(pcPanel, "Target", GLUI_SPINNER_INT, &iTarget);
-				pcSpinner_Target->set_int_limits(1, uNrOfLevels - 1);
+				// MOD-BY-LEETEN 05/07/2013-FROM:				pcSpinner_Target->set_int_limits(1, uNrOfLevels - 1);
+				pcSpinner_Target->set_int_limits(0, uNrOfLevels - 1);
+				// MOD-BY-LEETEN 05/07/2013-END
 
 			GLUI_Panel *pcPanel_Color = pcGlui->add_panel_to_panel(pcPanel, "Color");
 			static char* pszChannels[] = {"R", "G", "B", "A"};
@@ -59,6 +68,7 @@ protected:
 				pcSpinner->set_float_limits(0.0f, 1.0f);
 			}
 			pcGlui->add_button_to_panel(pcPanel, "Assign", pcWin->IAddWid(GLUI_EVENT_FILTER_ASSIGN), CGlutWin::_GluiCB_static);
+			pcGlui->add_button_to_panel(pcPanel, "Reset", pcWin->IAddWid(GLUI_EVENT_FILTER_RESET), CGlutWin::_GluiCB_static);	// ADD-BY-LEETEN 05/07/2013
 
 			vf2LevelProb.assign(uNrOfLevels, make_float2(0.0f, 1.0f));
 			for(size_t l = 0; l < uNrOfLevels; l++)
