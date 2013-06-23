@@ -16,3 +16,8 @@ using namespace std;
 #include "SATSepDWTBlock.h";
 using namespace SATSepDWT;
 CSimpleNDFile<CBlock::typeData> *CBlock::pcSimpleND;
+
+// ADD-BY-LEETEN 06/23/2013-BEGIN
+vector<CBlock*> CBlock::vpcBlocksRenderedByPCP;
+float4 CBlock::f4PCPColor;
+// ADD-BY-LEETEN 06/23/2013-END

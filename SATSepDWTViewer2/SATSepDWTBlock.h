@@ -37,6 +37,63 @@ namespace SATSepDWT
 		typedef double typeData;
 		static CSimpleNDFile<typeData>* pcSimpleND;
 
+		// ADD-BY-LEETEN 06/23/2013-BEGIN
+		static float4 f4PCPColor;
+		static 
+		void
+		_SetPCPColor
+		(
+			const float4& f4Color,
+			void *_Reserved = NULL
+		)
+		{
+			f4PCPColor = f4Color;
+		}
+
+		static 
+		const float4&
+		F4GetPCPColor
+		(
+			void *_Reserved = NULL
+		)
+		{
+			return f4PCPColor;
+		}
+
+		static vector<CBlock*> vpcBlocksRenderedByPCP;
+
+		static 
+		void
+		_AddBlockRenderedByPCP
+		(
+			CBlock *pcBlock,
+			void *_Reserved = NULL
+		)
+		{
+			vpcBlocksRenderedByPCP.push_back(pcBlock);
+		}
+
+		static 
+		void
+		_ClearBlocksRenderedByPCP
+		(
+			void *_Reserved = NULL
+		)
+		{
+			vpcBlocksRenderedByPCP.clear();
+		}
+
+		static
+		vector<CBlock*>&
+		VGetBlocksRenderedByPCP
+		(
+			void *_Reserved = NULL
+		)
+		{
+			return vpcBlocksRenderedByPCP;
+		}
+		// ADD-BY-LEETEN 06/23/2013-END
+
 		static 
 		void
 		_SetSource
@@ -322,7 +379,9 @@ namespace SATSepDWT
 					_ModifyMode(eNewMode, bIsAddingMode, f4Color);
 				}
 			}
-			if( uLevel < uSelectLevel || uLevel < uMaxLevel )
+			// MOD-BY-LEETEN 06/23/2013-FROM: if( uLevel < uSelectLevel || uLevel < uMaxLevel )
+			if( uLevel < uSelectLevel || uLevel <= uMaxLevel )
+			// MOD-BY-LEETEN 06/23/2013-END
 				for(size_t c = 0; c < vpcChildren.size(); c++)
 					vpcChildren[c]->_SelectByHist
 					(
@@ -383,12 +442,33 @@ namespace SATSepDWT
 					);
 		}
 
+		// ADD-BY-LEETEN 06/23/2013-BEGIN
+		void
+		_RenderBlock
+		(
+			const float4& f4Color,
+			void *_Reserved = NULL
+		) const
+		{
+			glColor4fv(&f4Color.x);
+			glPushMatrix();
+			const float4& f4Left = this->pairExtent.first;
+			glTranslatef(f4Left.x, f4Left.y, f4Left.z);
+			const float4& f4Right = this->pairExtent.second;
+			glScalef(f4Right.x - f4Left.x, f4Right.y - f4Left.y, f4Right.z - f4Left.z);
+			glTranslatef(+0.5f, +0.5f, +0.5f);
+			glColor4fv(&f4Color.x);
+			glutWireCube(1.0);
+			glPopMatrix();
+		}
+		// ADD-BY-LEETEN 06/23/2013-END
+
 		void
 		_RenderBlock
 		(
 			const EMode eRenderMode,
 			void *_Reserved = NULL
-		)
+		) 
 		{
 			float4 f4NewColor = f4Color;
 			bool bIsRender = false;
@@ -397,6 +477,7 @@ namespace SATSepDWT
 
 			if( bIsRender )
 			{
+				#if	0	// MOD-BY-LEETEN 06/23/2013-FROM:
 				glColor4fv(&f4NewColor.x);
 				glPushMatrix();
 				const float4& f4Left = this->pairExtent.first;
@@ -407,6 +488,9 @@ namespace SATSepDWT
 				glColor4fv(&f4NewColor.x);
 				glutWireCube(1.0);
 				glPopMatrix();
+				#else	// MOD-BY-LEETEN 06/23/2013-TO:
+				_RenderBlock(f4NewColor);
+				#endif	// MOD-BY-LEETEN 06/23/2013-END
 			} 
 
 			for(size_t c = 0; c < this->vpcChildren.size(); c++) 
@@ -463,6 +547,63 @@ namespace SATSepDWT
 			}
 		}
 
+		// ADD-BY-LEETEN 06/23/2013-BEGIN
+		void
+		_RenderHistogram
+		(
+			const float4& f4Color,
+			const int2& i2BinRange,
+			const vector<double>& vdLevelBinMax,
+			void *_Reserved = NULL
+		)
+		{
+			vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > > vpairPDF;
+			CGetSource()._GetCoefSparse(this->uWavelet, this->uLocalCoef, vpairPDF );
+			_ConvertToPDF(vpairPDF);
+
+			glPushAttrib(
+				GL_LINE_BIT |
+				0 );
+			glPushMatrix();
+			glTranslatef(0.0f, (float)uLevel, 0.0f);
+
+			glColor4fv((float*)&f4Color);
+			glBegin(GL_LINE_STRIP);
+			int iPrevBin = 0;
+			for(vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > >::iterator 
+					ivpairPDF = vpairPDF.begin();
+				ivpairPDF != vpairPDF.end();
+				ivpairPDF++)
+			{
+				int iBin = (int)ivpairPDF->first;
+				if( iBin < i2BinRange.x || iBin > i2BinRange.y )
+					continue;
+
+				if( iBin - iPrevBin > 1 )
+				{
+					glVertex2f((float)iPrevBin + 1, 0.0f);
+					glVertex2f((float)iBin, 0.0f);
+				}
+
+				float fProb = (float)ivpairPDF->second;
+				float fY = fProb / vdLevelBinMax[uLevel];
+
+				glVertex2f((float)iBin, fY);
+				glVertex2f((float)iBin+1, fY);
+				iPrevBin = iBin;
+			}
+			if( iPrevBin != (int)CGetSource().UGetNrOfBins() - 1 )
+			{
+				glVertex2f((float)iPrevBin + 1, 0.0f);
+				glVertex2f((float)CGetSource().UGetNrOfBins() - 1.0f, 0.0f);
+			}
+			glEnd();
+			glPopMatrix();
+			glPopAttrib();
+				// GL_LINE_BIT |
+		}
+		// ADD-BY-LEETEN 06/23/2013-END
+
 		void
 		_RenderHistogram
 		(
@@ -494,6 +635,7 @@ namespace SATSepDWT
 
 			if( bIsRender )
 			{
+				#if	0	// MOD-BY-LEETEN 06/23/2013-FROM:
 				vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet > > vpairPDF;
 				CGetSource()._GetCoefSparse(this->uWavelet, this->uLocalCoef, vpairPDF );
 				_ConvertToPDF(vpairPDF);
@@ -540,6 +682,14 @@ namespace SATSepDWT
 				glPopMatrix();
 				glPopAttrib();
 					// GL_LINE_BIT |
+				#else	// MOD-BY-LEETEN 06/23/2013-TO:
+				_RenderHistogram
+				(
+					f4NewColor, 
+					i2BinRange,
+					vdLevelBinMax
+				);
+				#endif	// MOD-BY-LEETEN 06/23/2013-END
 			}
 
 			if( bIsRecursive )
@@ -599,6 +749,12 @@ namespace SATSepDWT
 					glVertex2f((float)this->uLevel - 1, (float)dAscentDist );
 					glVertex2f((float)this->uLevel, (float)this->dDistFromParent);
 					glEnd();
+					
+					// ADD-BY-LEETEN 06/23/2013-BEGIN
+					// save this node
+					if(uFilterLevel == this->uLevel )
+						_AddBlockRenderedByPCP(this);
+					// ADD-BY-LEETEN 06/23/2013-END
 				} break;
 				case FILTER_ACTION_ASSIGN:
 				{

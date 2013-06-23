@@ -158,6 +158,14 @@ CHistView::_DisplayLevelHistograms()
 		i2BinRange,
 		this->f4DefaultColor
 		);
+
+	// ADD-BY-LEETEN 06/23/2013-BEGIN
+	for(size_t b = 0; b < CBlock::VGetBlocksRenderedByPCP().size(); b++)
+	{
+		CBlock::VGetBlocksRenderedByPCP()[b]->_RenderHistogram(CBlock::F4GetPCPColor(), i2BinRange, pcBlockTree->vdLevelBinMax);
+	}
+	// ADD-BY-LEETEN 06/23/2013-END
+
 	glPopAttrib();
 		// GL_COLOR_BUFFER_BIT |
 

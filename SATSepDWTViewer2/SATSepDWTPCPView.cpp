@@ -52,17 +52,23 @@ CPCPView::_DisplayFunc()
 	glLoadIdentity();
 
 	// scale the coordinate sysm s.t. the range of X axis is [-1, uMaxLevel] 
-	size_t uNrOfLevels = pcBlockTree->uMaxLevel;
+	// MOD-BY-LEETEN 06/23/2013-FROM:	size_t uNrOfLevels = pcBlockTree->uMaxLevel;
+	size_t uNrOfLevels = pcBlockTree->uMaxLevel + 1;
+	// MOD-BY-LEETEN 06/23/2013-END
 	glTranslatef(-1.0f, -1.0f, 0.0f);
 	// MOD-BY-LEETEN 05/07/2013-FROM:	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
-	glScalef(2.0f/(float)(uNrOfLevels + 2), 2.0f, 1.0f);
+	// MOD-BY-LEETEN 06/23/2013-FROM:	glScalef(2.0f/(float)(uNrOfLevels + 2), 2.0f, 1.0f);
+	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
+	// MOD-BY-LEETEN 06/23/2013-END
 	// MOD-BY-LEETEN 05/07/2013-END
 	glTranslatef(+1.0f, 0.0f, 0.0f);
 
 	// plot the axis
 	glBegin(GL_LINES);
 	glColor4fv(&f4Color.x);
+	// MOD-BY-LEETEN 06/23/2013-FROM:	for(size_t l = 0; l < uNrOfLevels; l++)
 	for(size_t l = 0; l < uNrOfLevels; l++)
+	// MOD-BY-LEETEN 06/23/2013-END
 	{
 		glVertex2f((float)l, 0.0f);
 		glVertex2f((float)l, 1.0f);
@@ -82,6 +88,9 @@ CPCPView::_DisplayFunc()
 	// plot the filter boxes
 	if( cFilter.iIsActive )
 	{
+		// ADD-BY-LEETEN 06/23/2013-BEGIN
+		CBlock::_ClearBlocksRenderedByPCP();
+		// ADD-BY-LEETEN 06/23/2013-END
 		glColor4fv(&cFilter.f4Color.x);
 		pcBlockTree->_FilteredPaths(
 			CBlock::FILTER_ACTION_RENDER,
@@ -164,6 +173,16 @@ CPCPView::_GluiFunc(unsigned short usValue)
 		}
 	} break;
 	// ADD-BY-LEETEN 05/07/2013-END
+	
+	// ADD-BY-LEETEN 06/23/2013-BEGIN
+	case GLUI_EVENT_FILTER_ACTIVE:
+		if( !this->cFilter.iIsActive )
+			CBlock::_ClearBlocksRenderedByPCP();
+		break;
+	case GLUI_EVENT_FILTER_COLOR:
+		CBlock::_SetPCPColor(cFilter.f4Color);
+		break;
+	// ADD-BY-LEETEN 06/23/2013-END
 	}
 }
 
