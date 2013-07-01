@@ -517,9 +517,7 @@ public:
 			for(size_t c = 0; c < this->uNrOfUpdatingCoefs; c++)
 			{
 				size_t uF, uS;
-				// MOD-BY-LEETEN 04/20/2013-FROM:				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)dWaveletThreshold);
 				this->vcCoefPools[c]._GetArraySize(uF, uS, (WT)DGetThreshold());
-				// MOD-BY-LEETEN 04/20/2013-END
 				uNrOfValuesInFullArray += uF;
 				uNrOfValuesOnSparseArray += uS;
 			}

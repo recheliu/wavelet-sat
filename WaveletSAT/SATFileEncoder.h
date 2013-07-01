@@ -9,9 +9,7 @@ namespace fs = boost::filesystem;
 
 #include <iostream>
 #include <vector>
-// MOD-BY-LEETEN 04/20/2013-FROM:#include <map>
 #include <unordered_map>
-// MOD-BY-LEETEN 04/20/2013-END
 using namespace std;
 #include <math.h>
 
@@ -58,9 +56,7 @@ namespace WaveletSAT
 	{
 protected:	
 		//! The storage to store the original data.
-		// MOD-BY-LEETEN 04/20/2013-FROM:		vector< map<BT, ST> > vmapHists;
 		vector< unordered_map<BT, ST> > vmapHists;
-		// MOD-BY-LEETEN 04/20/2013-END
 
 		char szNetCdfPathFilename[NC_MAX_NAME];
 
@@ -84,13 +80,8 @@ protected:
 		)
 		{
 			size_t uIndex = UConvertSubToIndex(vuPos, vuDimLengths);
-			#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-			map<BT, ST>& mapHist = vmapHists[uIndex];
-			typename map<BT, ST>::iterator imapHist = mapHist.find(uBin);
-			#else	// MOD-BY-LEETEN 04/20/2013-TO:
 			unordered_map<BT, ST>& mapHist = vmapHists[uIndex];
 			typename unordered_map<BT, ST>::iterator imapHist = mapHist.find(uBin);
-			#endif	// MOD-BY-LEETEN 04/20/2013-END
 			if(mapHist.end() == imapHist )
 				mapHist.insert(pair<BT, ST>(uBin, weight));
 			else
@@ -235,13 +226,8 @@ public:
 				// ADD-By-LEETEN 02/19/2013-END
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
-					#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-					const map<BT, ST>& mapHist = vmapHists[i];
-					typename map<BT, ST>::const_iterator imapHist = mapHist.find((BT)b);
-					#else	// MOD-BY-LEETEN 04/20/2013-TO:
 					const unordered_map<BT, ST>& mapHist = vmapHists[i];
 					typename unordered_map<BT, ST>::const_iterator imapHist = mapHist.find((BT)b);
-					#endif	// MOD-BY-LEETEN 04/20/2013-END
 					pSAT[i] = (double)( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
@@ -428,29 +414,6 @@ public:
 						&ncDimCoef) );
 			// ADD-BY-LEETEN 04/20/2013-END
 
-			#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-			// now define the variable for the bins.
-			int ncVarBin;
-			int piNcDimIds[NC_MAX_DIMS];
-			for(size_t d = 0; d < uNrOfDims; d++)
-				piNcDimIds[d] = vncDimData[uNrOfDims - 1 - d];
-			ASSERT_NETCDF(nc_def_var(
-					iNcId,
-					"BIN", 
-					NC_USHORT,
-					(int)uNrOfDims,
-					piNcDimIds,
-					&ncVarBin));
-
-			#if WITH_NETCDF4 
-			ASSERT_NETCDF(nc_def_var_deflate(
-					iNcId,
-					ncVarBin, 
-					0, 
-					1, 
-					iDeflateLevel));
-			#endif // #if WITH_NETCDF4
-			#else	// MOD-BY-LEETEN 04/20/2013-FROMTO:
 			// now define the variable for the bins.
 			int piNcDimIds[NC_MAX_DIMS];
 			for(size_t d = 0; d < uNrOfDims; d++)
@@ -491,30 +454,9 @@ public:
 				&ncDimCoef,
 				ncVarCoefSum
 			);
-			#endif	// MOD-BY-LEETEN 04/20/2013-END
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
 
-			#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-			vector<unsigned short> vusBins;
-			vusBins.assign(this->uDataSize, 0);
-			for(size_t i = 0; i < this->uDataSize; i++)
-			{
-				const map<BT, ST>& mapHist = vmapHists[i];
-				typename map<BT, ST>::const_iterator imapHist = mapHist.begin();
-				vusBins[i] = (unsigned short)imapHist->first;
-				/*
-				if( vusBins[i] )
-					LOG_VAR(vusBins[i]);
-				*/
-			}
-				
-			// dump this bins
-			ASSERT_NETCDF(nc_put_var(
-						iNcId,
-						ncVarBin,
-						(void*)&vusBins.data()[0]));
-			#else	// MOD-BY-LEETEN 04/20/2013-TO:
 			vector<typeCoefCount>	vusCounts;	vusCounts.assign(this->uDataSize,	(typeCoefCount)0);
 			vector<typeCoefOffset>	vuOffsets;	vuOffsets.assign(this->uDataSize,	(typeCoefOffset)0);
 			vector<typeBin>			vusBins;	vusBins.assign(uTotalNrOfBins,		(typeBin)0);
@@ -549,7 +491,6 @@ public:
 						iNcId,
 						ncVarCoefSum,
 						(void*)&vdSums.data()[0]));
-			#endif	// MOD-BY-LEETEN 04/20/2013-END
 			ASSERT_NETCDF(nc_close(iNcId));
 			iNcId = 0;
 		}

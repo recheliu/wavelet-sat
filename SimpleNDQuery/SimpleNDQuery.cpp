@@ -16,7 +16,6 @@ vector<double> vdData;
 // ADD-BY-LEETEN 03/28/2013-BEGIN
 #include "lognc.h"
 
-// MOD-BY-LEETEN 04/20/2013-FROM:	vector<WaveletSAT::typeBin> vusBins;
 vector<WaveletSAT::typeBin> vusCoefBins;
 vector<WaveletSAT::typeSum> vdCoefSums;
 vector<WaveletSAT::CSATFileNetCDF::typeCoefCount>		vusCoefCounts;
@@ -47,7 +46,6 @@ _ReadVar(
 	ASSERT_NETCDF(
 		nc_get_var(iNcId, ncVarId, (void*)&vData.data()[0]));
 }
-// MOD-BY-LEETEN 04/20/2013-END
 
 void
 _ReadBins(
@@ -68,18 +66,10 @@ _ReadBins(
     		&iNcId));
 	#endif // #if !WITH_NETCDF4
 
-	#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-	int ncVarBin;
-	ASSERT_NETCDF(
-		nc_inq_varid(iNcId, "BIN", &ncVarBin));
-	ASSERT_NETCDF(
-		nc_get_var(iNcId, ncVarBin, (void*)&vusBins.data()[0]));
-	#else	// MOD-BY-LEETEN 04/20/2013-TO:
 	_ReadVar<WaveletSAT::typeBin>(iNcId, WaveletSAT::CSATFileNetCDF::SZGetVarCoefBin(), vusCoefBins);
 	_ReadVar<WaveletSAT::typeSum>(iNcId, WaveletSAT::CSATFileNetCDF::SZGetVarCoefSum(), vdCoefSums);
 	_ReadVar<WaveletSAT::CSATFileNetCDF::typeCoefCount>(iNcId,	WaveletSAT::CSATFileNetCDF::SZGetVarCoefCount(), vusCoefCounts);
 	_ReadVar<WaveletSAT::CSATFileNetCDF::typeCoefOffset>(iNcId, WaveletSAT::CSATFileNetCDF::SZGetVarCoefOffset(), vuCoefOffsets);
-	#endif	// MOD-BY-LEETEN 04/20/2013-END
 	ASSERT_NETCDF(
 		nc_close(iNcId) );
 }
@@ -310,7 +300,6 @@ main(int argn, char* argv[])
 			// decide the threshld to filter numerical error
 			double dThreshold = cSimpleNDFile.DGetThreshold();
 
-			// DEL-BY-LEETEN 04/20/2013:			vusBins.resize(uNrOfValues);
 			_ReadBins(szBinFilePath);
 
 			LIBCLOCK_END(bIsPrintingTiming);
@@ -365,17 +354,12 @@ main(int argn, char* argv[])
 						for(size_t d = 0; d < uNrOfDims; d++)
 							vuPos[d] = vuOffset[d] + 1 + vuPosInWin[d];
 
-						#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-						size_t uBin = (size_t)vusBins[WaveletSAT::UConvertSubToIndex(vuPos, vuDimLengths)];
-						vdRefH[uBin] += (WaveletSAT::typeSum)1;
-						#else	// MOD-BY-LEETEN 04/20/2013-TO:
 						size_t uIndex = WaveletSAT::UConvertSubToIndex(vuPos, vuDimLengths);
 						size_t uOffset = vuCoefOffsets[uIndex];
 						for(size_t bi = 0; bi < vusCoefCounts[uIndex]; bi++)
 						{
 							vdRefH[vusCoefBins[uOffset+bi]] += (WaveletSAT::typeSum)vdCoefSums[uOffset+bi];
 						}
-						#endif	// MOD-BY-LEETEN 04/20/2013-END
 					}
 				}
 				else
@@ -396,25 +380,16 @@ main(int argn, char* argv[])
 					for(size_t b = 0; b < uBaseSize; b++)
 					{
 						WaveletSAT::_ConvertIndexToSub(b, vuB, vuBaseLengths);
-						#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-						size_t uBin = (size_t)vusBins[WaveletSAT::UConvertSubToIndex(vuB, vuDimLengths)];
-						vdRefH[uBin] += (WaveletSAT::typeSum)1;
-						#else	// MOD-BY-LEETEN 04/20/2013-TO:
 						size_t uIndex = WaveletSAT::UConvertSubToIndex(vuB, vuDimLengths);
 						size_t uOffset = vuCoefOffsets[uIndex];
 						for(size_t bi = 0; bi < vusCoefCounts[uIndex]; bi++)
 						{
 							vdRefH[vusCoefBins[uOffset+bi]] += (WaveletSAT::typeSum)vdCoefSums[uOffset+bi];
 						}
-						#endif	// MOD-BY-LEETEN 04/20/2013-END
 					}
 				}
 
 				// truncate the numerical error
-				#if	0	// DEL-BY-LEETEN 04/20/2013-BEGIN
-				for(size_t b = 0; b < uNrOfBins; b++)
-					vdH[b] = floor(0.5 + vdH[b]);
-				#endif	// DEL-BY-LEETEN 04/20/2013-END
 				double dError = 0.0;
 				for(size_t b = 0; b < uNrOfBins; b++)
 				{
@@ -433,13 +408,9 @@ main(int argn, char* argv[])
 					for(size_t b = 0; b < uNrOfBins; b++)
 					{
 						if( vdH[b] == vdRefH[b] )
-							// MOD-BY-LEETEN 04/20/2013-FROM:							printf( "\t\tH[%d]:%d\n", (unsigned int)b, (int)vdH[b]);
 							printf( "\t\tH[%d]:%f\n", (unsigned int)b, vdH[b]);
-							// MOD-BY-LEETEN 04/20/2013-END
 						else
-							// MOD-BY-LEETEN 04/20/2013-FROM:							printf( "\t\tH[%d]:%d,\t%d\n", (unsigned int)b, (int)vdH[b], (int)vdRefH[b]);
 							printf( "\t\tH[%d]:%f,\t%f\n", (unsigned int)b, vdH[b], vdRefH[b]);
-							// MOD-BY-LEETEN 04/20/2013-END
 					}
 					printf("RMSE:%f\n", dRMSE);
 				}
