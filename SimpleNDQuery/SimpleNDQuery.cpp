@@ -262,6 +262,12 @@ main(int argn, char* argv[])
 		"--is-computing-block-stat", &iIsComputingBlockStat, iIsComputingBlockStat);
 	// ADD-BY-LEETEN 01/23/2013-END
 
+	// ADD-BY-LEETEN 2013/07/03-BEGIN
+	int iIsTestingBruteForce = 0; 
+	_OPTAddBoolean(
+		"--is-testing-brute-force", &iIsTestingBruteForce, iIsTestingBruteForce);
+	// ADD-BY-LEETEN 2013/07/03-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
 	assert(szNcFilePath);
@@ -342,6 +348,9 @@ main(int argn, char* argv[])
 					vuOffset.resize(uNrOfDims);
 					for(size_t d = 0; d < uNrOfDims; d++)
 						vuOffset[d] = vuBase[d] - uWinSize;
+					// ADD-BY-LEETEN 2013/07/03-BEGIN
+					if( !iIsTestingBruteForce )
+					// ADD-BY-LEETEN 2013/07/03-END
 					cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
 
 					for(size_t w = 0; w < uWinLength; w++)
@@ -388,6 +397,11 @@ main(int argn, char* argv[])
 						}
 					}
 				}
+
+				// ADD-BY-LEETEN 2013/07/03-BEGIN
+				if( iIsTestingBruteForce )
+					continue;
+				// ADD-BY-LEETEN 2013/07/03-END
 
 				// truncate the numerical error
 				double dError = 0.0;

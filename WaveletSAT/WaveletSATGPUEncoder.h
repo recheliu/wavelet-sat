@@ -110,6 +110,7 @@ protected:
 				LIBCLOCK_END(bIsPrintingTiming);
 
 				LIBCLOCK_BEGIN(bIsPrintingTiming);
+				#if	0	// MOD-BY-LEETEN 2013/07/03-FROM:
 				for(size_t e = 0; e < uNrOfEncodedCoefs; e++)
 				{
 					vector<size_t> vuPos;
@@ -125,6 +126,27 @@ protected:
 					BT uBin = (BT)uKey;
 					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
 				}
+				#else	// MOD-BY-LEETEN 2013/07/03-TO:
+				vector<size_t> vuPos;
+				vuPos.resize(UGetNrOfDims());
+				vector<size_t> vuCoefHalfLengths;
+				vuCoefHalfLengths.resize(UGetNrOfDims());
+				for(size_t d = 0; d < UGetNrOfDims(); d++)
+					vuCoefHalfLengths[d] = vuCoefLengths[d]/2;
+				for(size_t e = 0; e < uNrOfEncodedCoefs; e++)
+				{
+					size_t uKey = (size_t)vuKeys[e];
+					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
+					for(size_t d = UGetNrOfDims(); d > 0; d--)
+					{
+						size_t uCoefHalfLength = vuCoefHalfLengths[d - 1];
+						vuPos[d - 1] = uKey % uCoefHalfLength;
+						uKey /= uCoefHalfLength;
+					}
+					BT uBin = (BT)uKey;
+					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
+				}
+				#endif	// MOD-BY-LEETEN 2013/07/03-TO:
 				LIBCLOCK_END(bIsPrintingTiming);
 
 				LIBCLOCK_PRINT(bIsPrintingTiming);
