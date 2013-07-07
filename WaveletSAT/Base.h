@@ -18,15 +18,11 @@ namespace WaveletSAT
 {
 	// ADD-BY-LEETEN 01/03/2013-BEGIN
 	typedef unsigned short	typeBin;
-	#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
-	typedef double			typeWavelet;
-	#else	// MOD-BY-LEETEN 2013/07/06-TO:
 	#if	WITH_DOUBLE_COEF
 	typedef double			typeWavelet;
-	#else
+	#else	// #if	WITH_DOUBLE_COEF
 	typedef float	typeWavelet;
-	#endif
-	#endif	// MOD-BY-LEETEN 2013/07/06-END
+	#endif	// #if	WITH_DOUBLE_COEF
 	typedef double			typeSum;
 	// ADD-BY-LEETEN 01/03/2013-END
 	//! The base class of all classes

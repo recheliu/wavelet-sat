@@ -227,14 +227,6 @@ C3DView::
 	(
 		CBlock::MODE_ASSIGNED 
 	);
-	#if	0	// DEL-BY-LEETEN 06/23/2013-BEGIN
-	// ADD-BY-LEETEN 05/07/2013-BEGIN
-	pcBlockTree->_RenderBlock
-	(
-		CBlock::MODE_SELECTED_BY_HIST
-	);
-	// ADD-BY-LEETEN 05/07/2013-END
-	#endif	// DEL-BY-LEETEN 06/23/2013-END
 
 	// ADD-BY-LEETEN 06/23/2013-BEGIN
 	for(size_t b = 0; b < CBlock::VGetBlocksRenderedByPCP().size(); b++)

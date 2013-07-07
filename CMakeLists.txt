@@ -51,16 +51,6 @@ if( WITH_BOOST )
 		${BOOST_LIB_DIR}
 	)
 
-	# # DEL-BY-LEETEN 01/23/2013-BEGIN
-	# # ADD-BY-LEETEN 12/30/2012-BEGIN
-	# set(WITH_SMART_PTR		OFF	CACHE 	BOOL "Is smart ptr used?")	
-	# if( WITH_SMART_PTR )
-	# 	add_definitions(
-	# 		-DWITH_SMART_PTR=1
-	# 	)
-	# endif()
-	# ADD-BY-LEETEN 12/30/2012-END
-	# # DEL-BY-LEETEN 01/23/2013-END
 endif()
 # ADD-BY-LEETEN 12/28/2012-END
 
@@ -100,7 +90,6 @@ link_directories (
 FIND_PACKAGE(CUDA)
 include_directories(
 	${CUDA_TOOLKIT_ROOT_DIR}/include
-	# DEL-BY-LEETEN 04/09:	${CUDPP_DIR}/include
 	)
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 	add_definitions(-DWIN64)
@@ -126,29 +115,6 @@ set(WITH_CUDA	OFF	CACHE 	BOOL "Is CUDA used?")
 if( WITH_CUDA )
 	add_definitions(-DWITH_CUDA)
 	
-	# DEL-BY-LEETEN 04/09:	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
-
-	# # DEL-BY-LEETEN 03/28/2013-BEGIN
-	# FIND_PACKAGE(CUDA)
-	# include_directories(
-		# ${CUDA_TOOLKIT_ROOT_DIR}/include
-		# ${CUDPP_DIR}/include
-		# )
-	# if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-		# add_definitions(-DWIN64)
-		# link_directories(
-			# ${CUDA_TOOLKIT_ROOT_DIR}/lib/x64)
-	# else()
-		# link_directories(
-			# ${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
-    # endif()	
-	# # DEL-BY-LEETEN 03/28/2013-END
-	# DEL-BY-LEETEN 04/09/2013-BEGIN
-	# link_directories(
-		# ${CUDPP_DIR}/lib
-		# )
-	# DEL-BY-LEETEN 04/09/2013-END
-
 	add_subdirectory(CudaDWT)
 	include_directories(
 		CudaDWT
@@ -162,10 +128,6 @@ endif()
 endif()	# ADD-BY-LEETEN 01/18/2012
 
 add_subdirectory(WaveletSAT)
-# DEL-BY-LEETEN 05/05/2013:	add_subdirectory(SimpleND)
-
-# DEL-BY-LEETEN 05/05/2013:	add_subdirectory(SimpleNDWithNrrd)
-
 add_subdirectory(SimpleNDEncoder)
 add_subdirectory(ContourSpectrum3D) # ADD-BY-LEETEN 04/20/2013
 add_subdirectory(SimpleNDQuery)
@@ -177,8 +139,6 @@ add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )
-	# DEL-BY-LEETEN 05/05/2013:		add_dependencies(SimpleND 			CudaDWT)
-	# DEL-BY-LEETEN 05/05/2013:		add_dependencies(SimpleNDWithNrrd 	CudaDWT)
 	add_dependencies(SimpleNDEncoder 	CudaDWT)
 	
 	add_dependencies(Ocean 	CudaDWT)	# ADD-BY-LEETEN 01/18/2012
@@ -187,9 +147,7 @@ endif()
 # ADD-BY-LEETEN 01/10/2012-END
 
 if(NOT WITH_SAT_FILE)	# ADD-BY-LEETEN 03/28/2013-BEGIN
-	# MOD-BY-LEETEN 05/05/2013-FROM:	 	add_subdirectory(SATSepDWTViewer)	# ADD-BY-LEETEN 01/27/2013
 	add_subdirectory(SATSepDWTViewer2)	
-	# MOD-BY-LEETEN 05/05/2013-END
 endif()					# ADD-BY-LEETEN 03/28/2013-END
 
 # ADD-BY-LEETEN 2013/07/06-BEGIN

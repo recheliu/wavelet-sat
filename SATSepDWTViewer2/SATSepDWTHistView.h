@@ -118,10 +118,8 @@ protected:
 			else
 				pcPanel = pcGlui->add_rollout_to_panel(pcParentPanel, "Cluster", 0);
 
-			// MOD-BY-LEETEN 05/07/2013-FROM:			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive);	// is the editor on?
 			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive,
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_EDITING), CGlutWin::_GluiCB_static);			
-			// MOD-BY-LEETEN 05/07/2013-END
 
 			GLUI_Panel *pcPanel_Color = pcGlui->add_panel_to_panel(pcPanel, "Color");
 			static char* pszChannels[] = {"R", "G", "B", "A"};
@@ -143,10 +141,8 @@ protected:
 				pcWin->	IAddWid(GLUI_EVENT_CLUSTER_EDITING), CGlutWin::_GluiCB_static);
 			pcSpinner_Prob->set_float_limits(0.0f, 1.0f);
 
-			// MOD-BY-LEETEN 05/07/2013-FROM:			GLUI_Spinner* pcSpinner_Level = pcGlui->add_spinner_to_panel(pcPanel, "Level",	GLUI_SPINNER_INT, &iLevel);	
 			GLUI_Spinner* pcSpinner_Level = pcGlui->add_spinner_to_panel(pcPanel, "Level",	GLUI_SPINNER_INT, &iLevel,
 				pcWin->IAddWid(GLUI_EVENT_CLUSTER_EDITING), CGlutWin::_GluiCB_static);
-			// MOD-BY-LEETEN 05/07/2013-END
 			pcSpinner_Level->set_int_limits(0, uMaxLevel);
 
 			vf2BinRanges.assign(uNrOfBins, make_float2(0.0f, 1.0f));

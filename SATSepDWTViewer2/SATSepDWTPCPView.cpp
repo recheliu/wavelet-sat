@@ -31,9 +31,7 @@ CPCPView::_InitFunc()
 	GLUI_Spinner* pcSpinner_Width = pcGlui->add_spinner_to_panel(pcPanel_Line, "Width", GLUI_SPINNER_FLOAT, &fWidth);
 		pcSpinner_Width->set_float_limits(1.0f, 16.0f);
 
-	// MOD-BY-LEETEN 05/07/2013-FROM:	cFilter._AddGlui(this, pcGlui, NULL, pcBlockTree->uMaxLevel);
 	cFilter._AddGlui(this, pcGlui, NULL, pcBlockTree->uMaxLevel + 1);
-	// MOD-BY-LEETEN 05/07/2013-END
 }
 
 void 
@@ -52,23 +50,15 @@ CPCPView::_DisplayFunc()
 	glLoadIdentity();
 
 	// scale the coordinate sysm s.t. the range of X axis is [-1, uMaxLevel] 
-	// MOD-BY-LEETEN 06/23/2013-FROM:	size_t uNrOfLevels = pcBlockTree->uMaxLevel;
 	size_t uNrOfLevels = pcBlockTree->uMaxLevel + 1;
-	// MOD-BY-LEETEN 06/23/2013-END
 	glTranslatef(-1.0f, -1.0f, 0.0f);
-	// MOD-BY-LEETEN 05/07/2013-FROM:	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
-	// MOD-BY-LEETEN 06/23/2013-FROM:	glScalef(2.0f/(float)(uNrOfLevels + 2), 2.0f, 1.0f);
 	glScalef(2.0f/(float)(uNrOfLevels + 1), 2.0f, 1.0f);
-	// MOD-BY-LEETEN 06/23/2013-END
-	// MOD-BY-LEETEN 05/07/2013-END
 	glTranslatef(+1.0f, 0.0f, 0.0f);
 
 	// plot the axis
 	glBegin(GL_LINES);
 	glColor4fv(&f4Color.x);
-	// MOD-BY-LEETEN 06/23/2013-FROM:	for(size_t l = 0; l < uNrOfLevels; l++)
 	for(size_t l = 0; l < uNrOfLevels; l++)
-	// MOD-BY-LEETEN 06/23/2013-END
 	{
 		glVertex2f((float)l, 0.0f);
 		glVertex2f((float)l, 1.0f);

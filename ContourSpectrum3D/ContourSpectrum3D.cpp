@@ -142,18 +142,9 @@ main(int argn, char* argv[])
 
 	vector<double> vdContourSpectrum;
 	vdContourSpectrum.assign(uNrOfBins, 0.0);
-	#if	0	// MOD-BY-LEETEN 04/26/2013-FROM:
-	#if	0		// MOD-BY-LEETEN 04/20/2013-FROM:
-	vector<double> vdCellHistogram;
-	vdCellHistogram.assign(uNrOfBins, 0.0);
-	#else		// MOD-BY-LEETEN 04/20/2013-TO:
-	unordered_map<size_t, double> hashCellHistogram;
-	#endif		// MOD-BY-LEETEN 04/20/2013-END
-	#else	// MOD-BY-LEETEN 04/26/2013-TO:
 	vector<double> vdCellHistogram;
 	vdCellHistogram.assign(uNrOfBins, 0.0);
 	size_t uFirstCellBin = uNrOfBins;
-	#endif	// MOD-BY-LEETEN 04/26/2013-END
 	vector<double> vdBinEdges;
 	vdBinEdges.resize(uNrOfBins+1);
 	typeData dBinInterval = (dValueMax - dValueMin)/(double)uNrOfBins;
@@ -184,32 +175,6 @@ main(int argn, char* argv[])
 							vCorners[j].second = glm::dvec4((double)x + xo, (double)y + yo, (double)z + zo, 1.0);
 						}
 
-				#if	0	// MOD-BY-LEETEN 04/26/2013-FROM:
-				#if	0	// MOD-BY-LEETEN 04/20/2013-FROM:
-				ContourSpectrum::_ComputeFor3DCell
-				(
-					vdBinEdges,
-					vCorners,
-					vdCellHistogram,
-					uTetraOrientation
-				);
-				for(size_t b = 0; b < vdCellHistogram.size(); b++)
-					vdContourSpectrum[b] += vdCellHistogram[b];
-				#else	// MOD-BY-LEETEN 04/20/2013-TO:
-				ContourSpectrum::_ComputeFor3DCell
-				(
-					vdBinEdges,
-					vCorners,
-					hashCellHistogram,
-					uTetraOrientation
-				);
-				for(unordered_map<size_t, double>::iterator 
-						ihashCell = hashCellHistogram.begin();
-					ihashCell != hashCellHistogram.end();
-					ihashCell++)
-					vdContourSpectrum[ihashCell->first] += ihashCell->second;
-				#endif	// MOD-BY-LEETEN 04/20/2013-END
-				#else	// MOD-BY-LEETEN 04/26/2013-TO:
 				ContourSpectrum::_ComputeFor3DCell
 				(
 					vdBinEdges,
@@ -224,7 +189,6 @@ main(int argn, char* argv[])
 						break;
 					vdContourSpectrum[b] += vdCellHistogram[b];
 				}
-				#endif	// MOD-BY-LEETEN 04/26/2013-END
 			}
 
 	vector<double> vdHistogram;

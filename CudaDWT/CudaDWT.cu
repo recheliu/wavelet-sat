@@ -87,17 +87,7 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
-		#if	0	// MOD-BY-LEETEN 2013/07/03-FROM:
-		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-		const float			pfValues[],
-		// ADD-BY-LEETEN 03/29/2013-BEGIN
-		#else	// #if	!WITH_DOUBLE_COEF
 		const typeCoef	pfValues[],
-		#endif	// #if	!WITH_DOUBLE_COEF
-		// ADD-BY-LEETEN 03/29/2013-END
-		#else	// MOD-BY-LEETEN 2013/07/03-TO:
-		const typeCoef	pfValues[],
-		#endif	// MOD-BY-LEETEN 2013/07/03-END
 		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
 		void* _Reserved
 	)
@@ -149,17 +139,7 @@ namespace CudaDWT
 
 		size_t				*puNrOfElements,
 		unsigned int		puKeys_host[],
-		#if	0	// MOD-BY-LEETEN 2013/07/03-FROM:
-		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-		float				pfCoefs_host[],
-		// ADD-BY-LEETEN 03/29/2013-BEGIN
-		#else	// #if	!WITH_DOUBLE_COEF
 		typeCoef			pfCoefs_host[],
-		#endif	// #if	!WITH_DOUBLE_COEF
-		// ADD-BY-LEETEN 03/29/2013-END
-		#else	// MOD-BY-LEETEN 2013/07/03-TO:
-		typeCoef			pfCoefs_host[],
-		#endif	// MOD-BY-LEETEN 2013/07/03-END
 		unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 
 		int iTimingPrintingLevel,	// ADD-BY-LEETEN 01/11/2013

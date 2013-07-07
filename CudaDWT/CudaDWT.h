@@ -16,17 +16,7 @@
 
 namespace CudaDWT
 {
-	// ADD-BY-LEETEN 04/08/2013-BEGIN
-	#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
-	#if	WITH_DOUBLE_COEF
-	typedef double typeCoef;
-	#else
-	typedef float typeCoef;
-	#endif	// #if	WITH_DOUBLE_COEF
-	#else	// MOD-BY-LEETEN 2013/07/06-TO:
 	typedef WaveletSAT::typeWavelet	typeCoef;
-	#endif	// MOD-BY-LEETEN 2013/07/06-END
-	// ADD-BY-LEETEN 04/08/2013-END
 	enum
 	{
 		GPU_MAX_NR_OF_DIMS = 3,
@@ -51,17 +41,7 @@ namespace CudaDWT
 
 		//
 		uint4 *pu4BinSub_device;
-		#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
-		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-		float* pfValues_device;
-		// ADD-BY-LEETEN 03/29/2013-BEGIN
-		#else	// #if	!WITH_DOUBLE_COEF	
 		typeCoef *pfValues_device;
-		#endif	// #if	!WITH_DOUBLE_COEF	
-		// ADD-BY-LEETEN 03/29/2013-END
-		#else	// MOD-BY-LEETEN 2013/07/06-TO:
-		typeCoef *pfValues_device;
-		#endif	// MOD-BY-LEETEN 2013/07/06-END
 		unsigned int* puKeys_device;
 
 		typeCoef* pfCoefs_device;
@@ -94,23 +74,11 @@ namespace CudaDWT
 		void
 		_InitEncoder
 		(
-			// ADD-BY-LEETEN 01/18/2012-BEGIN
 			size_t uNrOfDims,
 			unsigned int puCoefLengths[],
-			// ADD-BY-LEETEN 01/18/2012-END
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
-			#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
-			#if	!WITH_DOUBLE_COEF				// ADD-BY-LEETEN 03/29/2013
-			const float			pfValues[],
-			// ADD-BY-LEETEN 03/29/2013-BEGIN
-			#else	// #if	!WITH_DOUBLE_COEF
-			const double			pfValues[],
-			#endif	// #if	!WITH_DOUBLE_COEF
-			// ADD-BY-LEETEN 03/29/2013-END
-			#else	// MOD-BY-LEETEN 2013/07/06-TO:
 			const typeCoef pfValues[],
-			#endif	// MOD-BY-LEETEN 2013/07/06-END
 			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		);
@@ -125,17 +93,7 @@ namespace CudaDWT
 
 			size_t				*puNrOfElements,
 			unsigned int		puKeys_host[],
-			#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
-			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-			float				pfCoefs_host[],
-			// ADD-BY-LEETEN 03/29/2013-BEGIN
-			#else	// #if	!WITH_DOUBLE_COEF
-			double				pfCoefs_host[],
-			#endif	// #if	!WITH_DOUBLE_COEF
-			#else	// MOD-BY-LEETEN 2013/07/06-TO:
 			typeCoef	pfCoefs_host[],
-			#endif	// MOD-BY-LEETEN 2013/07/06-END
-			// ADD-BY-LEETEN 03/29/2013-END
 
 			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 

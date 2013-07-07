@@ -32,12 +32,10 @@ else()
 	set(WITH_CUDA 	OFF	CACHE BOOL	"Whether CUDA is used or not.")
 	if( WITH_CUDA )
 		add_definitions(-DWITH_CUDA)
-		# DEL-BY-LEETEN 04/09/2013:	set(CUDPP_DIR	"/usr/local"	CACHE 	PATH	"The installed path of CUDPP.")	
 
 		FIND_PACKAGE(CUDA)
 		include_directories(
 			${CUDA_TOOLKIT_ROOT_DIR}/include
-			# DEL-BY-LEETEN 04/09/2013:	${CUDPP_DIR}/include
 			)
 		if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 			add_definitions(-DWIN64)
@@ -47,11 +45,6 @@ else()
 			link_directories(
 				${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32)
 		endif()	
-		# DEL-BY-LEETEN 04/09/2013-BEGIN
-		# link_directories(
-		#	${CUDPP_DIR}/lib
-		#	)
-		# DEL-BY-LEETEN 04/09/2013-END
 	endif()
 endif()
 

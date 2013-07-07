@@ -53,28 +53,20 @@ protected:
 			void* _Reserved = NULL)
 		{
 			GLUI_Panel* pcPanel = pcGlui->add_rollout("Filter");
-			// ADD-BY-LEETEN 05/07/2013-BEGIN
-			// MOD-BY-LEETEN 06/23/2013-FROM:			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive);
 			pcGlui->add_checkbox_to_panel(pcPanel, "Active?", &iIsActive, 
 				pcWin->IAddWid(GLUI_EVENT_FILTER_ACTIVE), CGlutWin::_GluiCB_static);	
-			// MOD-BY-LEETEN 06/23/2013-END
 			GLUI_Spinner* pcSpinner_Width = pcGlui->add_spinner_to_panel(pcPanel, "Width", GLUI_SPINNER_FLOAT, &fWidth);
 				pcSpinner_Width->set_float_limits(0.0f, 0.5f);
-			// ADD-BY-LEETEN 05/07/2013-END
 			GLUI_Spinner* pcSpinner_Target = pcGlui->add_spinner_to_panel(pcPanel, "Target", GLUI_SPINNER_INT, &iTarget);
-				// MOD-BY-LEETEN 05/07/2013-FROM:				pcSpinner_Target->set_int_limits(1, uNrOfLevels - 1);
 				pcSpinner_Target->set_int_limits(0, uNrOfLevels - 1);
-				// MOD-BY-LEETEN 05/07/2013-END
 
 			GLUI_Panel *pcPanel_Color = pcGlui->add_panel_to_panel(pcPanel, "Color");
 			static char* pszChannels[] = {"R", "G", "B", "A"};
 			float *pfColor = &f4Color.x;
 			for(int c = 0; c < sizeof(pszChannels)/sizeof(pszChannels[0]); c++)
 			{
-				// MOD-BY-LEETEN 06/23/2013-FROM:				GLUI_Spinner* pcSpinner = pcGlui->add_spinner_to_panel(pcPanel_Color, pszChannels[c], GLUI_SPINNER_FLOAT, &pfColor[c]);
 				GLUI_Spinner* pcSpinner = pcGlui->add_spinner_to_panel(pcPanel_Color, pszChannels[c], GLUI_SPINNER_FLOAT, &pfColor[c],
 					pcWin->IAddWid(GLUI_EVENT_FILTER_COLOR), CGlutWin::_GluiCB_static);	
-				// MOD-BY-LEETEN 06/23/2013-END
 				pcSpinner->set_float_limits(0.0f, 1.0f);
 			}
 			pcGlui->add_button_to_panel(pcPanel, "Assign", pcWin->IAddWid(GLUI_EVENT_FILTER_ASSIGN), CGlutWin::_GluiCB_static);
