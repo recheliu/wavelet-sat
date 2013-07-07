@@ -1,0 +1,82 @@
+# This file packages OSUFlow as a CMake package. It can be configureed by the following variuables:
+#
+
+set(WITH_CUDA 			OFF 			CACHE BOOL "With CUDA?")
+set(WITH_NETCDF			@WITH_NETCDF@)
+set(WITH_DOUBLE_COEF	@WITH_DOUBLE_COEF@)
+
+set(ARCH	"")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(ARCH	"x64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+	set(ARCH	"x32")
+endif()
+	
+LIST(APPEND WaveletSAT_INCLUDE_DIRS
+	"${WaveletSAT_DIR}/include")
+LIST(APPEND WaveletSAT_LIBRARY_DIRS
+	"${WaveletSAT_DIR}/lib")
+
+if( ${WITH_DOUBLE_COEF} )
+	add_definitions(
+		-DWITH_DOUBLE_COEF
+	)
+endif()
+
+if( ${WITH_NETCDF} )
+	set(NETCDF_DIR 			"~/netcdf" 		CACHE PATH "The path to NetCDF4.")	
+	set(HDF5_DIR 			"~/hdf5" 		CACHE PATH "The path to HDF5.")	
+	
+	add_definitions(
+		-DWITH_NETCDF
+		-DWITH_HDF5
+	)
+	
+	# include_directories(
+	LIST(APPEND WaveletSAT_INCLUDE_DIRS
+		"${NETCDF_DIR}/include"
+		"${HDF5_DIR}/include"
+	)
+
+	#link_directories(
+	LIST(APPEND WaveletSAT_LIBRARY_DIRS
+		"${NETCDF_DIR}/lib"
+		"${HDF5_DIR}/lib"
+	)
+
+	LIST(APPEND WaveletSAT_LIBRARIES		
+			hdf5	
+			netcdf4
+		)
+
+	LIST(APPEND WaveletSAT_LIBRARIES		
+			hdf5	
+			netcdf4
+		)
+endif()
+
+
+if( ${WITH_CUDA} )
+	add_definitions(
+		-DWITH_CUDA
+	)
+
+	FIND_PACKAGE(CUDA)
+
+	CUDA_INCLUDE_DIRECTORIES(
+		"${CUDA_INCLUDE_DIRS}"
+		)
+
+	# link_directories(
+	LIST(APPEND WaveletSAT_LIBRARY_DIRS
+		"${CUDA_TOOLKIT_ROOT_DIR}/lib/${ARCH}"
+	)
+
+	LIST(APPEND	WaveletSAT_LIBRARIES			"CudaDWT")
+	LIST(APPEND	WaveletSAT_DEBUG_LIBRARIES		"CudaDWT_d")
+	LIST(APPEND	WaveletSAT_RELEASE_LIBRARIES	"CudaDWT_r")
+endif()
+
+include_directories(${WaveletSAT_INCLUDE_DIRS})
+link_directories(${WaveletSAT_LIBRARY_DIRS})
+

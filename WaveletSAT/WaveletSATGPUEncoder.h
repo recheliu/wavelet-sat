@@ -5,6 +5,7 @@
 using namespace CudaDWT;
 #endif	// #if	WITH_CUDA
 
+#include "libclock.h"	// ADD-BY-LEETEN 2013/07/06
 #include "WaveletSATEncoder.h"	// ADD-BY-LEETEN 12/16/2012
 
 namespace WaveletSAT
@@ -32,6 +33,7 @@ protected:
 		size_t uNrOfElements;
 
 		vector<uint4>			vu4BinSubs;
+		#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		vector<float>			vfWeights;
 		// ADD-BY-LEETEN 03/29/2013-BEGIN
@@ -39,7 +41,11 @@ protected:
 		vector<WT>			vfWeights;
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
+		#else	// MOD-BY-LEETEN 2013/07/06-TO:
+		vector<typeWavelet>			vfWeights;
+		#endif	// MOD-BY-LEETEN 2013/07/06-END
 		vector<unsigned int>	vuKeys;
+		#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
 		#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 		vector<float>			vfCoefs;
 		// ADD-BY-LEETEN 03/29/2013-BEGIN
@@ -47,6 +53,9 @@ protected:
 		vector<WT>			vfCoefs;
 		#endif	// #if	!WITH_DOUBLE_COEF
 		// ADD-BY-LEETEN 03/29/2013-END
+		#else	// MOD-BY-LEETEN 2013/07/06-TO:
+		vector<typeWavelet>			vfCoefs;
+		#endif	// MOD-BY-LEETEN 2013/07/06-END
 
 		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
 
@@ -177,6 +186,7 @@ protected:
 			unsigned int* puBinSub = &vu4BinSubs[uNrOfElements].y;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				puBinSub[d] = (unsigned int)vuPos[d];
+			#if	0	// MOD-BY-LEETEN 2013/07/06-FROM:
 			#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
 			vfWeights[uNrOfElements] = (float)dWeight;
 			// ADD-BY-LEETEN 03/29/2013-BEGIN
@@ -184,6 +194,9 @@ protected:
 			vfWeights[uNrOfElements] = (WT)dWeight;
 			#endif	// #if	!WITH_DOUBLE_COEF
 			// ADD-BY-LEETEN 03/29/2013-END
+			#else	// MOD-BY-LEETEN 2013/07/06-TO:
+			vfWeights[uNrOfElements] = (typeWavelet)dWeight;
+			#endif	// MOD-BY-LEETEN 2013/07/06-END
 			uNrOfElements++;
 
 			// otherwise, 
