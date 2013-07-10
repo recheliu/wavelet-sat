@@ -479,6 +479,7 @@ public:
 			
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			{
 				for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 				{
@@ -507,6 +508,16 @@ public:
 				}
 			}	
 			// ADD-BY-LEETEN 11/11/2012-END
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
+			{
+				vector<size_t> vuLevels;
+				_ConvertIndexToSub(c, vuLevels, this->vuDimMaxLevels);
+
+				this->vcCoefPools[c]._Finalize( (WT)1.0 );
+				// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
+			}
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 
 			_ShowMemoryUsage(false);
 
@@ -632,6 +643,37 @@ public:
 				if( !uNrOfCoefsInFullArray )
 				  bIsSparse = true;
 				// ADD-BY-LEETEN 11/11/2012-END
+
+				// ADD-BY-LEETEN 2013/07/07-BEGIN
+				// decide the wavelet weight
+				double dWavelet = +1.0;
+
+				// ADD-BY-LEETEN 2013/07/08-BEGIN
+				vector<size_t> vuWaveletLengths;
+				vuWaveletLengths.resize(UGetNrOfDims());
+				// ADD-BY-LEETEN 2013/07/08-END
+
+				for(size_t d = 0; d < vuLocalCoefSub.size(); d++)
+				{
+					size_t uLevel = vuLocalCoefSub[d];
+					if( uLevel >= 1 )
+						dWavelet *= (double)(1 << (uLevel - 1));
+
+					// ADD-BY-LEETEN 2013/07/08-BEGIN
+					vuWaveletLengths[d] = 1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
+					// ADD-BY-LEETEN 2013/07/08-END
+				}
+
+				dWavelet = sqrt(dWavelet);
+				double dWeight = dWavelet/dWaveletDenomiator;
+				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
+				// ADD-BY-LEETEN 2013/07/07-END
+
+				// ADD-BY-LEETEN 2013/07/08-BEGIN
+				this->vcCoefPools[c]._SetDataDimLengths(vuDimLengths);
+				this->vcCoefPools[c]._SetWaveletLengths(vuWaveletLengths);
+				// ADD-BY-LEETEN 2013/07/08-END
+
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),
 					vuPoolDimLengths,

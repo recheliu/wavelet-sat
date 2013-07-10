@@ -41,20 +41,327 @@ namespace WaveletSAT
 		//! A flag to indicate whether this coef. block is sparse.
 		bool bIsSparse;
 
+		// ADD-BY-LEETEN 2013/07/08-BEGIN
+		vector<size_t> vuDataDimLengths;
+
+		vector<size_t> vuWaveletLengths;
+		// ADD-BY-LEETEN 2013/07/08-END
+
+		#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 		vector< vector<WT> > vvFull;
 
 		vector< unordered_map<BT, WT>* >* pvpmapSparse;
+		#else	// MOD-BY-LEETEN 2013/07/07-TO:
+		WT	 dWaveletWeight;
+
+		size_t uNrOfBins;
+
+		typedef pair<size_t, vector<WT>*> CFullArray;
+		typedef unordered_map<size_t,  CFullArray*> CFullArrays;
+		CFullArrays* pcFullArrays;
+
+		// In the pair, the first element record the current count
+		typedef pair<size_t, unordered_map<BT, WT>*> CEncodingSparseArray;
+		typedef unordered_map<size_t, CEncodingSparseArray*> CEncodingSparseArrays; 
+		CEncodingSparseArrays *pcEncodingSparseArrays;
+		#endif	// MOD-BY-LEETEN 2013/07/07-END
 		
 		// ADD-BY-LEETEN 11/11/2012-BEGIN
 		//! Max # that each coefficient is updated
 		size_t uMaxCount;
 
+	#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 		//! Record how many time each coefficient has been updated
 		vector<size_t> vuCounts;
 
 		//! 
 		vector< vector< pair<BT, WT> > > vvpairSparse;
 		// ADD-BY-LEETEN 11/11/2012-END
+	#else	// MOD-BY-LEETEN 2013/07/07-TO:
+		typedef vector<pair<BT, WT>> CDecodingSparseArray;
+		typedef unordered_map< size_t, CDecodingSparseArray* > CDecodingSparseArrays;
+		CDecodingSparseArrays *pcDecodingSparseArrays;
+
+	protected:
+		void
+		_GetAtFullArray
+		(
+			const BT& Bin,
+			const size_t& uIndex,
+			WT& Value,
+			void* _Reserved = NULL
+		) 
+		{
+			CFullArrays::iterator iterFullArrays = this->pcFullArrays->find(uIndex);
+			if( pcFullArrays->end() 
+					 == iterFullArrays || 
+				NULL == iterFullArrays->second ||
+				NULL == iterFullArrays->second->second 
+				)
+			{
+				Value = WT(0);
+				return;
+			}
+			vector<WT>& vFullArray = *iterFullArrays->second->second;
+			Value = vFullArray[Bin];
+		}
+
+		void
+		_MoveToPool(
+			const size_t& uIndex,
+			void* _Reserved = NULL
+		)
+		{
+			if( !bIsSparse ) 
+			{
+				CFullArrays::iterator iterFullArrays = this->pcFullArrays->find(uIndex);
+				if( pcFullArrays->end()
+						 != iterFullArrays &&
+					NULL != iterFullArrays->second &&
+					NULL != iterFullArrays->second->second )
+				{
+					vector<WT>& vFullArray = *iterFullArrays->second->second;
+					for(size_t b = 0; b < vFullArray.size(); b++)
+						vFullArray[b] *= this->dWaveletWeight;
+					
+					// TODO: Move to the pool
+					/*
+					delete iterFullArrays->second->second;
+					delete iterFullArrays->second;
+					pcFullArrays->erase(iterFullArrays);
+					*/
+				}
+			}
+			else
+			{
+				CEncodingSparseArrays::iterator iterSparseArrays = this->pcEncodingSparseArrays->find(uIndex);
+				if( pcEncodingSparseArrays->end()
+						 != iterSparseArrays &&
+					NULL != iterSparseArrays->second &&
+					NULL != iterSparseArrays->second->second )
+				{
+					unordered_map<BT, WT>& mapSparseArray = *iterSparseArrays->second->second;
+					for(unordered_map<BT, WT>::iterator
+							iterSparseArray = mapSparseArray.begin();
+						iterSparseArray != mapSparseArray.end();
+						iterSparseArray++)
+					{
+						iterSparseArray->second *= dWaveletWeight;
+					}
+					// TODO: Move to the pool
+					/*
+					delete iterSparseArrays->second->second;
+					delete iterSparseArrays->second;
+					pcEncodingSparseArrays->erase(iterSparseArrays);
+					*/
+				}
+			}
+		}
+
+		// ADD-BY-LEETEN 2013/07/08-BEGIN
+		size_t UGetNonOccupiedVolume(
+			const size_t& uIndex, 
+			void *_Reserved = NULL
+			)
+		{
+			static vector<size_t> vuSubs;
+			_ConvertIndexToSub(uIndex, vuSubs, vuLengths);
+
+			size_t uOccupiedVolume = 1;
+			for(size_t d = 0; d < vuSubs.size(); d++) 
+			{
+				size_t uMaxOccupiedLength = (vuSubs[d] + 1) * vuWaveletLengths[d];
+				size_t uOccupiedLength = vuWaveletLengths[d];
+				if( uMaxOccupiedLength > this->vuDataDimLengths[d] )
+				{
+					size_t uMinOccupiedLength = vuSubs[d] * vuWaveletLengths[d];
+					if( uMinOccupiedLength >= this->vuDataDimLengths[d] )
+					{
+						uOccupiedVolume = 0;
+						break;
+					}
+					else
+						uOccupiedLength = this->vuDataDimLengths[d] - uMinOccupiedLength;
+				}
+				uOccupiedVolume *= uOccupiedLength;
+			}
+			return uMaxCount - uOccupiedVolume;
+		}
+		// ADD-BY-LEETEN 2013/07/08-END
+
+		void
+		_AddAtFullArray
+		(
+			const BT& usBin,
+			const size_t& uIndex,
+			const WT& Value,
+			const size_t& uCount,	
+			void* _Reserved = NULL
+		) 
+		{
+			CFullArrays::iterator iterFullArrays = this->pcFullArrays->find(uIndex);
+			CFullArray* pcFullArray = NULL;
+			if( iterFullArrays != pcFullArrays->end() )
+			{
+				pcFullArray = iterFullArrays->second;
+			}
+			else
+			{
+				pcFullArray = new CFullArray();
+				this->pcFullArrays->insert(pair<size_t, CFullArray*>(uIndex, pcFullArray));
+			}
+
+			if( !pcFullArray->second ) 
+			{
+				// MOD-BY-LEETEN 2013/07/08-FROM:				pcFullArray->first = 0;
+				pcFullArray->first = UGetNonOccupiedVolume(uIndex);
+				// MOD-BY-LEETEN 2013/07/08-END
+
+				pcFullArray->second = new vector<WT>();
+				pcFullArray->second->assign(uNrOfBins, (WT)0);
+			} 
+			pcFullArray->first += uCount;
+			vector<WT>& vec = *pcFullArray->second;
+			vec[usBin] += Value;
+
+			if( !uCount ) 
+				return;
+
+			size_t uCurrentCount = pcFullArray->first;
+			if( uCurrentCount >= uMaxCount ) 
+			{
+				this->_MoveToPool(uIndex);
+			}
+		}
+
+		void
+		_AddAtEncodingSparseArray
+		(
+			const BT& usBin,
+			const size_t& uIndex,
+			const WT& Value,
+			const size_t& uCount,	
+			void* _Reserved = NULL
+		) 
+		{
+			CEncodingSparseArrays::iterator iterSparseArrays = this->pcEncodingSparseArrays->find(uIndex);
+			CEncodingSparseArray* pcSparseArray = NULL;
+			if( iterSparseArrays != pcEncodingSparseArrays->end() )
+			{
+				pcSparseArray = iterSparseArrays->second;
+			}
+			else
+			{
+				pcSparseArray = new CEncodingSparseArray();
+				this->pcEncodingSparseArrays->insert(pair<size_t, CEncodingSparseArray*>(uIndex, pcSparseArray));
+			}
+
+			if( !pcSparseArray->second ) 
+			{
+				// MOD-BY-LEETEN 2013/07/08-FROM:				pcSparseArray->first = 0;
+				pcSparseArray->first = UGetNonOccupiedVolume(uIndex);
+				// MOD-BY-LEETEN 2013/07/08-END
+				pcSparseArray->second = new unordered_map<BT, WT>();
+			} 
+			pcSparseArray->first += uCount;
+			unordered_map<BT, WT>& mapSparseArray = *pcSparseArray->second;
+			unordered_map<BT, WT>::iterator iterSparseArray = mapSparseArray.find(usBin);
+			if( iterSparseArray != mapSparseArray.end() ) 
+			{
+				iterSparseArray->second += Value; 
+			}
+			else
+			{
+				if( Value )	// ADD-BY-LEETEN 2013/07/08
+					mapSparseArray.insert(pair<BT, WT>(usBin, Value));
+			}
+
+			if( !uCount ) 
+				return;
+
+			size_t uCurrentCount = pcSparseArray->first;
+			if( uCurrentCount >= uMaxCount ) 
+			{
+				this->_MoveToPool(uIndex);
+			}
+		}
+
+		void
+		_AppendDecodingSparseArray
+		(
+			const BT& usBin,
+			const size_t& uIndex,
+			const WT& Value,
+			const size_t& uCount,
+			void* _Reserved = NULL
+		) 
+		{
+			CDecodingSparseArrays::iterator iterSparseArrays = this->pcDecodingSparseArrays->find(uIndex);
+			CDecodingSparseArray* pcSparseArray = NULL;
+			if( iterSparseArrays != pcDecodingSparseArrays->end() )
+			{
+				pcSparseArray = iterSparseArrays->second;
+			}
+			else
+			{
+				pcSparseArray = new CDecodingSparseArray();
+				this->pcDecodingSparseArrays->insert(pair<size_t, CDecodingSparseArray*>(uIndex, pcSparseArray));
+			}
+
+			pcSparseArray->push_back(pair<BT, WT>(usBin, Value));
+		}
+
+		void
+		_GetAtDecodingSparseArray
+		(
+			const BT& usOffset,
+			const size_t& uIndex,
+			BT& Bin,
+			WT& Value,
+			void* _Reserved = NULL
+		) 
+		{
+			CDecodingSparseArrays::iterator iterDecodingSparseArrays = pcDecodingSparseArrays->find(uIndex);
+			if( pcDecodingSparseArrays->end()
+					 != iterDecodingSparseArrays &&
+				NULL != iterDecodingSparseArrays->second )
+			{
+				vector<pair<BT, WT>>& vpair = *iterDecodingSparseArrays->second;
+				if( (size_t)usOffset < vpair.size() )
+				{
+					Bin = vpair[usOffset].first;
+					Value = vpair[usOffset].second;
+				}
+			}
+		}
+
+
+		void
+		_GetAtEncodingSparseArray
+		(
+			const BT& Bin,
+			const size_t& uIndex,
+			WT& Value,
+			void* _Reserved = NULL
+		) 
+		{
+			CEncodingSparseArrays::iterator iterEncodingSparseArrays = pcEncodingSparseArrays->find(uIndex);
+			if( 
+				pcEncodingSparseArrays->end()
+					 == iterEncodingSparseArrays ||
+				NULL == iterEncodingSparseArrays->second ||
+				NULL == iterEncodingSparseArrays->second->second )
+			{
+				Value = WT(0);
+				return;
+			}
+
+			unordered_map<BT, WT>& mapSparseArray = *iterEncodingSparseArrays->second->second;
+			unordered_map<BT, WT>::iterator iterSparseArray = mapSparseArray.find(Bin);
+			Value = ( mapSparseArray.end() == iterSparseArray )?WT(0):iterSparseArray->second;
+		}
+	#endif	// MOD-BY-LEETEN 2013/07/07-END
+
 	public:
 		////////////////////////////////////////////////////////////////////
 		/*
@@ -86,6 +393,7 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if( bIsSparse )
 				vvpairSparse[uIndex].resize(uNrOfBins);
 
@@ -104,8 +412,53 @@ namespace WaveletSAT
 
 			if( bIsSparse )
 				vuCounts[uIndex] = uMaxCount;
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			for(size_t b = 0; b < uNrOfBins; b++)
+			{
+				CSATSepDWTNetCDF::TYPE_COEF_VALUE	Value = pValues[b];
+				CSATSepDWTNetCDF::TYPE_COEF_BIN		Bin =	pBins[b];
+				if( Value )
+				{
+					if( !bIsSparse )
+						this->_AddAtFullArray(Bin, uIndex, Value, 0);
+					else
+						this->_AppendDecodingSparseArray(Bin, uIndex, Value, 0);
+				}	
+			}
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		// ADD-BY-LEETEN 01/27/2013-END
+
+		// ADD-BY-LEETEN 2013/07/08-BEGIN
+		void
+		_SetDataDimLengths
+		(
+			const vector<size_t>& vuDataDimLengths,
+			void* _Reserved = NULL
+			)
+		{
+			this->vuDataDimLengths.assign(vuDataDimLengths.begin(), vuDataDimLengths.end());
+		}
+
+		void
+		_SetWaveletLengths
+		(
+			const vector<size_t>& vuWaveletLengths,
+			void* _Reserved = NULL
+			)
+		{
+			this->vuWaveletLengths.assign(vuWaveletLengths.begin(), vuWaveletLengths.end());
+		}
+
+		void
+		_SetWaveletWeight(
+			const WT& dWaveletWeight,
+			void* _Reserved = NULL
+			)
+		{
+			this->dWaveletWeight = dWaveletWeight;	
+		}
+		// ADD-BY-LEETEN 2013/07/08-END
 
 		void
 		_Set
@@ -126,23 +479,32 @@ namespace WaveletSAT
 				this->uSize *= vuLengths[d];
 			}
 			this->bIsSparse = bIsSparse;
+			this->uNrOfBins = uNrOfBins;	// ADD-BY-LEETEN 2013/07/07
 			if( !bIsSparse )
 			{
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				vvFull.resize(uNrOfBins);
 				for(size_t b = 0; b < (size_t)uNrOfBins; b++)
 					vvFull[b].resize(this->uSize);
-
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				this->pcFullArrays = new CFullArrays();
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{	// ADD-BY-LEETEN 11/11/2012
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				this->pvpmapSparse = new vector< unordered_map <BT, WT>* >;
 				this->pvpmapSparse->resize(this->uSize);
 
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 				this->vvpairSparse.resize(this->uSize);
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				this->pcEncodingSparseArrays = new CEncodingSparseArrays();
+				this->pcDecodingSparseArrays = new CDecodingSparseArrays();
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
-			this->vuCounts.assign(this->uSize, 0);
+			// DEL-BY-LEETEN 2013/07/07:	this->vuCounts.assign(this->uSize, 0);
 
 			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
@@ -158,6 +520,7 @@ namespace WaveletSAT
 		{
 			uCountInFullArray = 0;
 			uCountInSparseArray = 0;
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(!bIsSparse)
 			{
 				for(typename vector< vector<WT> >::iterator 
@@ -191,10 +554,32 @@ namespace WaveletSAT
 				}
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			for(size_t i = 0; i < uSize; i++) 
+			{
+				if(!bIsSparse)
+				{
+					vector<pair<BT, WT>> vpair;
+					this->_GetCoefSparse(i, vpair);
+					uCountInFullArray  += vpair.size();
+				}
+				else
+				{
+					CEncodingSparseArrays::iterator iterSparseArrays = pcEncodingSparseArrays->find(i);
+					if( pcEncodingSparseArrays->end() 
+							 != iterSparseArrays && 
+						NULL != iterSparseArrays->second &&
+						NULL != iterSparseArrays->second->second ) 
+					{
+						uCountInSparseArray  += iterSparseArrays->second->second->size();
+					}
+				}
+			}
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 
-
+		#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
 		void
 		_AddEntryToSparseArray
 		(
@@ -209,6 +594,7 @@ namespace WaveletSAT
 				mapSparse.insert(pair<BT, WT>(Bin, Value));
 			}
 		}
+		#endif		// DEL-BY-LEETEN 2013/07/07-END
 
 		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		void
@@ -229,17 +615,23 @@ namespace WaveletSAT
 			{
 				// full
 				Bin = usOffset;
-				Value = vvFull[Bin][uIndex];
+				// MOD-BY-LEETEN 2013/07/07-FROM:				Value = vvFull[Bin][uIndex];
+				_GetAtFullArray(Bin, uIndex, Value);
+				// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{
 				// sparse
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				vector< pair<BT, WT> >& vpair = this->vvpairSparse[uIndex];
 				if( (size_t)usOffset < vpair.size() )
 				{
 					Bin = vpair[usOffset].first;
 					Value = vpair[usOffset].second;
 				}
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				_GetAtDecodingSparseArray(usOffset, uIndex, Bin, Value);
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 		}
 		// ADD-BY-LEETEN 12/29/2012-END
@@ -260,11 +652,14 @@ namespace WaveletSAT
 			if( !bIsSparse )
 			{
 				// full
-				Value = vvFull[Bin][uIndex];
+				// MOD-BY-LEETEN 2013/07/07-FROM:				Value = vvFull[Bin][uIndex];
+				_GetAtFullArray(Bin, uIndex, Value);
+				// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{
 				// sparse
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				if( NULL == (*pvpmapSparse)[uIndex] )
 				{
 					Value = WT(0);
@@ -277,6 +672,9 @@ namespace WaveletSAT
 					Value = WT(0);
 				else
 					Value = ipair->second;
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				_GetAtEncodingSparseArray(Bin, uIndex, Value);
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 		}
 
@@ -305,12 +703,14 @@ namespace WaveletSAT
 		{
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 			// ADD-By-LEETEN 11/11/2012-BEGIN
-				vuCounts[uIndex] += uCount;
+			// DEL-BY-LEETEN 2013/07/07:				vuCounts[uIndex] += uCount;
 
+			#if	0	// DEL-BY-LEETEN 2013/07/08-BEGIN
 			if( Value )
 			{
+			#endif	// DEL-BY-LEETEN 2013/07/08-END
 			// ADD-By-LEETEN 11/11/2012-END
-
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if( !bIsSparse )
 			{
 				// full
@@ -334,8 +734,16 @@ namespace WaveletSAT
 						ipair->second += Value;
 
 			}
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			if( !bIsSparse )
+				this->_AddAtFullArray(Bin, uIndex, Value, uCount);
+			else
+				this->_AddAtEncodingSparseArray(Bin, uIndex, Value, uCount);
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#if	0	// DEL-BY-LEETEN 2013/07/08-BEGIN
 			}	// ADD-By-LEETEN 11/11/2012
-
+			#endif	// DEL-BY-LEETEN 2013/07/08-END
+			#if	0	// DEL-BY-LEETEN 2013/07/07-BEGIN
 			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
 			{
 				// ADD-BY-LEETEN 04/21/2013-BEGIN
@@ -354,6 +762,7 @@ namespace WaveletSAT
 				(*this->pvpmapSparse)[uIndex] = NULL;
 				// _ShowMemoryUsage();
 			}	
+			#endif	// DEL-BY-LEETEN 2013/07/07-END
 		}
 
 		void
@@ -363,6 +772,7 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(!bIsSparse)
 			{
 				// ADD-BY-LEETEN 03/16/2013-BEGIN
@@ -426,6 +836,18 @@ namespace WaveletSAT
 				}
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			// TODO:
+			if( !bIsSparse ) 
+			{	
+				// TODO:
+			}
+			else
+			{
+				// TODO:
+			}
+
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 		// ADD-BY-LEETEN 03/16/2013-BEGIN
@@ -436,7 +858,30 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) const
 		{
-			return (vuCounts[uIndex])?false:true;
+			// MOD-BY-LEETEN 2013/07/07-FROM:			return (vuCounts[uIndex])?false:true;
+			if( !bIsSparse )
+			{
+				if(!pcFullArrays)
+					return true;
+				CFullArrays::iterator iterFullArrays = pcFullArrays->find(uIndex);
+				if(pcFullArrays->end() 
+						 != iterFullArrays &&
+					NULL != iterFullArrays->second )
+					return (!iterFullArrays->second->first)?true:false;
+				return false;
+			}
+			else
+			{
+				if(!this->pcEncodingSparseArrays )
+					return true;
+				CEncodingSparseArrays::iterator iterSparseArrays = pcEncodingSparseArrays->find(uIndex);
+				if(pcEncodingSparseArrays->end() 
+						 != iterSparseArrays &&
+					NULL != iterSparseArrays->second )
+					return (!iterSparseArrays->second->first)?true:false;
+				return false;
+			}
+			// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 		const 
@@ -449,6 +894,7 @@ namespace WaveletSAT
 			return BIsEmpty(UConvertSubToIndex(vuSubs, vuLengths));
 		}
 
+		#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
 		virtual
 		const 
 		vector< pair<BT, WT> >&
@@ -458,9 +904,14 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) const
 		{
+			// ADD-BY-LEETEN 2013/07/07-BEGIN
+			static vector< pair<BT, WT> > vpairCoefs;	
+			vpairCoefs.clear();
+			// ADD-BY-LEETEN 2013/07/07-END
 			if( !bIsSparse )
 			{
-				static vector< pair<BT, WT> > vpairCoefs;
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				static vector< pair<BT, WT> > vpairCoefs;	
 				vpairCoefs.clear();
 
 				for(size_t b = 0; b < this->vvFull.size(); b++)
@@ -469,10 +920,37 @@ namespace WaveletSAT
 					if( Coef )
 						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 				}
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				CFullArray::iterator iterFullArrays = pcFullArrays->find(uIndex);
+				if( iterFullArrays != pcFullArrays->end() && NULL != iterFullArrays->second ) 
+				{
+					CFullArray& vFullArray = *iterFullArrays->second;
+					for(size_t b = 0; b < uNrOfBins ; b++)
+					{
+						WT Coef = vFullArray[b];
+						if( Coef )
+							vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
+					}
+				}
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 				return vpairCoefs;
 			}
 			else
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				return this->vvpairSparse[uIndex];
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			{
+				CDecodingSparseArray::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
+				if( pcDecodingSparseArrays->end() 
+						 != iterSparseArrays && 
+					NULL != iterSparseArrays->second &&
+					NULL != iterSparseArrays->second->second ) 
+				{
+					return *iterSparseArrays->second->second;
+				}
+			}
+			return vpairCoefs;
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		
 		virtual
@@ -488,6 +966,7 @@ namespace WaveletSAT
 			return VGetCoefSparse(uIndex);
 		}
 		// ADD-BY-LEETEN 03/16/2013-END
+		#endif	// DEL-BY-LEETEN 2013/07/07-END
 
 		void
 		_GetCoefSparse
@@ -501,21 +980,50 @@ namespace WaveletSAT
 			vpairCoefs.clear();
 			if( !bIsSparse )
 			{
+				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				for(size_t b = 0; b < this->vvFull.size(); b++)
 				{
 					WT Coef = vvFull[b][uIndex];
 					if( Coef )
 						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 				}
+				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				CFullArrays::iterator iterFullArrays = pcFullArrays->find(uIndex);
+				if( pcFullArrays->end() 
+						 != iterFullArrays &&
+					NULL != iterFullArrays->second &&
+					NULL != iterFullArrays->second->second
+					) 
+				{
+					vector<WT>& vFullArray = *iterFullArrays->second->second;
+					for(size_t b = 0; b < uNrOfBins ; b++)
+					{
+						WT Coef = vFullArray[b];
+						if( Coef )
+							vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
+					}
+				}
+				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{
 			// ADD-BY-LEETEN 11/12/2012-END
-
 			// sparse
+			#if	0		// MOD-BY-LEETEN 2013/07/07-FROM:
 			const vector< pair<BT, WT> >& vpairSparse = this->vvpairSparse[uIndex];
 			vpairCoefs.resize(vpairSparse.size());
 			copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
+			#else		// MOD-BY-LEETEN 2013/07/07-TO:
+				CDecodingSparseArrays::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
+				if( pcDecodingSparseArrays->end() 
+						 != iterSparseArrays && 
+					NULL != iterSparseArrays->second )
+				{
+					const vector< pair<BT, WT> >& vpairSparse = *iterSparseArrays->second;
+					vpairCoefs.resize(vpairSparse.size());
+					copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
+				}
+			#endif		// MOD-BY-LEETEN 2013/07/07-END
 			}	// ADD-BY-LEETEN 11/12/2012
 		}
 		
@@ -540,13 +1048,18 @@ namespace WaveletSAT
 
 		CSepDWTPool()
 		{
-			pvpmapSparse = NULL;
+			// MOD-BY-LEETEN 2013/07/07-FROM:			pvpmapSparse = NULL;
+			this->pcFullArrays = NULL;
+			this->pcDecodingSparseArrays = NULL;
+			this->pcEncodingSparseArrays = NULL;
+			// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 		// ADD-BY-LEETEN 11/12/2012-BEGIN
 		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSepDWTPool()
 		{
+			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(this->pvpmapSparse)
 			{	// ADD-BY-LEETEN 11/19/2012
 				for(size_t e = 0; e < this->pvpmapSparse->size(); e++)
@@ -561,6 +1074,50 @@ namespace WaveletSAT
 				this->pvpmapSparse = NULL;
 			}
 			// ADD-BY-LEETEN 11/19/2012-END
+			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			if( this->pcFullArrays ) {
+				for(CFullArrays::iterator 
+						iterFullArrays = pcFullArrays->begin(); 
+					iterFullArrays != pcFullArrays->end(); 
+					iterFullArrays++) 
+				{
+					if( iterFullArrays->second ) 
+					{
+						if( iterFullArrays->second->second ) 
+							delete iterFullArrays->second->second;
+						delete iterFullArrays->second;
+					}
+				}
+			}
+
+			if( this->pcEncodingSparseArrays ) {
+				for(CEncodingSparseArrays::iterator 
+						iterSparseArrays = pcEncodingSparseArrays->begin(); 
+					iterSparseArrays != pcEncodingSparseArrays->end(); 
+					iterSparseArrays++) 
+				{
+					if( iterSparseArrays->second ) 
+					{
+						if( iterSparseArrays->second->second ) 
+							delete iterSparseArrays->second->second;
+						delete iterSparseArrays->second;
+					}
+				}
+			}
+
+			if( this->pcDecodingSparseArrays ) {
+				for(CDecodingSparseArrays::iterator 
+						iterSparseArrays = pcDecodingSparseArrays->begin(); 
+					iterSparseArrays != pcDecodingSparseArrays->end(); 
+					iterSparseArrays++) 
+				{
+					if( iterSparseArrays->second ) 
+					{
+						delete iterSparseArrays->second;
+					}
+				}
+			}
+			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		// ADD-BY-LEETEN 11/12/2012-END
 	};
