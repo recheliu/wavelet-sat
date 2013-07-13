@@ -7,6 +7,20 @@ using namespace std;
 #include <string.h> // ADD-BY-LEETEN 04/11/2013
 
 #include "utils.h"		// ADD-BY-LEETEN 10/29/2012
+
+// ADD-BY-LEETEN 2013/07/13-BEGIN
+#if		!defined(WITH_NETCDF)
+#define WITH_NETCDF		1
+#endif	// #if	!defined(WITH_NETCDF)
+#if		!defined(WITH_NETCDF4)
+#define WITH_NETCDF4	1
+#endif	// #if	!defined(WITH_NETCDF4)
+
+#if		!defined(WITH_STREAMING)
+#define WITH_STREAMING	1
+#endif	// #if	!defined(WITH_STREAMING)
+// ADD-BY-LEETEN 2013/07/13-END
+
 #include "SepDWTHeader.h"	
 #include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
 #include "EncoderBase.h"	
@@ -62,6 +76,19 @@ namespace WaveletSAT
 		virtual public CEncoderBase<DT, ST, BT>	
 	{
 protected:	
+		// ADD-BY-LEETEN 2013/07/12-BEGIN
+		#if		WITH_STREAMING		
+		FILE *fpCoefBins;
+		const char* szCoefBinTempFilename;
+		FILE *fpCoefValues;
+		const char* szCoefValueTempFilename;
+
+		char szTempFilename[NC_MAX_NAME+1];
+
+		size_t uNrOfWrittenCoefs;
+		#endif	// #if		WITH_STREAMING		
+		// ADD-BY-LEETEN 2013/07/12-END
+
 	  // ADD-BY-LEETEN 12/15/2012-BEGIN
 	  //! Number of non-0 coefficients from all bin SATs.
 	  size_t uNrOfNonZeroValues;
@@ -104,6 +131,81 @@ protected:
 		}
 		// ADD-BY-LEETEN 04/26/2013-END
 
+		// ADD-BY-LEETEN 2013/07/12-BEGIN
+		#if	WITH_STREAMING
+		virtual
+		void
+		_FlushBuffer
+		(
+			size_t c,
+			void* _Reserved = NULL
+		)
+		{
+			size_t uNrOfBufferedHeaders;
+			size_t puStart[NC_MAX_DIMS];
+			size_t puCount[NC_MAX_DIMS];
+			TYPE_COEF_COUNT*	pCoefCounts;
+			TYPE_COEF_OFFSET*	pCoefOffsets;
+			size_t uNrOfBufferedCoefs;
+			TYPE_COEF_VALUE*	pCoefValues;
+			TYPE_COEF_BIN*		pCoefBins;
+
+			this->vcCoefPools[c]._GetFileBuffer(
+				puStart, 
+				puCount, 
+				uNrOfBufferedHeaders, 
+				&pCoefCounts, 
+				&pCoefOffsets, 
+				uNrOfBufferedCoefs, 
+				&pCoefValues, 
+				&pCoefBins);
+
+			for(size_t h = 0; h < uNrOfBufferedHeaders; h++)
+				pCoefOffsets[h] += uNrOfWrittenCoefs;
+
+			ASSERT_NETCDF(nc_put_vara(
+								iNcId,
+								ncVarCoefCount,
+								puStart,
+								puCount,
+								(void*)&pCoefCounts[0] ));
+
+			ASSERT_NETCDF(nc_put_vara(
+								iNcId,
+								ncVarCoefOffset,
+								puStart,
+								puCount,
+								(void*)&pCoefOffsets[0] ));
+
+			#if	0	// MOD-BY-LEETEN 2013/07/12-FROM:
+			// write the coefficients
+			puStart[0] = uNrOfWrittenCoefs;
+			puCount[0] = uNrOfBufferedCoefs;
+
+			ASSERT_NETCDF(nc_put_vara(
+							iNcId,
+							ncVarCoefBin,
+							puStart,
+							puCount,
+							(void*)&pCoefBins[0]));
+								  
+			ASSERT_NETCDF(nc_put_vara(
+							iNcId,
+							ncVarCoefValue,
+							puStart,
+							puCount,
+							(void*)&pCoefValues[0]));
+			#else	// MOD-BY-LEETEN 2013/07/12-TO:
+			fwrite(&pCoefBins[0], sizeof(TYPE_COEF_BIN), uNrOfBufferedCoefs, fpCoefBins);
+			fwrite(&pCoefValues[0], sizeof(TYPE_COEF_VALUE), uNrOfBufferedCoefs, fpCoefValues);
+			#endif	// MOD-BY-LEETEN 2013/07/12-END
+			uNrOfWrittenCoefs += uNrOfBufferedCoefs;
+
+			this->vcCoefPools[c]._ResetFileBuffer();
+		}
+		#endif	// #if	WITH_STREAMING
+		// ADD-BY-LEETEN 2013/07/12-END
+
 		//! Update the specified bin.
 		virtual // ADD-BY-LEETEN 01/03/2013
 		void 
@@ -142,6 +244,13 @@ protected:
 
 				WT dWavelet = (WT)dWeight * (WT)lWavelet;
 				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
+
+				// ADD-BY-LEETEN 2013/07/12-BEGIN
+				#if	WITH_STREAMING
+				if( this->vcCoefPools[c].BIsReadyToFlush() ) 
+					_FlushBuffer(c);
+				#endif	//	#if	WITH_STREAMING
+				// ADD-BY-LEETEN 2013/07/12-END
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
 		}
@@ -170,6 +279,133 @@ public:
 		  // CEncoderBase<T, double>::_SetInteger(eName, lValue);
 		}
 
+		// ADD-BY-LEETEN 2013/07/12-BEGIN
+		#if	WITH_STREAMING
+		void
+		_OpenFile
+		(
+			void *_Reserved = NULL
+		)
+		{
+			fpCoefBins = fopen(szCoefBinTempFilename, "wb");
+			fpCoefValues = fopen(szCoefValueTempFilename, "wb");
+			#if WITH_NETCDF 
+			#if !WITH_NETCDF4
+			const char* szFileExt = "wnc";
+			#else // #if !WITH_NETCDF4
+			const char* szFileExt = "wnc4";
+			#endif // #if !WITH_NETCDF4
+
+			char szFilepath[NC_MAX_NAME+1];
+			sprintf(szFilepath, "tmp.%s", szFileExt);
+			strcpy(szTempFilename, szFilepath);
+			// Create the file.
+			#if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szFilepath,
+    				NC_CLOBBER,
+    				&iNcId));
+			#else	// #if !WITH_NETCDF4 
+			ASSERT_NETCDF(nc_create(
+    				szFilepath,
+				NC_CLOBBER | NC_NETCDF4,
+    				&iNcId));
+			#endif	// #if !WITH_NETCDF4 
+
+			// define the dimensions, including:
+			// data_dim_0, data_dim_1, ... for the data
+			// coef_dim_0, coef_dim_1, ... for the level
+			// level_dim_0, level_dim_1, ... for the level
+			size_t uDimLength;
+			int iNcDimId;
+			vncDims.clear();
+
+			// define the dimension for #bins
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimBin,
+						(int)UGetNrOfBins(),
+						&ncDimBin) );
+			// define the dimension for #dims
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimDim,
+						(int)UGetNrOfDims(),
+						&ncDimDim ) );
+
+			for(size_t t = 0; t < NR_OF_DIM_TYPES; t++)
+				for(int d = 0; d < UGetNrOfDims(); d++)
+				{
+					switch(t)
+					{
+					case DIM_TYPE_DATA:
+						uDimLength = (size_t)this->vuDimLengths[d];
+						break;
+					case DIM_TYPE_LEVEL:
+						uDimLength = (size_t)this->vuDimLevels[d];
+						break;
+					case DIM_TYPE_COEF:
+						uDimLength = (size_t)((size_t)1<<(this->vuDimLevels[d]-1));
+						break;
+					}
+
+					char szNcDimName[NC_MAX_NAME+1];
+					sprintf(szNcDimName, "%s_DIM_%d", pszDimTypes[t], (unsigned int)d);
+
+					ASSERT_NETCDF(nc_def_dim(
+    								iNcId,
+    								szNcDimName,
+    								(int)uDimLength,
+    								&iNcDimId));
+					vncDims.push_back(iNcDimId);
+				}
+
+			//
+			// now define the variable for the coef headers
+			int piDimIds[NC_MAX_DIMS];
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+				piDimIds[d] = vncDims[UGetNrOfDims() * DIM_TYPE_COEF + UGetNrOfDims() - 1 - d];
+
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					szVarCoefCount,
+					typeCoefCount,
+					(int)UGetNrOfDims(),
+					piDimIds,
+					&ncVarCoefCount));
+
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					szVarCoefOffset, 
+					typeCoefOffset,
+					(int)UGetNrOfDims(),
+					piDimIds,
+					&ncVarCoefOffset));
+
+			#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefCount, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefOffset, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			#endif // #if WITH_NETCDF4
+
+			// finish the definition mode
+			ASSERT_NETCDF(nc_enddef(iNcId));
+			#endif	// #if WITH_NETCDF 
+
+			uNrOfWrittenCoefs = 0;
+		}
+		#endif	//	#if	WITH_STREAMING
+		// ADD-BY-LEETEN 2013/07/12-END
+
 		// ADD-BY-LEETEN 12/12/2012-BEGIN
 		virtual 
 		void
@@ -190,7 +426,7 @@ public:
 			char szFilepath[NC_MAX_NAME+1];
 			sprintf(szFilepath, "%s.%s", szFilepathPrefix, szFileExt);
 			// ADD-BY-LEETEN 12/15/2012-END
-
+			#if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
 			// Create the file.
 			#if !WITH_NETCDF4 
 			ASSERT_NETCDF(nc_create(
@@ -461,10 +697,15 @@ public:
 
 			// close the file
 			ASSERT_NETCDF(nc_close(iNcId));
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#else	// #if	!WITH_STREAMING	
+			unlink(szFilepath);
+			ASSERT_OR_LOG(-1 != rename(szTempFilename, szFilepath), perror(""));
+			#endif	// #if	!WITH_STREAMING		
+			// ADD-BY-LEETEN 2013/07/12-END
 			#else	// #if WITH_NETCDF 
 			#endif	// #if WITH_NETCDF 
 			// write the data resolution
-
 		}
 		// ADD-BY-LEETEN 12/12/2012-END
 
@@ -521,6 +762,7 @@ public:
 
 			_ShowMemoryUsage(false);
 
+			#if	!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
 			// ADD-BY-LEETEN 12/15/2012-BEGIN
 			uNrOfNonZeroValues = 0;
 			uNrOfValuesInFullArray = 0;
@@ -534,6 +776,91 @@ public:
 			}
 			uNrOfNonZeroValues = uNrOfValuesInFullArray + uNrOfValuesOnSparseArray;
 			// ADD-BY-LEETEN 12/15/2012-END
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#else	//	#if	!WITH_STREAMING		
+			fclose(fpCoefBins);
+			fclose(fpCoefValues);
+
+			ASSERT_NETCDF(nc_redef(iNcId));
+			ASSERT_NETCDF(nc_def_dim(
+						iNcId,
+						szDimValue,
+						uNrOfWrittenCoefs,
+						&ncDimValue) );
+
+			// define the pool of the coefficients
+			int piDimIds[NC_MAX_DIMS];
+			piDimIds[0] = this->ncDimValue;
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					szVarCoefValue,
+					typeCoefValue,
+					1,
+					piDimIds,
+					&ncVarCoefValue));
+
+			ASSERT_NETCDF(nc_def_var(
+					iNcId,
+					szVarCoefBin, 
+					typeCoefBin,
+					1,
+					piDimIds,
+					&ncVarCoefBin));
+
+			#if WITH_NETCDF4 
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefBin, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			ASSERT_NETCDF(nc_def_var_deflate(
+				   iNcId,
+				   ncVarCoefValue, 
+				   0, 
+				   1, 
+				   iDeflateLevel));
+			#endif	// #if WITH_NETCDF4 
+
+			ASSERT_NETCDF(nc_enddef(iNcId));
+			 
+			size_t puStart[NC_MAX_DIMS];
+			size_t puCount[NC_MAX_DIMS];
+			puStart[0] = 0;
+			puCount[0] = uNrOfWrittenCoefs;
+
+			fpCoefBins = fopen(this->szCoefBinTempFilename, "rb");
+			vector<TYPE_COEF_BIN> vBins;
+			vBins.resize(uNrOfWrittenCoefs);
+			fread(vBins.data(), sizeof(vBins[0]), vBins.size(), fpCoefBins);
+			fclose(fpCoefBins);
+			unlink(this->szCoefBinTempFilename);
+
+			ASSERT_NETCDF(nc_put_vara(
+							iNcId,
+							ncVarCoefBin,
+							puStart,
+							puCount,
+							(void*)vBins.data()));
+			vBins.clear();
+								  
+			fpCoefValues = fopen(this->szCoefValueTempFilename, "rb");
+			vector<TYPE_COEF_VALUE> vValues;
+			vValues.resize(uNrOfWrittenCoefs);
+			fread(vValues.data(), sizeof(vValues[0]), vValues.size(), fpCoefValues);
+			fclose(fpCoefValues);
+			ASSERT_NETCDF(nc_put_vara(
+							iNcId,
+							ncVarCoefValue,
+							puStart,
+							puCount,
+							(void*)vValues.data()));
+			vValues.clear();
+			unlink(this->szCoefValueTempFilename);
+
+			ASSERT_NETCDF(nc_close(iNcId));
+			#endif	//	#if	!WITH_STREAMING		
+			// ADD-BY-LEETEN 2013/07/12-END
 		}
 
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -653,6 +980,10 @@ public:
 				vuWaveletLengths.resize(UGetNrOfDims());
 				// ADD-BY-LEETEN 2013/07/08-END
 
+				// ADD-BY-LEETEN 2013/07/12-BEGIN
+				vector<size_t> vuGlobalCoefBase;
+				// ADD-BY-LEETEN 2013/07/12-END
+
 				for(size_t d = 0; d < vuLocalCoefSub.size(); d++)
 				{
 					size_t uLevel = vuLocalCoefSub[d];
@@ -660,12 +991,21 @@ public:
 						dWavelet *= (double)(1 << (uLevel - 1));
 
 					// ADD-BY-LEETEN 2013/07/08-BEGIN
-					vuWaveletLengths[d] = 1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
+					// MOD-BY-LEETEN 2013/07/13-FROM:					vuWaveletLengths[d] = 1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
+					vuWaveletLengths[d] = (size_t)1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
+					// MOD-BY-LEETEN 2013/07/13-END
 					// ADD-BY-LEETEN 2013/07/08-END
+
+					// ADD-BY-LEETEN 2013/07/12-BEGIN
+					#if		WITH_STREAMING		
+					vuGlobalCoefBase.push_back( (!uLevel)?0:(1<<(uLevel - 1)) );
+					#endif	//	#if	WITH_STREAMING		
+					// ADD-BY-LEETEN 2013/07/12-END
 				}
 
 				dWavelet = sqrt(dWavelet);
 				double dWeight = dWavelet/dWaveletDenomiator;
+				#if		!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
 				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
 				// ADD-BY-LEETEN 2013/07/07-END
 
@@ -673,6 +1013,17 @@ public:
 				this->vcCoefPools[c]._SetDataDimLengths(vuDimLengths);
 				this->vcCoefPools[c]._SetWaveletLengths(vuWaveletLengths);
 				// ADD-BY-LEETEN 2013/07/08-END
+				// ADD-BY-LEETEN 2013/07/12-BEGIN
+				#else	// #if		!WITH_STREAMING		
+				this->vcCoefPools[c]._SetBuffer
+				(
+					dWeight,
+					vuDimLengths,
+					vuWaveletLengths,
+					vuGlobalCoefBase
+				);
+				#endif	// #if		!WITH_STREAMING		
+				// ADD-BY-LEETEN 2013/07/12-END
 
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),
@@ -683,6 +1034,12 @@ public:
 			// ADD-BY-LEETEN 11/11/2012-END
 
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
+
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#if		WITH_STREAMING		
+			_OpenFile();
+			#endif	// #if		WITH_STREAMING		
+			// ADD-BY-LEETEN 2013/07/12-END
 		}
 		
 		//! Return the sum of all bins at the given position
@@ -759,6 +1116,13 @@ public:
 		}
 
 		CWaveletSATEncoder():
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#if		WITH_STREAMING		
+			szCoefBinTempFilename("coef.bin.tmp"),
+			szCoefValueTempFilename("coef.value.tmp"),
+			uNrOfWrittenCoefs(0),	
+			#endif	// #if		WITH_STREAMING		
+			// ADD-BY-LEETEN 2013/07/12-END
 			bIsFinalizedWithoutWavelet(false)
 		{
 		}

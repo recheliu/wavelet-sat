@@ -132,6 +132,7 @@ namespace CudaDWT
 	CCudaDWT::
 	_Encode
 	(
+		size_t				uNrOfBins,	// ADD-BY-LEETEN 2013/07/13
 		size_t				uNrOfElements,
 		size_t				uNrOfDims,
 		const unsigned int	puLevels[],
@@ -175,6 +176,7 @@ namespace CudaDWT
 		_ProjToWavelet_kernel<<<v3Grid, v3Blk, 0>>>(
 			&pu4BinSub_device[0],	// the tuples of <bin, data_subscripts> of all elements
 			&pfValues_device[0],	// the counts of all elements
+			(unsigned int)uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
 			(unsigned int)uNrOfDims, 
 			(unsigned int)uNrOfElements,
 			&puKeys_device[0],		// output: the keys of all elements. The keys are composed of bin and local_subscripts

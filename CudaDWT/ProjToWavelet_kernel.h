@@ -8,6 +8,7 @@ _ProjToWavelet_kernel
 (
 	const uint4 pu4BinSub_device[],	// the tuples of <bin, data_subscripts> of all elements
 	const CudaDWT::typeCoef pfCounts_device[],	// the counts of all elements
+	const unsigned int uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
 	const unsigned int uNrOfDims, 
 	const unsigned int uNrOfElements,
 	unsigned int puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
@@ -28,7 +29,7 @@ _ProjToWavelet_kernel
 		uint4 u4BinSub = pu4BinSub_device[uElement];
 		CudaDWT::typeCoef fCount = pfCounts_device[uElement];
 
-		unsigned int uKey = u4BinSub.x;
+		// DEL-BY-LEETEN 2013/07/13:	unsigned int uKey = u4BinSub.x;
 		unsigned int* puSub = &u4BinSub.y;
 		int iWavelet = 1;
 		for(unsigned int d = 0; d < uNrOfDims; d++)
@@ -49,10 +50,27 @@ _ProjToWavelet_kernel
 				iLocalWavelet *= -1;		
 			}
 			iWavelet *= iLocalWavelet;
+			#if	0	// DEL-BY-LEETEN 2013/07/13-BEGIN
+			uKey *= puCoefLengths_const[d]/2;
+			uKey += uSub / w;
+			#endif	// DEL-BY-LEETEN 2013/07/13-END
+		}
+		// ADD-BY-LEETEN 2013/07/13-BEGIN
+		unsigned int uKey = 0;
+		for(unsigned int di = 0; di < uNrOfDims; di++)
+		{
+			unsigned int d = uNrOfDims - 1 - di;
+
+			unsigned int uSub = puSub[d];
+			unsigned int w = puWaveletLengths_const[d];
 
 			uKey *= puCoefLengths_const[d]/2;
 			uKey += uSub / w;
 		}
+
+		uKey *= uNrOfBins;
+		uKey += u4BinSub.x;
+		// ADD-BY-LEETEN 2013/07/13-END
 
 		pfCoefs_device[uElement] = fCount * (CudaDWT::typeCoef)iWavelet;
 		puKeys_device[uElement] = uKey;

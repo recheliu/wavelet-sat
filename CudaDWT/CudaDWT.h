@@ -86,6 +86,7 @@ namespace CudaDWT
 		void
 		_Encode
 		(
+			size_t				uNrOfBins,	// ADD-BY-LEETEN 2013/07/13
 			size_t				uNrOfElements,
 			size_t				uNrOfDims,
 			const unsigned int	puLevels[],

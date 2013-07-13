@@ -82,6 +82,25 @@ namespace WaveletSAT
 		typedef unordered_map< size_t, CDecodingSparseArray* > CDecodingSparseArrays;
 		CDecodingSparseArrays *pcDecodingSparseArrays;
 
+		// ADD-BY-LEETEN 2013/07/12-BEGIN
+		#if	WITH_STREAMING
+		struct CFileBuffer {
+			vector<size_t> vuHeaderGlobalOffsets;
+			vector<size_t> vuHeaderLengthsNotInBuffer;
+			vector<size_t> vuHeaderLengthsInBuffer;
+
+			size_t uNrOfBufferedHeaders;
+			vector<CSATSepDWTNetCDF::TYPE_COEF_COUNT>		vCounts;
+			vector<CSATSepDWTNetCDF::TYPE_COEF_OFFSET>	vOffsets;
+			vector<CSATSepDWTNetCDF::TYPE_COEF_BIN>		vBins;
+			vector<CSATSepDWTNetCDF::TYPE_COEF_VALUE>		vValues;
+
+			size_t uNrOfFlushes;
+			size_t uMaxNrOfHeaders;
+		} cFileBuffer;
+		#endif	// #if	WITH_STREAMING
+		// ADD-BY-LEETEN 2013/07/12-END
+
 	protected:
 		void
 		_GetAtFullArray
@@ -107,11 +126,19 @@ namespace WaveletSAT
 		}
 
 		void
-		_MoveToPool(
+		// MOD-BY-LEETEN 2013/07/12-FROM:	_MoveToPool(
+		_MoveToBuffer(
+		// MOD-BY-LEETEN 2013/07/12-END
 			const size_t& uIndex,
 			void* _Reserved = NULL
 		)
 		{
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#if	WITH_STREAMING
+			size_t uCount = 0;
+			cFileBuffer.vOffsets[cFileBuffer.uNrOfBufferedHeaders] = cFileBuffer.vValues.size();
+			#endif	//	#if	WITH_STREAMING
+			// ADD-BY-LEETEN 2013/07/12-END
 			if( !bIsSparse ) 
 			{
 				CFullArrays::iterator iterFullArrays = this->pcFullArrays->find(uIndex);
@@ -122,14 +149,36 @@ namespace WaveletSAT
 				{
 					vector<WT>& vFullArray = *iterFullArrays->second->second;
 					for(size_t b = 0; b < vFullArray.size(); b++)
+					// ADD-BY-LEETEN 2013/07/12-BEGIN
+					{
+						if( vFullArray[b] )
+						{
+					// ADD-BY-LEETEN 2013/07/12-END
 						vFullArray[b] *= this->dWaveletWeight;
+					// ADD-BY-LEETEN 2013/07/12-BEGIN
+					#if	WITH_STREAMING
+							cFileBuffer.vBins.push_back(	(CSATSepDWTNetCDF::TYPE_COEF_BIN)b );
+							cFileBuffer.vValues.push_back(	(CSATSepDWTNetCDF::TYPE_COEF_VALUE)vFullArray[b] );
+							uCount++;
+					#endif	// #if	WITH_STREAMING
+						}
+					}
+					// ADD-BY-LEETEN 2013/07/12-END
 					
+					#if	0	// MOD-BY-LEETEN 2013/07/12-FROM:
 					// TODO: Move to the pool
 					/*
 					delete iterFullArrays->second->second;
 					delete iterFullArrays->second;
 					pcFullArrays->erase(iterFullArrays);
 					*/
+					#else	// MOD-BY-LEETEN 2013/07/12-TO:
+					#if	WITH_STREAMING
+					delete iterFullArrays->second->second;
+					delete iterFullArrays->second;
+					pcFullArrays->erase(iterFullArrays);
+					#endif	// #if	WITH_STREAMING
+					#endif	// MOD-BY-LEETEN 2013/07/12-END
 				}
 			}
 			else
@@ -147,15 +196,36 @@ namespace WaveletSAT
 						iterSparseArray++)
 					{
 						iterSparseArray->second *= dWaveletWeight;
+						// ADD-BY-LEETEN 2013/07/12-BEGIN
+						#if	WITH_STREAMING
+						cFileBuffer.vBins.push_back(	(CSATSepDWTNetCDF::TYPE_COEF_BIN)iterSparseArray->first );
+						cFileBuffer.vValues.push_back(	(CSATSepDWTNetCDF::TYPE_COEF_VALUE)iterSparseArray->second );
+						uCount++;
+						#endif	// #if	WITH_STREAMING
+						// ADD-BY-LEETEN 2013/07/12-END
 					}
+					#if	0	// MOD-BY-LEETEN 2013/07/12-FROM:
 					// TODO: Move to the pool
 					/*
 					delete iterSparseArrays->second->second;
 					delete iterSparseArrays->second;
 					pcEncodingSparseArrays->erase(iterSparseArrays);
 					*/
+					#else	// MOD-BY-LEETEN 2013/07/12-TO:
+					#if	WITH_STREAMING
+					delete iterSparseArrays->second->second;
+					delete iterSparseArrays->second;
+					pcEncodingSparseArrays->erase(iterSparseArrays);
+					#endif	// #if	WITH_STREAMING
+					#endif	// MOD-BY-LEETEN 2013/07/12-END
 				}
 			}
+			// ADD-BY-LEETEN 2013/07/12-BEGIN
+			#if	WITH_STREAMING
+			cFileBuffer.vCounts[cFileBuffer.uNrOfBufferedHeaders] = (CSATSepDWTNetCDF::TYPE_COEF_COUNT)uCount;
+			cFileBuffer.uNrOfBufferedHeaders++;
+			#endif	// #if	WITH_STREAMING
+			// ADD-BY-LEETEN 2013/07/12-END
 		}
 
 		// ADD-BY-LEETEN 2013/07/08-BEGIN
@@ -230,7 +300,7 @@ namespace WaveletSAT
 			size_t uCurrentCount = pcFullArray->first;
 			if( uCurrentCount >= uMaxCount ) 
 			{
-				this->_MoveToPool(uIndex);
+				this->_MoveToBuffer(uIndex);
 			}
 		}
 
@@ -282,7 +352,7 @@ namespace WaveletSAT
 			size_t uCurrentCount = pcSparseArray->first;
 			if( uCurrentCount >= uMaxCount ) 
 			{
-				this->_MoveToPool(uIndex);
+				this->_MoveToBuffer(uIndex);
 			}
 		}
 
@@ -383,6 +453,111 @@ namespace WaveletSAT
 			return bIsSparse;
 		}
 		
+		// ADD-BY-LEETEN 2013/07/12-BEGIN
+		#if	WITH_STREAMING
+		void
+		_SetBuffer
+		(
+			const WT& dWaveletWeight,
+			const vector<size_t>& vuDataDimLengths,
+			const vector<size_t>& vuWaveletLengths,
+			const vector<size_t>& vuHeaderGlobalOffsets,
+			void* _Reserved = NULL
+		)
+		{
+			this->dWaveletWeight = dWaveletWeight;	
+			this->vuDataDimLengths.assign(vuDataDimLengths.begin(), vuDataDimLengths.end());
+			this->vuWaveletLengths.assign(vuWaveletLengths.begin(), vuWaveletLengths.end());
+			this->cFileBuffer.vuHeaderGlobalOffsets.assign(vuHeaderGlobalOffsets.begin(), vuHeaderGlobalOffsets.end());
+
+			cFileBuffer.uNrOfBufferedHeaders = 0;
+			cFileBuffer.uNrOfFlushes = 0;
+
+			cFileBuffer.vuHeaderLengthsNotInBuffer.resize(vuDataDimLengths.size());
+			cFileBuffer.vuHeaderLengthsInBuffer.resize(vuDataDimLengths.size());
+			cFileBuffer.uMaxNrOfHeaders = 1;
+			for(size_t d = 0; d < vuDataDimLengths.size(); d++) 
+			{
+				size_t uHeaderLength = (size_t)ceilf((float)vuDataDimLengths[d] / (float)vuWaveletLengths[d]);
+				#if	1	// TMP-MOD
+				if( 1 == cFileBuffer.uMaxNrOfHeaders )
+				{
+					cFileBuffer.uMaxNrOfHeaders *= uHeaderLength;
+					cFileBuffer.vuHeaderLengthsInBuffer[d] = uHeaderLength;
+					cFileBuffer.vuHeaderLengthsNotInBuffer[d] = 1;
+				} 
+				else 
+				{
+					cFileBuffer.vuHeaderLengthsInBuffer[d] = 1;
+					cFileBuffer.vuHeaderLengthsNotInBuffer[d] = uHeaderLength;
+				}
+				#else
+				cFileBuffer.uMaxNrOfHeaders *= uHeaderLength;
+				cFileBuffer.vuHeaderLengthsInBuffer[d] = uHeaderLength;
+				cFileBuffer.vuHeaderLengthsNotInBuffer[d] = 1;
+				#endif
+			}
+
+			cFileBuffer.vCounts.resize(cFileBuffer.uMaxNrOfHeaders);
+			cFileBuffer.vOffsets.resize(cFileBuffer.uMaxNrOfHeaders);
+		}
+
+		bool 
+		BIsReadyToFlush
+		(
+			void *_Reserved = NULL
+		)
+		{
+			if( cFileBuffer.uNrOfBufferedHeaders == cFileBuffer.uMaxNrOfHeaders )
+				return true;
+			return false;
+		}
+
+		void
+		_GetFileBuffer(
+			size_t puHeaderStart[NC_MAX_DIMS],
+			size_t puHeaderCount[NC_MAX_DIMS], 
+			size_t& uNrOfBufferedHeaders,
+			CSATSepDWTNetCDF::TYPE_COEF_COUNT	**ppCoefCounts,
+			CSATSepDWTNetCDF::TYPE_COEF_OFFSET	**ppCoefOffsets,
+
+			size_t& uNrOfBufferedCoefs,
+			CSATSepDWTNetCDF::TYPE_COEF_VALUE	**ppCoefValues,
+			CSATSepDWTNetCDF::TYPE_COEF_BIN		**ppCoefBins,
+
+			void *_Reserved = NULL
+			)
+		{
+			// convert the current scanline to its indices
+			vector<size_t> vuFlushOffsets;
+			_ConvertIndexToSub(cFileBuffer.uNrOfFlushes, vuFlushOffsets, cFileBuffer.vuHeaderLengthsNotInBuffer);
+			size_t uNrOfDims = cFileBuffer.vuHeaderGlobalOffsets.size();
+			for(size_t d = 0; d < uNrOfDims; d++) {
+			    puHeaderStart[uNrOfDims - 1 - d] = cFileBuffer.vuHeaderGlobalOffsets[d] + vuFlushOffsets[d];
+			    puHeaderCount[uNrOfDims - 1 - d] = cFileBuffer.vuHeaderLengthsInBuffer[d];
+			}
+
+			uNrOfBufferedHeaders = cFileBuffer.uNrOfBufferedHeaders;
+			uNrOfBufferedCoefs = cFileBuffer.vValues.size();
+			*ppCoefCounts	= cFileBuffer.vCounts.data();
+			*ppCoefOffsets	= cFileBuffer.vOffsets.data();
+			*ppCoefValues	= cFileBuffer.vValues.data();
+			*ppCoefBins		= cFileBuffer.vBins.data();
+			cFileBuffer.uNrOfFlushes++;
+		}
+
+		void
+		_ResetFileBuffer(
+			void *_Reserved = NULL
+		)
+		{
+			cFileBuffer.uNrOfBufferedHeaders = 0;
+			cFileBuffer.vValues.clear();
+			cFileBuffer.vBins.clear();
+		}
+		#endif	// #if	WITH_STREAMING
+		// ADD-BY-LEETEN 2013/07/12-END
+
 		// ADD-BY-LEETEN 01/27/2013-BEGIN
 		void
 		_Copy(
@@ -430,6 +605,7 @@ namespace WaveletSAT
 		// ADD-BY-LEETEN 01/27/2013-END
 
 		// ADD-BY-LEETEN 2013/07/08-BEGIN
+		#if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
 		void
 		_SetDataDimLengths
 		(
@@ -458,6 +634,7 @@ namespace WaveletSAT
 		{
 			this->dWaveletWeight = dWaveletWeight;	
 		}
+		#endif	// #if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
 		// ADD-BY-LEETEN 2013/07/08-END
 
 		void

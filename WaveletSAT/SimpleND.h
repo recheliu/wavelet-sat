@@ -234,7 +234,11 @@ public:
 	DGetThreshold
 	(
 		void *_Reserved = NULL
+	#if	0	// MOD-BY-LEETEN 2013/07/13-FROM:
 	) throw(std::range_error)
+	#else	// MOD-BY-LEETEN 2013/07/13-TO:
+	)
+	#endif	// MOD-BY-LEETEN 2013/07/13-END
 	{
 		double dWeight = 1.0;
 		if( bIsWithContourSpectrum )

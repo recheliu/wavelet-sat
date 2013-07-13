@@ -83,6 +83,7 @@ protected:
 				LIBCLOCK_BEGIN(bIsPrintingTiming);
 				size_t uNrOfEncodedCoefs;
 				CCudaDWT::_Encode(
+					uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
 					uNrOfElements,
 					UGetNrOfDims(),
 					&puLevels[0],
@@ -109,6 +110,7 @@ protected:
 				{
 					size_t uKey = (size_t)vuKeys[e];
 					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
+					#if	0	// MOD-BY-LEETEN 2013/07/13-FROM:
 					for(size_t d = UGetNrOfDims(); d > 0; d--)
 					{
 						size_t uCoefHalfLength = vuCoefHalfLengths[d - 1];
@@ -116,7 +118,26 @@ protected:
 						uKey /= uCoefHalfLength;
 					}
 					BT uBin = (BT)uKey;
+					#else	// MOD-BY-LEETEN 2013/07/13-TO:
+					BT uBin = (BT)uKey % uNrOfBins;
+					uKey /= uNrOfBins;
+					for(size_t d = 0; d < UGetNrOfDims(); d++)
+					{
+						size_t uCoefHalfLength = vuCoefHalfLengths[d];
+						vuPos[d] = uKey % uCoefHalfLength;
+						uKey /= uCoefHalfLength;
+					}
+					#endif	// MOD-BY-LEETEN 2013/07/13-END
 					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
+
+					// ADD-BY-LEETEN 2013/07/12-BEGIN
+					#if	WITH_STREAMING
+					if( this->vcCoefPools[c].BIsReadyToFlush() ) 
+					{
+						_FlushBuffer(c);
+					}
+					#endif	// #if	WITH_STREAMING
+					// ADD-BY-LEETEN 2013/07/12-END
 				}
 				LIBCLOCK_END(bIsPrintingTiming);
 
