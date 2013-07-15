@@ -458,6 +458,9 @@ namespace WaveletSAT
 		void
 		_SetBuffer
 		(
+			// ADD-BY-LEETEN 2013/07/14-BEGIN
+			size_t uMinNrOFBufferedThreads,
+			// ADD-BY-LEETEN 2013/07/14-END
 			const WT& dWaveletWeight,
 			const vector<size_t>& vuDataDimLengths,
 			const vector<size_t>& vuWaveletLengths,
@@ -479,6 +482,7 @@ namespace WaveletSAT
 			for(size_t d = 0; d < vuDataDimLengths.size(); d++) 
 			{
 				size_t uHeaderLength = (size_t)ceilf((float)vuDataDimLengths[d] / (float)vuWaveletLengths[d]);
+				#if	0	// MOD-BY-LEETEN 2013/07/14-FROM:
 				#if	1	// TMP-MOD
 				if( 1 == cFileBuffer.uMaxNrOfHeaders )
 				{
@@ -496,6 +500,19 @@ namespace WaveletSAT
 				cFileBuffer.vuHeaderLengthsInBuffer[d] = uHeaderLength;
 				cFileBuffer.vuHeaderLengthsNotInBuffer[d] = 1;
 				#endif
+				#else	// MOD-BY-LEETEN 2013/07/14-TO:
+				if( uMinNrOFBufferedThreads >= cFileBuffer.uMaxNrOfHeaders )
+				{
+					cFileBuffer.uMaxNrOfHeaders *= uHeaderLength;
+					cFileBuffer.vuHeaderLengthsInBuffer[d] = uHeaderLength;
+					cFileBuffer.vuHeaderLengthsNotInBuffer[d] = 1;
+				} 
+				else 
+				{
+					cFileBuffer.vuHeaderLengthsInBuffer[d] = 1;
+					cFileBuffer.vuHeaderLengthsNotInBuffer[d] = uHeaderLength;
+				}
+				#endif	// MOD-BY-LEETEN 2013/07/14-END
 			}
 
 			cFileBuffer.vCounts.resize(cFileBuffer.uMaxNrOfHeaders);

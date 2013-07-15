@@ -175,6 +175,13 @@ main(int argn, char* argv[])
 		"Is the contour spectrum algorithm enabled?");
 	// ADD-BY-LEETEN 04/20/2013-END
 
+	// ADD-BY-LEETEN 2013/07/14-BEGIN
+	int iMinNrOfBufferedHeaders = 1;
+	_OPTAddIntegerVector(
+		"--min-n-buffered-headers", 1,
+		&iMinNrOfBufferedHeaders, iMinNrOfBufferedHeaders);
+	// ADD-BY-LEETEN 2013/07/14-END
+
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
 	assert(bIsOptParsed);
@@ -197,6 +204,11 @@ main(int argn, char* argv[])
 
 	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
 
+	// ADD-BY-LEETEN 2013/07/14-BEGIN
+	#if	!WITH_SAT_FILE	
+	cSimpleND._SetInteger(CSimpleND<double>::MIN_NR_OF_BUFFERED_HEADERS, (long)iMinNrOfBufferedHeaders);
+	#endif	// #if	!WITH_SAT_FILE	
+	// ADD-BY-LEETEN 2013/07/14-END
 	cSimpleND._SetInteger(CSimpleND<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
 	cSimpleND._SetInteger(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);

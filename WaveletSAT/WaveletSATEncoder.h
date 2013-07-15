@@ -76,6 +76,10 @@ namespace WaveletSAT
 		virtual public CEncoderBase<DT, ST, BT>	
 	{
 protected:	
+		// ADD-BY-LEETEN 2013/07/14-BEGIN
+		size_t	uMinNrOfBufferedHeaders;
+		size_t	uMaxMemoryUsage;
+		// ADD-BY-LEETEN 2013/07/14-END
 		// ADD-BY-LEETEN 2013/07/12-BEGIN
 		#if		WITH_STREAMING		
 		FILE *fpCoefBins;
@@ -196,11 +200,16 @@ protected:
 							puCount,
 							(void*)&pCoefValues[0]));
 			#else	// MOD-BY-LEETEN 2013/07/12-TO:
+
 			fwrite(&pCoefBins[0], sizeof(TYPE_COEF_BIN), uNrOfBufferedCoefs, fpCoefBins);
 			fwrite(&pCoefValues[0], sizeof(TYPE_COEF_VALUE), uNrOfBufferedCoefs, fpCoefValues);
+
 			#endif	// MOD-BY-LEETEN 2013/07/12-END
 			uNrOfWrittenCoefs += uNrOfBufferedCoefs;
-
+			// ADD-BY-LEETEN 2013/07/14-BEGIN
+			size_t uMemoryUsage = WaveletSAT::UGetMemoryUsage();
+			uMaxMemoryUsage = max(uMaxMemoryUsage, uMemoryUsage);
+			// ADD-BY-LEETEN 2013/07/14-END
 			this->vcCoefPools[c]._ResetFileBuffer();
 		}
 		#endif	// #if	WITH_STREAMING
@@ -263,6 +272,7 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0400,
+			MIN_NR_OF_BUFFERED_HEADERS,	// ADD-BY-LEETEN 2013/07/14
 			PARAMETER_END
 		};
 
@@ -277,6 +287,19 @@ public:
 		  CSATSepDWTNetCDF::_SetInteger(eName, lValue);
 		  CSepDWTHeader::_SetInteger(eName, lValue);
 		  // CEncoderBase<T, double>::_SetInteger(eName, lValue);
+			
+		// ADD-BY-LEETEN 2013/07/14-BEGIN
+		  switch(eName) {
+		  case MIN_NR_OF_BUFFERED_HEADERS:
+			  uMinNrOfBufferedHeaders = (size_t)lValue;
+			  if(uMinNrOfBufferedHeaders < 1) {
+				  LOG("Warning: uMinNrOfBufferedHeaders is clamped to 1.");
+				  uMinNrOfBufferedHeaders = 1;
+			  }
+			  LOG_VAR(uMinNrOfBufferedHeaders);	// TMP-DEBUG
+			  break;
+		  }
+		// ADD-BY-LEETEN 2013/07/14-END
 		}
 
 		// ADD-BY-LEETEN 2013/07/12-BEGIN
@@ -717,7 +740,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			
+			LOG_VAR(uMaxMemoryUsage);	// ADD-BY-LEETEN 2013/07/14
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 
 			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
@@ -1017,6 +1040,7 @@ public:
 				#else	// #if		!WITH_STREAMING		
 				this->vcCoefPools[c]._SetBuffer
 				(
+					uMinNrOfBufferedHeaders,	// ADD-BY-LEETEN 2013/07/14
 					dWeight,
 					vuDimLengths,
 					vuWaveletLengths,
@@ -1024,6 +1048,10 @@ public:
 				);
 				#endif	// #if		!WITH_STREAMING		
 				// ADD-BY-LEETEN 2013/07/12-END
+
+				// ADD-BY-LEETEN 2013/07/14-BEGIN
+				bIsSparse = true;
+				// ADD-BY-LEETEN 2013/07/14-END
 
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),
@@ -1116,6 +1144,10 @@ public:
 		}
 
 		CWaveletSATEncoder():
+			// ADD-BY-LEETEN 2013/07/14-BEGIN
+			uMaxMemoryUsage(0),	
+			uMinNrOfBufferedHeaders(8),
+			// ADD-BY-LEETEN 2013/07/14-END
 			// ADD-BY-LEETEN 2013/07/12-BEGIN
 			#if		WITH_STREAMING		
 			szCoefBinTempFilename("coef.bin.tmp"),
