@@ -16,9 +16,17 @@ using namespace std;
 #define WITH_NETCDF4	1
 #endif	// #if	!defined(WITH_NETCDF4)
 
+// ADD-BY-LEETEN 2013/07/23-BEGIN
+#if		!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
+#define WITH_DYNAMIC_ARRAY_ALLOCATION	1
+#endif	// #if	!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
+// ADD-BY-LEETEN 2013/07/23-END
+
+#if		WITH_DYNAMIC_ARRAY_ALLOCATION	// ADD-BY-LEETEN 2013/07/23
 #if		!defined(WITH_STREAMING)
 #define WITH_STREAMING	1
 #endif	// #if	!defined(WITH_STREAMING)
+#endif	// #if		WITH_DYNAMIC_ARRAY_ALLOCATION	// ADD-BY-LEETEN 2013/07/23
 // ADD-BY-LEETEN 2013/07/13-END
 
 #include "SepDWTHeader.h"	
@@ -1028,6 +1036,7 @@ public:
 
 				dWavelet = sqrt(dWavelet);
 				double dWeight = dWavelet/dWaveletDenomiator;
+				#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 				#if		!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
 				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
 				// ADD-BY-LEETEN 2013/07/07-END
@@ -1052,6 +1061,7 @@ public:
 				// ADD-BY-LEETEN 2013/07/14-BEGIN
 				bIsSparse = true;
 				// ADD-BY-LEETEN 2013/07/14-END
+				#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),

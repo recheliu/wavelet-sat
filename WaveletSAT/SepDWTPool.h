@@ -47,11 +47,11 @@ namespace WaveletSAT
 		vector<size_t> vuWaveletLengths;
 		// ADD-BY-LEETEN 2013/07/08-END
 
-		#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+		#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:	#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 		vector< vector<WT> > vvFull;
 
 		vector< unordered_map<BT, WT>* >* pvpmapSparse;
-		#else	// MOD-BY-LEETEN 2013/07/07-TO:
+		#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#else	// MOD-BY-LEETEN 2013/07/07-TO:
 		WT	 dWaveletWeight;
 
 		size_t uNrOfBins;
@@ -64,20 +64,20 @@ namespace WaveletSAT
 		typedef pair<size_t, unordered_map<BT, WT>*> CEncodingSparseArray;
 		typedef unordered_map<size_t, CEncodingSparseArray*> CEncodingSparseArrays; 
 		CEncodingSparseArrays *pcEncodingSparseArrays;
-		#endif	// MOD-BY-LEETEN 2013/07/07-END
+		#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#endif	// MOD-BY-LEETEN 2013/07/07-END
 		
 		// ADD-BY-LEETEN 11/11/2012-BEGIN
 		//! Max # that each coefficient is updated
 		size_t uMaxCount;
 
-	#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+		#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:		#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 		//! Record how many time each coefficient has been updated
 		vector<size_t> vuCounts;
 
 		//! 
 		vector< vector< pair<BT, WT> > > vvpairSparse;
 		// ADD-BY-LEETEN 11/11/2012-END
-	#else	// MOD-BY-LEETEN 2013/07/07-TO:
+		#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:		#else	// MOD-BY-LEETEN 2013/07/07-TO:
 		typedef vector<pair<BT, WT>> CDecodingSparseArray;
 		typedef unordered_map< size_t, CDecodingSparseArray* > CDecodingSparseArrays;
 		CDecodingSparseArrays *pcDecodingSparseArrays;
@@ -430,7 +430,7 @@ namespace WaveletSAT
 			unordered_map<BT, WT>::iterator iterSparseArray = mapSparseArray.find(Bin);
 			Value = ( mapSparseArray.end() == iterSparseArray )?WT(0):iterSparseArray->second;
 		}
-	#endif	// MOD-BY-LEETEN 2013/07/07-END
+		#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:		#endif	// MOD-BY-LEETEN 2013/07/07-END
 
 	public:
 		////////////////////////////////////////////////////////////////////
@@ -585,7 +585,7 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		)
 		{
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if( bIsSparse )
 				vvpairSparse[uIndex].resize(uNrOfBins);
 
@@ -604,7 +604,7 @@ namespace WaveletSAT
 
 			if( bIsSparse )
 				vuCounts[uIndex] = uMaxCount;
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			for(size_t b = 0; b < uNrOfBins; b++)
 			{
 				CSATSepDWTNetCDF::TYPE_COEF_VALUE	Value = pValues[b];
@@ -617,10 +617,11 @@ namespace WaveletSAT
 						this->_AppendDecodingSparseArray(Bin, uIndex, Value, 0);
 				}	
 			}
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		// ADD-BY-LEETEN 01/27/2013-END
 
+		#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 		// ADD-BY-LEETEN 2013/07/08-BEGIN
 		#if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
 		void
@@ -653,6 +654,7 @@ namespace WaveletSAT
 		}
 		#endif	// #if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
 		// ADD-BY-LEETEN 2013/07/08-END
+		#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 
 		void
 		_Set
@@ -673,32 +675,39 @@ namespace WaveletSAT
 				this->uSize *= vuLengths[d];
 			}
 			this->bIsSparse = bIsSparse;
+			#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 			this->uNrOfBins = uNrOfBins;	// ADD-BY-LEETEN 2013/07/07
+			#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 			if( !bIsSparse )
 			{
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				vvFull.resize(uNrOfBins);
 				for(size_t b = 0; b < (size_t)uNrOfBins; b++)
 					vvFull[b].resize(this->uSize);
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				this->pcFullArrays = new CFullArrays();
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{	// ADD-BY-LEETEN 11/11/2012
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				this->pvpmapSparse = new vector< unordered_map <BT, WT>* >;
 				this->pvpmapSparse->resize(this->uSize);
 
 			// ADD-BY-LEETEN 11/11/2012-BEGIN
 				this->vvpairSparse.resize(this->uSize);
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				this->pcEncodingSparseArrays = new CEncodingSparseArrays();
 				this->pcDecodingSparseArrays = new CDecodingSparseArrays();
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			// ADD-BY-LEETEN 11/11/2012-END
 			// DEL-BY-LEETEN 2013/07/07:	this->vuCounts.assign(this->uSize, 0);
+			// ADD-BY-LEETEN 2013/07/23-BEGIN
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			this->vuCounts.assign(this->uSize, 0);
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			// ADD-BY-LEETEN 2013/07/23-END
 
 			this->uMaxCount = uMaxCount;	// ADD-BY-LEETEN 11/11/2012
 		}
@@ -714,7 +723,7 @@ namespace WaveletSAT
 		{
 			uCountInFullArray = 0;
 			uCountInSparseArray = 0;
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(!bIsSparse)
 			{
 				for(typename vector< vector<WT> >::iterator 
@@ -748,7 +757,7 @@ namespace WaveletSAT
 				}
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			for(size_t i = 0; i < uSize; i++) 
 			{
 				if(!bIsSparse)
@@ -769,11 +778,11 @@ namespace WaveletSAT
 					}
 				}
 			}
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 
-		#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
+		#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
 		void
 		_AddEntryToSparseArray
 		(
@@ -788,7 +797,7 @@ namespace WaveletSAT
 				mapSparse.insert(pair<BT, WT>(Bin, Value));
 			}
 		}
-		#endif		// DEL-BY-LEETEN 2013/07/07-END
+		#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#endif		// DEL-BY-LEETEN 2013/07/07-END
 
 		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		void
@@ -809,23 +818,31 @@ namespace WaveletSAT
 			{
 				// full
 				Bin = usOffset;
+				#if	0	// MOD-BY-LEETEN 2013/07/23-FROM:
 				// MOD-BY-LEETEN 2013/07/07-FROM:				Value = vvFull[Bin][uIndex];
 				_GetAtFullArray(Bin, uIndex, Value);
 				// MOD-BY-LEETEN 2013/07/07-END
+				#else	// MOD-BY-LEETEN 2013/07/23-TO:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				Value = vvFull[Bin][uIndex];
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				_GetAtFullArray(Bin, uIndex, Value);
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				#endif	// MOD-BY-LEETEN 2013/07/23-END
 			}
 			else
 			{
 				// sparse
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				vector< pair<BT, WT> >& vpair = this->vvpairSparse[uIndex];
 				if( (size_t)usOffset < vpair.size() )
 				{
 					Bin = vpair[usOffset].first;
 					Value = vpair[usOffset].second;
 				}
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				_GetAtDecodingSparseArray(usOffset, uIndex, Bin, Value);
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 		}
 		// ADD-BY-LEETEN 12/29/2012-END
@@ -846,14 +863,22 @@ namespace WaveletSAT
 			if( !bIsSparse )
 			{
 				// full
+				#if	0	// MOD-BY-LEETEN 2013/07/23-FROM:
 				// MOD-BY-LEETEN 2013/07/07-FROM:				Value = vvFull[Bin][uIndex];
 				_GetAtFullArray(Bin, uIndex, Value);
 				// MOD-BY-LEETEN 2013/07/07-END
+				#else	// MOD-BY-LEETEN 2013/07/23-TO:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				Value = vvFull[Bin][uIndex];
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				_GetAtFullArray(Bin, uIndex, Value);
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+				#endif	// MOD-BY-LEETEN 2013/07/23-END
 			}
 			else
 			{
 				// sparse
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				if( NULL == (*pvpmapSparse)[uIndex] )
 				{
 					Value = WT(0);
@@ -866,9 +891,9 @@ namespace WaveletSAT
 					Value = WT(0);
 				else
 					Value = ipair->second;
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:								#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				_GetAtEncodingSparseArray(Bin, uIndex, Value);
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:								#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 		}
 
@@ -898,13 +923,18 @@ namespace WaveletSAT
 			size_t uIndex = UConvertSubToIndex(vuSubs, vuLengths);
 			// ADD-By-LEETEN 11/11/2012-BEGIN
 			// DEL-BY-LEETEN 2013/07/07:				vuCounts[uIndex] += uCount;
+			// ADD-BY-LEETEN 2013/07/23-BEGIN
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			vuCounts[uIndex] += uCount;
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			// ADD-BY-LEETEN 2013/07/23-END
 
 			#if	0	// DEL-BY-LEETEN 2013/07/08-BEGIN
 			if( Value )
 			{
 			#endif	// DEL-BY-LEETEN 2013/07/08-END
 			// ADD-By-LEETEN 11/11/2012-END
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if( !bIsSparse )
 			{
 				// full
@@ -928,16 +958,16 @@ namespace WaveletSAT
 						ipair->second += Value;
 
 			}
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			if( !bIsSparse )
 				this->_AddAtFullArray(Bin, uIndex, Value, uCount);
 			else
 				this->_AddAtEncodingSparseArray(Bin, uIndex, Value, uCount);
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#endif	// MOD-BY-LEETEN 2013/07/07-END
 			#if	0	// DEL-BY-LEETEN 2013/07/08-BEGIN
 			}	// ADD-By-LEETEN 11/11/2012
 			#endif	// DEL-BY-LEETEN 2013/07/08-END
-			#if	0	// DEL-BY-LEETEN 2013/07/07-BEGIN
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#if	0	// DEL-BY-LEETEN 2013/07/07-BEGIN
 			if( bIsSparse && vuCounts[uIndex] == uMaxCount )
 			{
 				// ADD-BY-LEETEN 04/21/2013-BEGIN
@@ -956,7 +986,7 @@ namespace WaveletSAT
 				(*this->pvpmapSparse)[uIndex] = NULL;
 				// _ShowMemoryUsage();
 			}	
-			#endif	// DEL-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#endif	// DEL-BY-LEETEN 2013/07/07-END
 		}
 
 		void
@@ -966,7 +996,7 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		)
 		{
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(!bIsSparse)
 			{
 				// ADD-BY-LEETEN 03/16/2013-BEGIN
@@ -1030,7 +1060,7 @@ namespace WaveletSAT
 				}
 				// ADD-BY-LEETEN 11/11/2012-END
 			}
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			// TODO:
 			if( !bIsSparse ) 
 			{	
@@ -1040,8 +1070,7 @@ namespace WaveletSAT
 			{
 				// TODO:
 			}
-
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:						#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 
 		// ADD-BY-LEETEN 03/16/2013-BEGIN
@@ -1052,7 +1081,11 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) const
 		{
-			// MOD-BY-LEETEN 2013/07/07-FROM:			return (vuCounts[uIndex])?false:true;
+			// MOD-BY-LEETEN 2013/07/23-FROM: // MOD-BY-LEETEN 2013/07/07-FROM:			return (vuCounts[uIndex])?false:true;
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			return (vuCounts[uIndex])?false:true;
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			// MOD-BY-LEETEN 2013/07/23-END
 			if( !bIsSparse )
 			{
 				if(!pcFullArrays)
@@ -1076,6 +1109,7 @@ namespace WaveletSAT
 				return false;
 			}
 			// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 		}
 
 		const 
@@ -1088,7 +1122,7 @@ namespace WaveletSAT
 			return BIsEmpty(UConvertSubToIndex(vuSubs, vuLengths));
 		}
 
-		#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
+		#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:	#if	0		// DEL-BY-LEETEN 2013/07/07-BEGIN
 		virtual
 		const 
 		vector< pair<BT, WT> >&
@@ -1098,13 +1132,15 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) const
 		{
+			#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 			// ADD-BY-LEETEN 2013/07/07-BEGIN
 			static vector< pair<BT, WT> > vpairCoefs;	
 			vpairCoefs.clear();
 			// ADD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 			if( !bIsSparse )
 			{
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				static vector< pair<BT, WT> > vpairCoefs;	
 				vpairCoefs.clear();
 
@@ -1114,7 +1150,7 @@ namespace WaveletSAT
 					if( Coef )
 						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 				}
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				CFullArray::iterator iterFullArrays = pcFullArrays->find(uIndex);
 				if( iterFullArrays != pcFullArrays->end() && NULL != iterFullArrays->second ) 
 				{
@@ -1126,13 +1162,13 @@ namespace WaveletSAT
 							vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 					}
 				}
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#endif	// MOD-BY-LEETEN 2013/07/07-END
 				return vpairCoefs;
 			}
 			else
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				return this->vvpairSparse[uIndex];
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			{
 				CDecodingSparseArray::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
 				if( pcDecodingSparseArrays->end() 
@@ -1144,7 +1180,7 @@ namespace WaveletSAT
 				}
 			}
 			return vpairCoefs;
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		
 		virtual
@@ -1160,7 +1196,7 @@ namespace WaveletSAT
 			return VGetCoefSparse(uIndex);
 		}
 		// ADD-BY-LEETEN 03/16/2013-END
-		#endif	// DEL-BY-LEETEN 2013/07/07-END
+		#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#endif	// DEL-BY-LEETEN 2013/07/07-END
 
 		void
 		_GetCoefSparse
@@ -1174,14 +1210,14 @@ namespace WaveletSAT
 			vpairCoefs.clear();
 			if( !bIsSparse )
 			{
-				#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+				#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 				for(size_t b = 0; b < this->vvFull.size(); b++)
 				{
 					WT Coef = vvFull[b][uIndex];
 					if( Coef )
 						vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 				}
-				#else	// MOD-BY-LEETEN 2013/07/07-TO:
+				#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#else	// MOD-BY-LEETEN 2013/07/07-TO:
 				CFullArrays::iterator iterFullArrays = pcFullArrays->find(uIndex);
 				if( pcFullArrays->end() 
 						 != iterFullArrays &&
@@ -1197,17 +1233,17 @@ namespace WaveletSAT
 							vpairCoefs.push_back(pair<BT, WT>((BT)b, Coef));
 					}
 				}
-				#endif	// MOD-BY-LEETEN 2013/07/07-END
+				#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:					#endif	// MOD-BY-LEETEN 2013/07/07-END
 			}
 			else
 			{
 			// ADD-BY-LEETEN 11/12/2012-END
 			// sparse
-			#if	0		// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#if	0		// MOD-BY-LEETEN 2013/07/07-FROM:
 			const vector< pair<BT, WT> >& vpairSparse = this->vvpairSparse[uIndex];
 			vpairCoefs.resize(vpairSparse.size());
 			copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
-			#else		// MOD-BY-LEETEN 2013/07/07-TO:
+			#else // #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else		// MOD-BY-LEETEN 2013/07/07-TO:
 				CDecodingSparseArrays::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
 				if( pcDecodingSparseArrays->end() 
 						 != iterSparseArrays && 
@@ -1217,7 +1253,7 @@ namespace WaveletSAT
 					vpairCoefs.resize(vpairSparse.size());
 					copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
 				}
-			#endif		// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif		// MOD-BY-LEETEN 2013/07/07-END
 			}	// ADD-BY-LEETEN 11/12/2012
 		}
 		
@@ -1243,9 +1279,16 @@ namespace WaveletSAT
 		CSepDWTPool()
 		{
 			// MOD-BY-LEETEN 2013/07/07-FROM:			pvpmapSparse = NULL;
+			// ADD-BY-LEETEN 2013/07/23-BEGIN
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			pvpmapSparse = NULL;
+			#else	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
+			// ADD-BY-LEETEN 2013/07/23-END
+
 			this->pcFullArrays = NULL;
 			this->pcDecodingSparseArrays = NULL;
 			this->pcEncodingSparseArrays = NULL;
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 			// MOD-BY-LEETEN 2013/07/07-END
 		}
 
@@ -1253,7 +1296,7 @@ namespace WaveletSAT
 		virtual	// ADD-BY-LEETEN 01/02/2013
 		~CSepDWTPool()
 		{
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
+			#if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
 			if(this->pvpmapSparse)
 			{	// ADD-BY-LEETEN 11/19/2012
 				for(size_t e = 0; e < this->pvpmapSparse->size(); e++)
@@ -1268,7 +1311,7 @@ namespace WaveletSAT
 				this->pvpmapSparse = NULL;
 			}
 			// ADD-BY-LEETEN 11/19/2012-END
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
+			#else // #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			if( this->pcFullArrays ) {
 				for(CFullArrays::iterator 
 						iterFullArrays = pcFullArrays->begin(); 
@@ -1311,7 +1354,7 @@ namespace WaveletSAT
 					}
 				}
 			}
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
+			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		// MOD-BY-LEETEN 2013/07/23-FROM:				#endif	// MOD-BY-LEETEN 2013/07/07-END
 		}
 		// ADD-BY-LEETEN 11/12/2012-END
 	};

@@ -33,7 +33,9 @@ protected:
 		size_t uNrOfElements;
 
 		vector<uint4>			vu4BinSubs;
-		vector<typeWavelet>			vfWeights;
+		// MOD-BY-LEETEN 2013/07/23-FROM:		vector<typeWavelet>			vfWeights;
+		vector<CudaDWT::typeValue>			vfWeights;
+		// MOD-BY-LEETEN 2013/07/23-END
 		vector<unsigned int>	vuKeys;
 		vector<typeWavelet>			vfCoefs;
 
@@ -169,7 +171,9 @@ protected:
 			unsigned int* puBinSub = &vu4BinSubs[uNrOfElements].y;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				puBinSub[d] = (unsigned int)vuPos[d];
-			vfWeights[uNrOfElements] = (typeWavelet)dWeight;
+			// MOD-BY-LEETEN 2013/07/23-FROM:			vfWeights[uNrOfElements] = (typeWavelet)dWeight;
+			vfWeights[uNrOfElements] = (CudaDWT::typeValue)dWeight;
+			// MOD-BY-LEETEN 2013/07/23-END
 			uNrOfElements++;
 
 			// otherwise, 

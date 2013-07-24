@@ -17,6 +17,7 @@
 namespace CudaDWT
 {
 	typedef WaveletSAT::typeWavelet	typeCoef;
+	typedef	double	typeValue;		// ADD-BY-LEETEN 2013/07/23
 	enum
 	{
 		GPU_MAX_NR_OF_DIMS = 3,
@@ -41,7 +42,9 @@ namespace CudaDWT
 
 		//
 		uint4 *pu4BinSub_device;
-		typeCoef *pfValues_device;
+		// MOD-BY-LEETEN 2013/07/23-FROM:		typeCoef *pfValues_device;
+		typeValue	*pfValues_device;
+		// MOD-BY-LEETEN 2013/07/23-END
 		unsigned int* puKeys_device;
 
 		typeCoef* pfCoefs_device;
@@ -78,7 +81,9 @@ namespace CudaDWT
 			unsigned int puCoefLengths[],
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
-			const typeCoef pfValues[],
+			// MOD-BY-LEETEN 2013/07/23-FROM:			const typeCoef pfValues[],
+			const typeValue pfValues[],
+			// MOD-BY-LEETEN 2013/07/23-END
 			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		);

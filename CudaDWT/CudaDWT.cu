@@ -87,7 +87,9 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
-		const typeCoef	pfValues[],
+		// MOD-BY-LEETEN 2013/07/23-FROM:		const typeCoef	pfValues[],
+		const typeValue	pfValues[],
+		// MOD-BY-LEETEN 2013/07/23-END
 		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
 		void* _Reserved
 	)

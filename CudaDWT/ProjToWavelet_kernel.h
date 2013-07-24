@@ -7,7 +7,9 @@ void
 _ProjToWavelet_kernel
 (
 	const uint4 pu4BinSub_device[],	// the tuples of <bin, data_subscripts> of all elements
-	const CudaDWT::typeCoef pfCounts_device[],	// the counts of all elements
+	// MOD-BY-LEETEN 2013/07/23-FROM:	const CudaDWT::typeCoef pfCounts_device[],	// the counts of all elements
+	const CudaDWT::typeValue	pfCounts_device[],	// the counts of all elements
+	// MOD-BY-LEETEN 2013/07/23-END
 	const unsigned int uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
 	const unsigned int uNrOfDims, 
 	const unsigned int uNrOfElements,
@@ -27,7 +29,9 @@ _ProjToWavelet_kernel
 	if( uElement < uNrOfElements )
 	{
 		uint4 u4BinSub = pu4BinSub_device[uElement];
-		CudaDWT::typeCoef fCount = pfCounts_device[uElement];
+		// MOD-BY-LEETEN 2013/07/23-FROM:		CudaDWT::typeCoef fCount = pfCounts_device[uElement];
+		CudaDWT::typeValue	fCount = pfCounts_device[uElement];
+		// MOD-BY-LEETEN 2013/07/23-END
 
 		// DEL-BY-LEETEN 2013/07/13:	unsigned int uKey = u4BinSub.x;
 		unsigned int* puSub = &u4BinSub.y;
@@ -72,7 +76,9 @@ _ProjToWavelet_kernel
 		uKey += u4BinSub.x;
 		// ADD-BY-LEETEN 2013/07/13-END
 
-		pfCoefs_device[uElement] = fCount * (CudaDWT::typeCoef)iWavelet;
+		// MOD-BY-LEETEN 2013/07/23-FROM:		pfCoefs_device[uElement] = fCount * (CudaDWT::typeCoef)iWavelet;
+		pfCoefs_device[uElement] = (CudaDWT::typeCoef)(fCount * (CudaDWT::typeValue)iWavelet);
+		// MOD-BY-LEETEN 2013/07/23-END
 		puKeys_device[uElement] = uKey;
 	}
 }
