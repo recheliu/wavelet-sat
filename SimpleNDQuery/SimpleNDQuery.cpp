@@ -601,6 +601,7 @@ main(int argn, char* argv[])
 			);
 	}
 
+	#if	0	// DEL-BY-LEETEN 2013/07/31-BEGIN
 	#if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
 	// ADD-BY-LEETEN 01/23/2013-BEGIN
 	if( iIsComputingBlockStat ) // iIsComputingBlockStatistics )
@@ -622,6 +623,7 @@ main(int argn, char* argv[])
 	}
 	// ADD-BY-LEETEN 01/23/2013-END
 	#endif	 // #if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
+	#endif	// DEL-BY-LEETEN 2013/07/31-END
 
 	// ADD-BY-LEETEN 01/05/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);

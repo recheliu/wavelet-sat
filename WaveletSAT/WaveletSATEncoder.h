@@ -304,7 +304,6 @@ public:
 				  LOG("Warning: uMinNrOfBufferedHeaders is clamped to 1.");
 				  uMinNrOfBufferedHeaders = 1;
 			  }
-			  LOG_VAR(uMinNrOfBufferedHeaders);	// TMP-DEBUG
 			  break;
 		  }
 		// ADD-BY-LEETEN 2013/07/14-END
@@ -857,6 +856,7 @@ public:
 			 
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
+			#if	0	// MOD-BY-LEETEN 2013/07/31-FROM:
 			puStart[0] = 0;
 			puCount[0] = uNrOfWrittenCoefs;
 
@@ -888,6 +888,47 @@ public:
 							(void*)vValues.data()));
 			vValues.clear();
 			unlink(this->szCoefValueTempFilename);
+			#else	// MOD-BY-LEETEN 2013/07/31-FROM:
+			LOG_VAR(uNrOfWrittenCoefs);
+
+			const size_t uMaxNrOfCoefsToMove = 64000000;
+
+			fpCoefBins = fopen(this->szCoefBinTempFilename, "rb");
+			vector<TYPE_COEF_BIN> vBins;
+			vBins.resize(uMaxNrOfCoefsToMove);
+			for(size_t uNrOfMovedCoefs = 0; uNrOfMovedCoefs < uNrOfWrittenCoefs; uNrOfMovedCoefs += uMaxNrOfCoefsToMove) {
+				puStart[0] = uNrOfMovedCoefs;
+				puCount[0] = min(uNrOfWrittenCoefs - uNrOfMovedCoefs, uMaxNrOfCoefsToMove);
+				fread(vBins.data(), sizeof(vBins[0]), puCount[0], fpCoefBins);
+				ASSERT_NETCDF(nc_put_vara(
+								iNcId,
+								ncVarCoefBin,
+								puStart,
+								puCount,
+								(void*)vBins.data()));
+			}
+			fclose(fpCoefBins);
+			unlink(this->szCoefBinTempFilename);
+			vBins.clear();
+
+			fpCoefValues = fopen(this->szCoefValueTempFilename, "rb");
+			vector<TYPE_COEF_VALUE> vValues;
+			vValues.resize(uMaxNrOfCoefsToMove);
+			for(size_t uNrOfMovedCoefs = 0; uNrOfMovedCoefs < uNrOfWrittenCoefs; uNrOfMovedCoefs += uMaxNrOfCoefsToMove) {
+				puStart[0] = uNrOfMovedCoefs;
+				puCount[0] = min(uNrOfWrittenCoefs - uNrOfMovedCoefs, uMaxNrOfCoefsToMove);
+				fread(vValues.data(), sizeof(vValues[0]), puCount[0], fpCoefValues);
+				ASSERT_NETCDF(nc_put_vara(
+								iNcId,
+								ncVarCoefValue,
+								puStart,
+								puCount,
+								(void*)vValues.data()));
+			}
+			fclose(fpCoefValues);
+			unlink(this->szCoefValueTempFilename);
+			vValues.clear();
+			#endif	// MOD-BY-LEETEN 2013/07/31-END
 
 			ASSERT_NETCDF(nc_close(iNcId));
 			#endif	//	#if	!WITH_STREAMING		

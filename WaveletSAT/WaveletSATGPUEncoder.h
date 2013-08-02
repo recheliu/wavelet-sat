@@ -36,7 +36,9 @@ protected:
 		// MOD-BY-LEETEN 2013/07/23-FROM:		vector<typeWavelet>			vfWeights;
 		vector<CudaDWT::typeValue>			vfWeights;
 		// MOD-BY-LEETEN 2013/07/23-END
-		vector<unsigned int>	vuKeys;
+		// MOD-BY-LEETEN 2013/07/31-FROM:		vector<unsigned int>	vuKeys;
+		vector<CudaDWT::typeKey>	vuKeys;
+		// MOD-BY-LEETEN 2013/07/31-END
 		vector<typeWavelet>			vfCoefs;
 
 		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
@@ -110,7 +112,9 @@ protected:
 					vuCoefHalfLengths[d] = vuCoefLengths[d]/2;
 				for(size_t e = 0; e < uNrOfEncodedCoefs; e++)
 				{
-					size_t uKey = (size_t)vuKeys[e];
+					// MOD-BY-LEETEN 2013/07/31-FROM:					size_t uKey = (size_t)vuKeys[e];
+					CudaDWT::typeKey uKey = (CudaDWT::typeKey )vuKeys[e];
+					// MOD-BY-LEETEN 2013/07/31-END
 					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
 					#if	0	// MOD-BY-LEETEN 2013/07/13-FROM:
 					for(size_t d = UGetNrOfDims(); d > 0; d--)

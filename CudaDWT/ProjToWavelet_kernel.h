@@ -13,7 +13,9 @@ _ProjToWavelet_kernel
 	const unsigned int uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
 	const unsigned int uNrOfDims, 
 	const unsigned int uNrOfElements,
-	unsigned int puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
+	// MOD-BY-LEETEN 2013/07/31-FROM:	unsigned int puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
+	CudaDWT::typeKey puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
+	// MOD-BY-LEETEN 2013/07/31-END
 	CudaDWT::typeCoef pfCoefs_device[]				// output: the wavelet projection of the current wavelet 
 )
 {
@@ -48,7 +50,7 @@ _ProjToWavelet_kernel
 			else
 			{
 				if( uSubInWavelet < w / 2)
-					iLocalWavelet = (int)uSubInWavelet;
+					iLocalWavelet =		(int)uSubInWavelet;
 				else
 					iLocalWavelet = (int)w - (int)uSubInWavelet;
 				iLocalWavelet *= -1;		
@@ -60,7 +62,9 @@ _ProjToWavelet_kernel
 			#endif	// DEL-BY-LEETEN 2013/07/13-END
 		}
 		// ADD-BY-LEETEN 2013/07/13-BEGIN
-		unsigned int uKey = 0;
+		// MOD-BY-LEETEN 2013/07/31-FROM:		unsigned int uKey = 0;
+		CudaDWT::typeKey uKey = 0;
+		// MOD-BY-LEETEN 2013/07/31-END
 		for(unsigned int di = 0; di < uNrOfDims; di++)
 		{
 			unsigned int d = uNrOfDims - 1 - di;

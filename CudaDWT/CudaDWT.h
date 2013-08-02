@@ -18,6 +18,7 @@ namespace CudaDWT
 {
 	typedef WaveletSAT::typeWavelet	typeCoef;
 	typedef	double	typeValue;		// ADD-BY-LEETEN 2013/07/23
+	typedef unsigned long long typeKey;	// ADD-BY-LEETEN 2013/07/31
 	enum
 	{
 		GPU_MAX_NR_OF_DIMS = 3,
@@ -45,11 +46,15 @@ namespace CudaDWT
 		// MOD-BY-LEETEN 2013/07/23-FROM:		typeCoef *pfValues_device;
 		typeValue	*pfValues_device;
 		// MOD-BY-LEETEN 2013/07/23-END
-		unsigned int* puKeys_device;
+		// MOD-BY-LEETEN 2013/07/31-FROM:	unsigned int* puKeys_device;
+		typeKey *puKeys_device;
+		// MOD-BY-LEETEN 2013/07/31-END
 
 		typeCoef* pfCoefs_device;
 		typeCoef* pfCompactedCoefs_device;
-		unsigned int* puCompactedKeys_device;
+		// MOD-BY-LEETEN 2013/07/31-FROM:		unsigned int* puCompactedKeys_device;
+		typeKey* puCompactedKeys_device;
+		// MOD-BY-LEETEN 2013/07/31-END
 
 		unsigned int *puOnes_device;
 		unsigned int *puCompactedSegCounts_device;
@@ -98,7 +103,9 @@ namespace CudaDWT
 			const unsigned int	puWaveletLengths[],
 
 			size_t				*puNrOfElements,
-			unsigned int		puKeys_host[],
+			// MOD-BY-LEETEN 2013/07/31-FROM:			unsigned int		puKeys_host[],
+			typeKey		puKeys_host[],
+			// MOD-BY-LEETEN 2013/07/31-END
 			typeCoef	pfCoefs_host[],
 
 			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
