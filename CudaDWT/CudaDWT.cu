@@ -226,7 +226,7 @@ namespace CudaDWT
 				thrust::device_ptr<unsigned int>, 
 				thrust::device_ptr<typeKey>, 
 				thrust::device_ptr<unsigned int> >
-        #end If // MOD-BY-LEETEN 2013/07/31-END
+        #endif // MOD-BY-LEETEN 2013/08/03-FROM: #end If // MOD-BY-LEETEN 2013/07/31-END
 			(
 				vuKeys_device, 
 				vuKeys_device + uNrOfElements, 
