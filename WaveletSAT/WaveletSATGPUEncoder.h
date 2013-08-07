@@ -33,12 +33,8 @@ protected:
 		size_t uNrOfElements;
 
 		vector<uint4>			vu4BinSubs;
-		// MOD-BY-LEETEN 2013/07/23-FROM:		vector<typeWavelet>			vfWeights;
 		vector<CudaDWT::typeValue>			vfWeights;
-		// MOD-BY-LEETEN 2013/07/23-END
-		// MOD-BY-LEETEN 2013/07/31-FROM:		vector<unsigned int>	vuKeys;
 		vector<CudaDWT::typeKey>	vuKeys;
-		// MOD-BY-LEETEN 2013/07/31-END
 		vector<typeWavelet>			vfCoefs;
 
 		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
@@ -112,19 +108,8 @@ protected:
 					vuCoefHalfLengths[d] = vuCoefLengths[d]/2;
 				for(size_t e = 0; e < uNrOfEncodedCoefs; e++)
 				{
-					// MOD-BY-LEETEN 2013/07/31-FROM:					size_t uKey = (size_t)vuKeys[e];
 					CudaDWT::typeKey uKey = (CudaDWT::typeKey )vuKeys[e];
-					// MOD-BY-LEETEN 2013/07/31-END
 					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
-					#if	0	// MOD-BY-LEETEN 2013/07/13-FROM:
-					for(size_t d = UGetNrOfDims(); d > 0; d--)
-					{
-						size_t uCoefHalfLength = vuCoefHalfLengths[d - 1];
-						vuPos[d - 1] = uKey % uCoefHalfLength;
-						uKey /= uCoefHalfLength;
-					}
-					BT uBin = (BT)uKey;
-					#else	// MOD-BY-LEETEN 2013/07/13-TO:
 					BT uBin = (BT)uKey % uNrOfBins;
 					uKey /= uNrOfBins;
 					for(size_t d = 0; d < UGetNrOfDims(); d++)
@@ -133,7 +118,6 @@ protected:
 						vuPos[d] = uKey % uCoefHalfLength;
 						uKey /= uCoefHalfLength;
 					}
-					#endif	// MOD-BY-LEETEN 2013/07/13-END
 					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
 
 					// ADD-BY-LEETEN 2013/07/12-BEGIN
@@ -175,9 +159,7 @@ protected:
 			unsigned int* puBinSub = &vu4BinSubs[uNrOfElements].y;
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				puBinSub[d] = (unsigned int)vuPos[d];
-			// MOD-BY-LEETEN 2013/07/23-FROM:			vfWeights[uNrOfElements] = (typeWavelet)dWeight;
 			vfWeights[uNrOfElements] = (CudaDWT::typeValue)dWeight;
-			// MOD-BY-LEETEN 2013/07/23-END
 			uNrOfElements++;
 
 			// otherwise, 

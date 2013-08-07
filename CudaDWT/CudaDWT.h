@@ -43,18 +43,12 @@ namespace CudaDWT
 
 		//
 		uint4 *pu4BinSub_device;
-		// MOD-BY-LEETEN 2013/07/23-FROM:		typeCoef *pfValues_device;
 		typeValue	*pfValues_device;
-		// MOD-BY-LEETEN 2013/07/23-END
-		// MOD-BY-LEETEN 2013/07/31-FROM:	unsigned int* puKeys_device;
 		typeKey *puKeys_device;
-		// MOD-BY-LEETEN 2013/07/31-END
 
 		typeCoef* pfCoefs_device;
 		typeCoef* pfCompactedCoefs_device;
-		// MOD-BY-LEETEN 2013/07/31-FROM:		unsigned int* puCompactedKeys_device;
 		typeKey* puCompactedKeys_device;
-		// MOD-BY-LEETEN 2013/07/31-END
 
 		unsigned int *puOnes_device;
 		unsigned int *puCompactedSegCounts_device;
@@ -86,9 +80,7 @@ namespace CudaDWT
 			unsigned int puCoefLengths[],
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
-			// MOD-BY-LEETEN 2013/07/23-FROM:			const typeCoef pfValues[],
 			const typeValue pfValues[],
-			// MOD-BY-LEETEN 2013/07/23-END
 			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
 			void* _Reserved = NULL
 		);
@@ -103,9 +95,7 @@ namespace CudaDWT
 			const unsigned int	puWaveletLengths[],
 
 			size_t				*puNrOfElements,
-			// MOD-BY-LEETEN 2013/07/31-FROM:			unsigned int		puKeys_host[],
 			typeKey		puKeys_host[],
-			// MOD-BY-LEETEN 2013/07/31-END
 			typeCoef	pfCoefs_host[],
 
 			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013

@@ -601,35 +601,10 @@ main(int argn, char* argv[])
 			);
 	}
 
-	#if	0	// DEL-BY-LEETEN 2013/07/31-BEGIN
-	#if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
-	// ADD-BY-LEETEN 01/23/2013-BEGIN
-	if( iIsComputingBlockStat ) // iIsComputingBlockStatistics )
-	{
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		double (*StatFunc)(const vector< pair< WaveletSAT::typeBin, WaveletSAT::typeWavelet> >&);
-		switch(iStat)
-		{
-		case STAT_MEAN:		StatFunc = WaveletSAT::Statistics::Mean<double>;	break;
-		case STAT_COUNT:	StatFunc = WaveletSAT::Statistics::Count<double>;	break;
-		case STAT_ENTROPY:	StatFunc = WaveletSAT::Statistics::Entropy<double>;	break;
-		case STAT_STDDEV:	StatFunc = WaveletSAT::Statistics::StdDev<double>;	break;
-		}
-		cSimpleNDFile._CompBlockStatistics(
-			(size_t)iBlockLevel,
-			StatFunc,
-			szStatFilepathPrefix);
-		LIBCLOCK_END(bIsPrintingTiming);	
-	}
-	// ADD-BY-LEETEN 01/23/2013-END
-	#endif	 // #if	!WITH_SAT_FILE	// ADD-By-LEETEN 02/19/2013
-	#endif	// DEL-BY-LEETEN 2013/07/31-END
 
-	// ADD-BY-LEETEN 01/05/2012-BEGIN
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleNDFile._ShowStatistics();
 	LIBCLOCK_END(bIsPrintingTiming);
-	// ADD-BY-LEETEN 01/05/2012-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;

@@ -87,9 +87,7 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
-		// MOD-BY-LEETEN 2013/07/23-FROM:		const typeCoef	pfValues[],
 		const typeValue	pfValues[],
-		// MOD-BY-LEETEN 2013/07/23-END
 		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
 		void* _Reserved
 	)
@@ -141,9 +139,7 @@ namespace CudaDWT
 		const unsigned int	puWaveletLengths[],
 
 		size_t				*puNrOfElements,
-        // MOD-BY-LEETEN 2013/07/31-FROM:		unsigned int		puKeys_host[],
 		typeKey				puKeys_host[],
-        // MOD-BY-LEETEN 2013/07/31-END
 		typeCoef			pfCoefs_host[],
 		unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
 
@@ -195,29 +191,15 @@ namespace CudaDWT
 		// ADD-BY-LEETEN 01/13/2013-END
 		// sort the wavelet projection according to the key composed by the bin and local subscripts
 		LIBCLOCK_BEGIN(bIsPrintingTiming);
-        // MOD-BY-LEETEN 2013/07/31-FROM:		thrust::device_ptr<unsigned int> vKeys_device(puKeys_device);
 		thrust::device_ptr<typeKey> vKeys_device(puKeys_device);
-        // MOD-BY-LEETEN 2013/07/31-END
 		thrust::device_ptr<typeCoef> vCoefs_device(pfCoefs_device);
 		thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
 		// ADD-BY-LEETEN 03/29/2013-END
 		LIBCLOCK_END(bIsPrintingTiming);
 		}	// ADD-BY-LEETEN 01/13/2013
 
-        // MOD-BY-LEETEN 2013/07/31-FROM:		thrust::device_ptr<unsigned int> vuKeys_device(puKeys_device);
 		thrust::device_ptr<typeKey> vuKeys_device(puKeys_device);
-        // MOD-BY-LEETEN 2013/07/31-END
 		thrust::device_ptr<unsigned int> vuOnes_device(puOnes_device);
-        #if	0	// MOD-BY-LEETEN 2013/07/31-FROM:
-		thrust::device_ptr<unsigned int> vuCompactedKeys_device(puCompactedKeys_device);
-		thrust::device_ptr<unsigned int> vuCompactedSegCounts_device(puCompactedSegCounts_device);
-		thrust::pair< thrust::device_ptr<unsigned int>, thrust::device_ptr<unsigned int> > pairEnds = 
-			thrust::reduce_by_key<
-				thrust::device_ptr<unsigned int>, 
-				thrust::device_ptr<unsigned int>, 
-				thrust::device_ptr<unsigned int>, 
-				thrust::device_ptr<unsigned int> >
-        #else   // MOD-BY-LEETEN 2013/07/31-TO:
 		thrust::device_ptr<typeKey> vuCompactedKeys_device(puCompactedKeys_device);
 		thrust::device_ptr<unsigned int> vuCompactedSegCounts_device(puCompactedSegCounts_device);
 		thrust::pair< thrust::device_ptr<typeKey>, thrust::device_ptr<unsigned int> > pairEnds = 
@@ -226,7 +208,6 @@ namespace CudaDWT
 				thrust::device_ptr<unsigned int>, 
 				thrust::device_ptr<typeKey>, 
 				thrust::device_ptr<unsigned int> >
-        #endif // MOD-BY-LEETEN 2013/08/03-FROM: #end If // MOD-BY-LEETEN 2013/07/31-END
 			(
 				vuKeys_device, 
 				vuKeys_device + uNrOfElements, 
@@ -250,21 +231,12 @@ namespace CudaDWT
 		thrust::device_ptr<typeCoef> vfCompactedCoefs_device(pfCompactedCoefs_device);
 		size_t uNrOfCompactedCoefs_host;
 		{
-            #if	0   // MOD-BY-LEETEN 2013/07/31-FROM:
-			thrust::pair<thrust::device_ptr<unsigned int>, thrust::device_ptr<typeCoef> > pairEnds = 
-				thrust::reduce_by_key<
-					thrust::device_ptr<unsigned int>, 
-					thrust::device_ptr<typeCoef>, 
-					thrust::device_ptr<unsigned int>, 
-					thrust::device_ptr<typeCoef> >
-            #else   // MOD-BY-LEETEN 2013/07/31-TO:
 			thrust::pair<thrust::device_ptr<typeKey>, thrust::device_ptr<typeCoef> > pairEnds = 
 				thrust::reduce_by_key<
 					thrust::device_ptr<typeKey>, 
 					thrust::device_ptr<typeCoef>, 
 					thrust::device_ptr<typeKey>, 
 					thrust::device_ptr<typeCoef> >
-            #endif  // MOD-BY-LEETEN 2013/07/31-END
 				(
 					vuKeys_device, 
 					vuKeys_device + uNrOfElements, 

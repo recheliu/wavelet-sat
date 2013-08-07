@@ -189,30 +189,8 @@ protected:
 								puCount,
 								(void*)&pCoefOffsets[0] ));
 
-			#if	0	// MOD-BY-LEETEN 2013/07/12-FROM:
-			// write the coefficients
-			puStart[0] = uNrOfWrittenCoefs;
-			puCount[0] = uNrOfBufferedCoefs;
-
-			ASSERT_NETCDF(nc_put_vara(
-							iNcId,
-							ncVarCoefBin,
-							puStart,
-							puCount,
-							(void*)&pCoefBins[0]));
-								  
-			ASSERT_NETCDF(nc_put_vara(
-							iNcId,
-							ncVarCoefValue,
-							puStart,
-							puCount,
-							(void*)&pCoefValues[0]));
-			#else	// MOD-BY-LEETEN 2013/07/12-TO:
-
 			fwrite(&pCoefBins[0], sizeof(TYPE_COEF_BIN), uNrOfBufferedCoefs, fpCoefBins);
 			fwrite(&pCoefValues[0], sizeof(TYPE_COEF_VALUE), uNrOfBufferedCoefs, fpCoefValues);
-
-			#endif	// MOD-BY-LEETEN 2013/07/12-END
 			uNrOfWrittenCoefs += uNrOfBufferedCoefs;
 			// ADD-BY-LEETEN 2013/07/14-BEGIN
 			size_t uMemoryUsage = WaveletSAT::UGetMemoryUsage();
@@ -750,36 +728,6 @@ public:
 			LOG_VAR(uMaxMemoryUsage);	// ADD-BY-LEETEN 2013/07/14
 			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
 
-			#if	0	// MOD-BY-LEETEN 2013/07/07-FROM:
-			{
-				for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
-				{
-					vector<size_t> vuLevels;
-					_ConvertIndexToSub(c, vuLevels, this->vuDimMaxLevels);
-
-					// decide the wavelet weight
-					double dWavelet = +1.0;
-					// ADD-BY-LEETEN 12/16/2012-BEGIN
-					if( !bIsFinalizedWithoutWavelet )	
-					{
-					// ADD-BY-LEETEN 12/16/2012-END
-					for(size_t d = 0; d < vuLevels.size(); d++)
-					{
-						size_t uLevel = vuLevels[d];
-						if( uLevel >= 1 )
-							dWavelet *= (double)(1 << (uLevel - 1));
-							// Wavelet *= (T)sqrt((double)(1 << (uLevel - 1) ));
-					}
-
-					dWavelet = sqrt(dWavelet);
-					}
-					double dWeight = ( !bIsFinalizedWithoutWavelet )?(dWavelet / dWaveletDenomiator):1.0;
-					this->vcCoefPools[c]._Finalize( (WT)dWeight );
-					// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
-				}
-			}	
-			// ADD-BY-LEETEN 11/11/2012-END
-			#else	// MOD-BY-LEETEN 2013/07/07-TO:
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
 				vector<size_t> vuLevels;
@@ -788,7 +736,6 @@ public:
 				this->vcCoefPools[c]._Finalize( (WT)1.0 );
 				// this->vcCoefPools[c]._Weight( Wavelet / dWaveletDenomiator );
 			}
-			#endif	// MOD-BY-LEETEN 2013/07/07-END
 
 			_ShowMemoryUsage(false);
 
@@ -856,39 +803,6 @@ public:
 			 
 			size_t puStart[NC_MAX_DIMS];
 			size_t puCount[NC_MAX_DIMS];
-			#if	0	// MOD-BY-LEETEN 2013/07/31-FROM:
-			puStart[0] = 0;
-			puCount[0] = uNrOfWrittenCoefs;
-
-			fpCoefBins = fopen(this->szCoefBinTempFilename, "rb");
-			vector<TYPE_COEF_BIN> vBins;
-			vBins.resize(uNrOfWrittenCoefs);
-			fread(vBins.data(), sizeof(vBins[0]), vBins.size(), fpCoefBins);
-			fclose(fpCoefBins);
-			unlink(this->szCoefBinTempFilename);
-
-			ASSERT_NETCDF(nc_put_vara(
-							iNcId,
-							ncVarCoefBin,
-							puStart,
-							puCount,
-							(void*)vBins.data()));
-			vBins.clear();
-								  
-			fpCoefValues = fopen(this->szCoefValueTempFilename, "rb");
-			vector<TYPE_COEF_VALUE> vValues;
-			vValues.resize(uNrOfWrittenCoefs);
-			fread(vValues.data(), sizeof(vValues[0]), vValues.size(), fpCoefValues);
-			fclose(fpCoefValues);
-			ASSERT_NETCDF(nc_put_vara(
-							iNcId,
-							ncVarCoefValue,
-							puStart,
-							puCount,
-							(void*)vValues.data()));
-			vValues.clear();
-			unlink(this->szCoefValueTempFilename);
-			#else	// MOD-BY-LEETEN 2013/07/31-FROM:
 			LOG_VAR(uNrOfWrittenCoefs);
 
 			const size_t uMaxNrOfCoefsToMove = 64000000;
@@ -928,7 +842,6 @@ public:
 			fclose(fpCoefValues);
 			unlink(this->szCoefValueTempFilename);
 			vValues.clear();
-			#endif	// MOD-BY-LEETEN 2013/07/31-END
 
 			ASSERT_NETCDF(nc_close(iNcId));
 			#endif	//	#if	!WITH_STREAMING		
@@ -1063,9 +976,7 @@ public:
 						dWavelet *= (double)(1 << (uLevel - 1));
 
 					// ADD-BY-LEETEN 2013/07/08-BEGIN
-					// MOD-BY-LEETEN 2013/07/13-FROM:					vuWaveletLengths[d] = 1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
 					vuWaveletLengths[d] = (size_t)1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
-					// MOD-BY-LEETEN 2013/07/13-END
 					// ADD-BY-LEETEN 2013/07/08-END
 
 					// ADD-BY-LEETEN 2013/07/12-BEGIN

@@ -2,9 +2,7 @@ __global__
 void 
 _MarkSegments_kernel
 (
-	// MOD-BY-LEETEN 2013/07/31-FROM:	unsigned int puKey_devices[],
 	CudaDWT::typeKey puKey_devices[],
-	// MOD-BY-LEETEN 2013/07/31-END
 	unsigned int uNrOfElements,
 	unsigned int puiSegFlags_device[]
 )
