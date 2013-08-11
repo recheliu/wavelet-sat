@@ -473,6 +473,29 @@ public:
 			{
 				size_t uNrOfLocalCoefs; 
 				this->_ConvertWaveletToLevels(c, vuGlobalCoefBase, vuLocalCoefLengths, uNrOfLocalCoefs);
+
+				// ADD-BY-LEETEN 2013/08/11-BEGIN
+				vector<size_t> vuPoolLevels;
+				_ConvertIndexToSub(c, vuPoolLevels, vuDimLevels);
+
+				// decide the wavelet weight
+				double dWavelet = +1.0;
+
+				vector<size_t> vuWaveletLengths;
+				vuWaveletLengths.resize(UGetNrOfDims());
+
+				for(size_t d = 0; d < vuWaveletLengths.size(); d++)
+				{
+					size_t uLevel = vuPoolLevels[d];
+					if( uLevel >= 1 )
+						dWavelet *= (double)(1 << (uLevel - 1));
+					vuWaveletLengths[d] = (size_t)1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
+				}
+				dWavelet = sqrt(dWavelet);
+				double dWeight = dWavelet/dWaveletDenomiator;
+				// ADD-BY-LEETEN 2013/08/11-END
+
+
 				// scan through all basis
 				for(size_t valuei = 0, lc = 0; lc < uNrOfLocalCoefs; lc++, i++)
 				{
@@ -486,9 +509,31 @@ public:
 							vuLocalCoefLengths,
 							vuMaxCounts[c],
 							true);
+
+						// ADD-BY-LEETEN 2013/08/11-BEGIN
+						vpcCoefPools[c]->_SetWaveletWeight(dWeight);
+						vpcCoefPools[c]->_SetDataDimLengths(vuDimLengths);
+						vpcCoefPools[c]->_SetWaveletLengths(vuWaveletLengths);
+						// ADD-BY-LEETEN 2013/08/11-END
 						uNrOfAllocatedPools++;
 					}
 
+					// ADD-BY-LEETEN 2013/08/11-BEGIN
+					vector<size_t> vuSub;
+					_ConvertIndexToSub(lc, vuSub, vuLocalCoefLengths);
+					bool bIsOutOfDataDomain = false;
+					for(size_t d = 0; d < vuSub.size(); d++) 
+					{
+						if( vuSub[d] >= (size_t)ceilf((float)vuDimLengths[d]/(float)vuWaveletLengths[d]) ) 
+						{
+							bIsOutOfDataDomain = true;
+							break;
+						}
+					}
+
+					if( bIsOutOfDataDomain )
+						continue;
+					// ADD-BY-LEETEN 2013/08/11-END
 					this->vpcCoefPools[c]->_Copy(
 						lc,
 						vusCoefCounts[uCoefIndex], 

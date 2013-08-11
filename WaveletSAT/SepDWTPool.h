@@ -422,16 +422,20 @@ namespace WaveletSAT
 		_SetBuffer
 		(
 			size_t uMinNrOFBufferedThreads,
+			#if	0	// DEL-BY-LEETEN 2013/08/11-BEGIN
 			const WT& dWaveletWeight,
 			const vector<size_t>& vuDataDimLengths,
 			const vector<size_t>& vuWaveletLengths,
+			#endif	// DEL-BY-LEETEN 2013/08/11-END
 			const vector<size_t>& vuHeaderGlobalOffsets,
 			void* _Reserved = NULL
 		)
 		{
+			#if	0	// DEL-BY-LEETEN 2013/08/11-BEGIN
 			this->dWaveletWeight = dWaveletWeight;	
 			this->vuDataDimLengths.assign(vuDataDimLengths.begin(), vuDataDimLengths.end());
 			this->vuWaveletLengths.assign(vuWaveletLengths.begin(), vuWaveletLengths.end());
+			#endif	// DEL-BY-LEETEN 2013/08/11-END
 			this->cFileBuffer.vuHeaderGlobalOffsets.assign(vuHeaderGlobalOffsets.begin(), vuHeaderGlobalOffsets.end());
 
 			cFileBuffer.uNrOfBufferedHeaders = 0;
@@ -559,9 +563,13 @@ namespace WaveletSAT
 			#endif	// #if	!WITH_DYNAMIC_ARRAY_ALLOCATION		
 		}
 
+		// DEL-BY-LEETEN 2013/08/11-BEGIN
+		/*
 		#if	WITH_DYNAMIC_ARRAY_ALLOCATION		
 		// ADD-BY-LEETEN 2013/07/08-BEGIN
 		#if	!WITH_STREAMING	
+		*/
+		// DEL-BY-LEETEN 2013/08/11-END
 		void
 		_SetDataDimLengths
 		(
@@ -590,8 +598,12 @@ namespace WaveletSAT
 		{
 			this->dWaveletWeight = dWaveletWeight;	
 		}
+		// DEL-BY-LEETEN 2013/08/11-BEGIN
+		/*
 		#endif	// #if	!WITH_STREAMING	
 		#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		
+		*/
+		// DEL-BY-LEETEN 2013/08/11-END
 
 		void
 		_Set

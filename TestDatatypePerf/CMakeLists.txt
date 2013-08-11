@@ -7,16 +7,18 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(TestDatatypePerf)
 
-set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
+# MOD-BY-LEETEN 2013/0811-FROM:	set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
+find_package(ThirdPartyLib)
+# MOD-BY-LEETEN 2013/0811-END
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
 include_directories(
-	${LIB_DIR}/include
+	# DEL-BY-LEETEN 2013/0811:	${LIB_DIR}/include
 	${MYLIB_DIR}/include
 )
 
 link_directories(
-	${LIB_DIR}/lib
+	# DEL-BY-LEETEN 2013/0811:	${LIB_DIR}/lib
 	${MYLIB_DIR}/lib
 )
 
@@ -24,6 +26,12 @@ link_directories(
 ADD_EXECUTABLE(${PROJECT_NAME}
 	TestDatatypePerf.cpp
 )
+
+# ADD-BY-LEETEN 2013/0811-BEGIN
+target_link_libraries(${PROJECT_NAME}
+	${ThirdPartyLib_LIBRARIES}
+	)
+# ADD-BY-LEETEN 2013/0811-END
 
 if( DEFINED WIN32 ) 
 else()

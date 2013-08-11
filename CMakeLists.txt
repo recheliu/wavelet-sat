@@ -9,7 +9,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(WaveletSAT)
 
 # ADD-BY-LEETEN 09/02/2011-BEGIN
-set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
+# MOD-BY-LEETEN 2013/0811-FROM:	set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
+find_package(ThirdPartyLib)
+# MOD-BY-LEETEN 2013/0811-END
+
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
 # ADD-BY-LEETEN 03/29/2013-BEGIN

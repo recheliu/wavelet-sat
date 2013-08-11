@@ -13,6 +13,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 set(WITH_FREEGLUT 	FALSE 		CACHE BOOL "Whether FREEGULT is used.")	
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
+find_package(ThirdPartyLib)	# ADD-BY-LEETEN 2013/0811
+
 set(WITH_STATIC_LIBS 	TRUE	CACHE BOOL "Whether libraries are statically linked.")
 if( WITH_STATIC_LIBS )
 	set(WITH_OPENCV		FALSE 	CACHE BOOL "Whether OpenCV is used.")
@@ -47,13 +49,13 @@ endif()
 
 include_directories(
 	${MYLIB_DIR}/include
-	${3RDPARTY_DIR}/include	
+    # DEL-BY-LEETEN 2013/0811:	${3RDPARTY_DIR}/include	
 	${CUDA_TOOLKIT_ROOT_DIR}/include
 )
 
 link_directories(
 	${MYLIB_DIR}/lib
-	${3RDPARTY_DIR}/lib
+    # DEL-BY-LEETEN 2013/0811:	${3RDPARTY_DIR}/lib
 	${CUDA_TOOLKIT_ROOT_DIR}/lib/Win32
 )
 
@@ -111,12 +113,16 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	${SHADER_FILES}	
 )
 
+# ADD-BY-LEETEN 2013/0811-BEGIN
+target_link_libraries(${PROJECT_NAME}	${ThirdPartyLib_LIBRARIES})
+# ADD-BY-LEETEN 2013/0811-END
+
 # link OpenGL-related libraries
 if(DEFINED WIN32)
 	target_link_libraries(${PROJECT_NAME}
 		opengl32
 		glu32
-		debug	ITKNrrdIOd	optimized	ITKNrrdIO
+	    # DEL-BY-LEETEN 2013/0811:	debug	ITKNrrdIOd	optimized	ITKNrrdIO
 	)
 else()
 	target_link_libraries(${PROJECT_NAME}
@@ -124,9 +130,11 @@ else()
 		GLU
 		GLEW
 		glut
-		glui 
-		netcdf 
-		ITKNrrdIO
+	    # DEL-BY-LEETEN 2013/0811-BEGIN
+		# glui 
+		# netcdf 
+		# ITKNrrdIO
+	    # DEL-BY-LEETEN 2013/0811-END
 	)
 endif()
 
@@ -153,7 +161,7 @@ else()
 		libtfw
 		libfbo
 		libfps
-		lodepng
+		# DEL-BY-LEETEN 2013/0811:	lodepng
 	)
 endif()
 

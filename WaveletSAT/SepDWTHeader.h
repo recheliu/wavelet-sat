@@ -1,5 +1,17 @@
 #pragma once
 
+// ADD-BY-LEETEN 2013/08/11-BEGIN
+#if		!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
+	#define WITH_DYNAMIC_ARRAY_ALLOCATION	1
+#endif	// #if	!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
+
+#if		WITH_DYNAMIC_ARRAY_ALLOCATION	
+	#if		!defined(WITH_STREAMING)
+		#define WITH_STREAMING	1
+	#endif	// #if	!defined(WITH_STREAMING)
+#endif	// #if		WITH_DYNAMIC_ARRAY_ALLOCATION	
+// ADD-BY-LEETEN 2013/08/11-END
+
 #include <map>	
 #if defined (WIN32)
 	#include <psapi.h>	

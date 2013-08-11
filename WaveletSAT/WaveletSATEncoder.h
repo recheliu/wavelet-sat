@@ -16,9 +16,12 @@ using namespace std;
 #define WITH_NETCDF4	1
 #endif	// #if	!defined(WITH_NETCDF4)
 
+#if	0	// DEL-BY-LEETEN 2013/08/11-BEGIN
 // ADD-BY-LEETEN 2013/07/23-BEGIN
 #if		!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
+// TMP-MOD:	#define WITH_DYNAMIC_ARRAY_ALLOCATION	1
 #define WITH_DYNAMIC_ARRAY_ALLOCATION	1
+// TMP-MOD-END
 #endif	// #if	!defined(WITH_DYNAMIC_ARRAY_ALLOCATION)
 // ADD-BY-LEETEN 2013/07/23-END
 
@@ -28,6 +31,7 @@ using namespace std;
 #endif	// #if	!defined(WITH_STREAMING)
 #endif	// #if		WITH_DYNAMIC_ARRAY_ALLOCATION	// ADD-BY-LEETEN 2013/07/23
 // ADD-BY-LEETEN 2013/07/13-END
+#endif	// DEL-BY-LEETEN 2013/08/11-END
 
 #include "SepDWTHeader.h"	
 #include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
@@ -988,8 +992,15 @@ public:
 
 				dWavelet = sqrt(dWavelet);
 				double dWeight = dWavelet/dWaveletDenomiator;
+				// ADD-BY-LEETEN 2013/08/11-BEGIN
+				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
+				this->vcCoefPools[c]._SetDataDimLengths(vuDimLengths);
+				this->vcCoefPools[c]._SetWaveletLengths(vuWaveletLengths);
+				// ADD-BY-LEETEN 2013/08/11-END
 				#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
 				#if		!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
+				// DEL-BY-LEETEN 2013/08/11-BEGIN
+				/*
 				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
 				// ADD-BY-LEETEN 2013/07/07-END
 
@@ -997,14 +1008,18 @@ public:
 				this->vcCoefPools[c]._SetDataDimLengths(vuDimLengths);
 				this->vcCoefPools[c]._SetWaveletLengths(vuWaveletLengths);
 				// ADD-BY-LEETEN 2013/07/08-END
+				*/
+				// DEL-BY-LEETEN 2013/08/11-END
 				// ADD-BY-LEETEN 2013/07/12-BEGIN
 				#else	// #if		!WITH_STREAMING		
 				this->vcCoefPools[c]._SetBuffer
 				(
 					uMinNrOfBufferedHeaders,	// ADD-BY-LEETEN 2013/07/14
+					#if	0	// DEL-BY-LEETEN 2013/08/11-BEGIN
 					dWeight,
 					vuDimLengths,
 					vuWaveletLengths,
+					#endif	// DEL-BY-LEETEN 2013/08/11-END
 					vuGlobalCoefBase
 				);
 				#endif	// #if		!WITH_STREAMING		

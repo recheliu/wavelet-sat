@@ -5,9 +5,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(Ocean)
 
-set(LIB_DIR 	"~/lib" CACHE PATH "The installed path to 3rd party ibraries.")
-include_directories(${LIB_DIR}/include)
-link_directories(${LIB_DIR}/lib)
+# MOD-BY-LEETEN 2013/0811-FROM:
+# set(LIB_DIR 	"~/lib" CACHE PATH "The installed path to 3rd party ibraries.")
+# include_directories(${LIB_DIR}/include)
+# link_directories(${LIB_DIR}/lib)
+# MOD-BY-LEETEN 2013/0811-TO:
+find_package(ThirdPartyLib)
+# MOD-BY-LEETEN 2013/0811-END
 
 set(HDF5_DIR	"~/lib" CACHE PATH "The installed path to HDF5.")
 include_directories(${HDF5_DIR}/include)
@@ -58,6 +62,11 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	WaveletSAT_Ocean_main.cpp
 )
 
+# ADD-BY-LEETEN 2013/0811-BEGIN
+target_link_libraries(${PROJECT_NAME}
+	${ThirdPartyLib_LIBRARIES}
+	)
+# ADD-BY-LEETEN 2013/0811-END
 if( DEFINED WIN32) # ADD-BY-LEETEN 01/31/2013
 target_link_libraries(
 	${PROJECT_NAME}
