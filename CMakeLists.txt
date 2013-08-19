@@ -140,6 +140,8 @@ add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 add_subdirectory(Ocean)		# ADD-BY-LEETEN 01/18/2012
 add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
 
+add_subdirectory(python)		# ADD-BY-LEETEN 03/28/2013
+
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )
 	add_dependencies(SimpleNDEncoder 	CudaDWT)
