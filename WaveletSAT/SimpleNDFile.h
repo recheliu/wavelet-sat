@@ -221,5 +221,24 @@ public:
 		LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
 	}
 	// ADD-BY-LEETEN 12/30/2012-END
+	// ADD-BY-LEETEN 2013/09/03-BEGIN
+	#if	!WITH_SAT_FILE
+	// Given the level and local coordinate within the level, 
+	// return the wavelet coefficients
+	void 
+	_GetCoefSparse
+	(
+		const vector<size_t>& vuLevel,
+		const vector<size_t>& vuLocal,
+		vector< pair<BT, WT> >& vpairCoefBinValues,
+		void* _Reserved = NULL
+	)
+	{
+		vpcCoefPools.at(WaveletSAT::UConvertSubToIndex(vuLevel, vuDimLevels))->_GetCoefSparse(
+			vuLocal, 
+			vpairCoefBinValues);
+	}
+	#endif	// #if	!WITH_SAT_FILE
+	// ADD-BY-LEETEN 2013/09/03-END
 };
 

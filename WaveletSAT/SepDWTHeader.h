@@ -482,7 +482,7 @@ public:
 					// ADD-BY-LEETEN 01/21/2013-END
 				}
 			}
-			LOG_VAR(uNrOfInvalids);	// ADD-BY-LEETEN 01/21/2013
+			// DEL-BY-LEETEN 2013/09/03:	LOG_VAR(uNrOfInvalids);	// ADD-BY-LEETEN 01/21/2013
 			// ADD-BY-LEETEN 12/30/2012-END
 		}
 
