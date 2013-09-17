@@ -3,12 +3,14 @@
 #include <list>
 #include <vector>
 using namespace std;
+#include <Python.h>	// ADD-BY-LEETEN 2013/09/16
 #include <boost/python.hpp>
 #include "boost/python/class.hpp" 
 #include <boost/python/module.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/list.hpp>
 #include <boost/python/args.hpp>	// ADD-BY-LEETEN 2013/09/03
+#include <boost/python/call.hpp>	// ADD-BY-LEETEN 2013/09/16
 #include <boost/python/extract.hpp>
 #include <boost/python/to_python_value.hpp>
 using namespace boost::python;
@@ -39,6 +41,18 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 			vVector[d] = boost::python::extract<T>(python_list[d]);
 	}
 
+	// ADD-BY-LEETEN 2013/09/16-BEGIN
+	void 
+	_ClearList
+	(
+		boost::python::list& python_list
+	)
+	{
+		while( boost::python::len(python_list) > 0 )
+			python_list.pop();
+	}
+	// ADD-BY-LEETEN 2013/09/16-END
+
 	template<class T>
 	void 
 	_ConvertVectorToList
@@ -47,8 +61,9 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		boost::python::list& python_list
 	)
 	{
-		while( boost::python::len(python_list) > 0 )
-			python_list.pop();
+		// ADD-BY-LEETEN 2013/09/16-BEGIN
+		_ClearList(python_list);
+		// ADD-BY-LEETEN 2013/09/16-END
 
 		for(size_t d = 0; d < vVector.size(); d++)
 			python_list.append(vVector[d]);
@@ -187,6 +202,64 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		}
 	}
 	// ADD-BY-LEETEN 2013/09/03-END
+
+	// ADD-BY-LEETEN 2013/09/16-BEGIN
+	void apply_filter
+	(
+		PyObject* callable,
+		const boost::python::list& left_offset, 
+		const boost::python::list& right_offset,
+		boost::python::list& result,
+		const boolean verbose
+	) 
+	{
+		LIBCLOCK_INIT(verbose, __FUNCTION__);
+
+		LIBCLOCK_BEGIN(verbose);
+		vector<int> viLeftOffset;
+		_ConvertListToVector<int>(left_offset, viLeftOffset);
+		vector<size_t> vuLeft;
+		vuLeft.resize(this->UGetNrOfDims());
+
+		vector<int> viRightOffset;
+		_ConvertListToVector<int>(right_offset, viRightOffset);
+		vector<size_t> vuRight;
+		vuRight.resize(this->UGetNrOfDims());
+
+		vector<size_t> vuCenter;
+		vuCenter.resize(this->UGetNrOfDims());
+
+		vector<double> vdResult;
+		vdResult.resize(uDataSize);
+		LIBCLOCK_END(verbose);
+
+		LIBCLOCK_BEGIN(verbose);
+		for(size_t v = 0; v < this->uDataSize; v++) {
+			WaveletSAT::_ConvertIndexToSub(v, vuCenter, this->vuDimLengths);
+			for(size_t d = 0; d < this->UGetNrOfDims(); d++) {
+				int iLeft = (int)vuCenter[d] + viLeftOffset[d];
+				vuLeft[d] = (size_t)min(max(iLeft, 0), (int)vuDimLengths[d] - 1);
+
+				int iRight = (int)vuCenter[d] + viRightOffset[d];
+				vuRight[d] = (size_t)min(max(iRight, 0), (int)vuDimLengths[d] - 1);
+			}
+			vector<WaveletSAT::typeSum> vdHist;
+			_GetRegionSums(vuLeft, vuRight, vdHist);
+
+			boost::python::list hist;
+			_ConvertVectorToList<WaveletSAT::typeSum>(vdHist, hist);
+
+			vdResult[v] = call<double, boost::python::list>(callable, boost::ref(hist));
+		}
+		LIBCLOCK_END(verbose);
+
+		LIBCLOCK_BEGIN(verbose);
+		_ConvertVectorToList<double>(vdResult, result);
+		LIBCLOCK_END(verbose);
+
+		LIBCLOCK_PRINT(verbose);
+	}
+	// ADD-BY-LEETEN 2013/09/16-END
 };
 
 BOOST_PYTHON_MODULE(sat_dwt_decoder)
@@ -209,6 +282,12 @@ BOOST_PYTHON_MODULE(sat_dwt_decoder)
 		.def("get_n_bins", &pySATSepDWTDecoder::get_n_bins,
 			"Get #Bins.")
 		// ADD-BY-LEETEN 2013/09/03-END
+
+		// ADD-BY-LEETEN 2013/09/16-BEGIN
+		.def("apply_filter", &pySATSepDWTDecoder::apply_filter,
+			args("callable", "left_offset", "right_offset", "result", "verbose"), 
+			"Apply the filter to all region histograms of the given size.")
+		// ADD-BY-LEETEN 2013/09/16-END
 
 		.def("get_region_histogram", &pySATSepDWTDecoder::get_region_histogram)
 		;	
