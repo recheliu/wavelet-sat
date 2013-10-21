@@ -42,6 +42,7 @@ for d in range(0, len(spatial_left)):
 	
 time_queue.append(time.time());
 for t in range(0, data_size[2]-1):
+	region_hist = []; # ADD-BY-LEETEN 2013/10/20
 	waveletsat_decoder.get_region_histogram([spatial_left[0], spatial_left[1], t], [spatial_right[0], spatial_right[1], t+1], region_hist);
 	for b in range(0, n_bins):
 		time_hist[b, t] = region_hist[b];
