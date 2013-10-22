@@ -22,9 +22,7 @@ using namespace WaveletSAT;
 
 // Ref: http://wiki.python.org/moin/boost.python/PointersAndSmartPointers
 
-// MOD-BY-LEETEN 2013/09/03-FROM:	struct pySATSepDWTDecoder: public CSimpleNDFile<double, double, WaveletSAT::typeBin, double> {
 struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, WaveletSAT::typeBin, WaveletSAT::typeWavelet> {
-// MOD-BY-LEETEN 2013/09/03-END
 
 	// ADD-BY-LEETEN 2013/09/03-BEGIN
 	template<class T>
@@ -78,20 +76,6 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 	}
 	// ADD-BY-LEETEN 2013/09/03-END
 
-	#if	0	// MOD-BY-LEETEN 2013/09/03-FROM:
-	boost::python::list
-	get_size
-	(
-	) 
-	{
-		vector<size_t> vuDataSize;
-		this->_GetDataSize(vuDataSize);
-		boost::python::list* data_size = new boost::python::list();
-		for(size_t d = 0; d < this->UGetNrOfDims(); d++) 
-			data_size->append(vuDataSize[d]);
-		return *data_size;
-	}
-	#else	// MOD-BY-LEETEN 2013/09/03-TO:
 	void
 	get_size
 	(
@@ -111,7 +95,6 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		vector<size_t> vuDataLevel = VGetDimLevels();
 		_ConvertVectorToList<size_t>(vuDataLevel, data_level);
 	}
-	#endif	// MOD-BY-LEETEN 2013/09/03-END
 	
 	void	
 	load
@@ -122,14 +105,6 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		_LoadFile(filepath.c_str());	
 	}
 
-	#if	0	// MOD-BY-LEETEN 2013/09/03-FROM:
-	boost::python::list
-	get_region_histogram
-	(
-		boost::python::list region_left, 
-		boost::python::list region_right
-	)		
-	#else	// MOD-BY-LEETEN 2013/09/03-TO:
 	void
 	get_region_histogram
 	(
@@ -137,37 +112,16 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		const boost::python::list& region_right,
 		boost::python::list& region_hist
 	)
-	#endif	// MOD-BY-LEETEN 2013/09/03-END
 	{	
-		#if	0	// MOD-BY-LEETEN 2013/09/03-FROM:
-		vector<size_t> vuLeft;
-		vuLeft.resize((size_t)boost::python::len(region_left));
-		for(size_t d = 0; d < vuLeft.size(); d++)
-			vuLeft[d] = boost::python::extract<size_t>(region_left[d]);
-			
-		vector<size_t> vuRight;
-		vuRight.resize((size_t)boost::python::len(region_right));
-		for(size_t d = 0; d < vuRight.size(); d++)
-			vuRight[d] = boost::python::extract<size_t>(region_right[d]);
-		#else	// MOD-BY-LEETEN 2013/09/03-TO:
 		vector<size_t> vuLeft;
 		_ConvertListToVector(region_left, vuLeft);
 
 		vector<size_t> vuRight;
 		_ConvertListToVector(region_right, vuRight);
-		#endif	// MOD-BY-LEETEN 2013/09/03-END
 		vector<WaveletSAT::typeSum> vdHist;
 		_GetRegionSums(vuLeft, vuRight, vdHist);
 		
-		#if	0	// MOD-BY-LEETEN 2013/09/03-FROM:
-		boost::python::list* region_hist = new boost::python::list();
-		for(size_t b = 0; b < vdHist.size(); b++)
-			region_hist->append(vdHist[b]);
-
-		return *region_hist;
-		#else	// MOD-BY-LEETEN 2013/09/03-TO:
 		_ConvertVectorToList<WaveletSAT::typeSum>(vdHist, region_hist);
-		#endif	// MOD-BY-LEETEN 2013/09/03-END
 	}
 
 	// ADD-BY-LEETEN 2013/09/03-BEGIN

@@ -245,42 +245,6 @@ namespace WaveletSAT
 	}
 	// ADD-BY-LEETEN 10/30/2012-END
 
-#if	0	// MOD-BY-LEETEN 2013/07/14-FROM:
-#if defined(WIN32)
-#define _ShowMemoryUsage(bIsOutputToError) \
-	{								\
-	  PROCESS_MEMORY_COUNTERS memCounter;				\
-	  BOOL result = GetProcessMemoryInfo(				\
-					     GetCurrentProcess(),	\
-					     &memCounter,		\
-					     sizeof( memCounter ));	\
-	  if( bIsOutputToError )					\
-	    {								\
-	      LOG_VAR_TO_ERROR(memCounter.WorkingSetSize);		\
-	    }								\
-	  else								\
-	    LOG_VAR(memCounter.WorkingSetSize);				\
-	}
-
-#else	// #if defined(WIN32)
-
-#define _ShowMemoryUsage(bIsOutputToError) \
-	{				   \
-	  int who = RUSAGE_SELF;	   \
-	  struct rusage usage;		   \
-	  int ret;			   \
-	  getrusage(who,&usage);	   \
-	  if( bIsOutputToError )			\
-	    {						\
-	      LOG_VAR_TO_ERROR(usage.ru_maxrss);	\
-	    }						\
-	  else						\
-	    LOG_VAR(usage.ru_maxrss);			\
-	}
-
-#endif	// #if defined(WIN32)
-#else	// MOD-BY-LEETEN 2013/07/14-TO:
-
 inline
 size_t
 UGetMemoryUsage() 
@@ -312,5 +276,4 @@ UGetMemoryUsage()
 	    LOG_VAR(uMemoryUsage);			\
 	}
 
-#endif	// MOD-BY-LEETEN 2013/07/14-END
 }

@@ -1,0 +1,16 @@
+/**
+\mainpage The mainpage documentation
+
+WaveletSAT is a powerful for region histogram query. WaveletSAT is designed to compress integral histograms, which is presented by Fatih Porikli in IEEE CVPR 2005. For each grid point in a Cartesian grid, its integral histogram is the histogram of the region bound by this point and the origin. By storing the integral histograms for all grid points, the region histogram of arbitrary axis-aligned regions can be queried by combining the integral histogram of its corners. (Integral histograms can be considered as an extension of sum area tables, where the area sum is extended to histograms).
+
+Integral histograms are widely used in computer vision and image processing. Nevertheless, extending integral histograms to large images, videos or 3D grids will be challenging because of the storage consumption (each grid point is associated with one histogram, which contains multiple bins).
+
+That's why WaveletSAT is developed. This package provides the core algorithm of WaveletSAT. which are in the namespace WaveletSAT. 
+
+Besides the core algorithms, the class CSimpleND is a simple encoder that assigns the value to bins by quantization. Its usage can be seen in the sample code SimpleNDEncoder.
+
+The main decoder class is CSimpleNDFile. Its usage can be seen in the sample code SimpleNDQuery. 
+
+More details are in the page https://sites.google.com/site/wikiforrecheliusprojects/wavelet-sat.
+	
+*/

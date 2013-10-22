@@ -7,18 +7,14 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(TestDatatypePerf)
 
-# MOD-BY-LEETEN 2013/0811-FROM:	set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
 find_package(ThirdPartyLib)
-# MOD-BY-LEETEN 2013/0811-END
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
 include_directories(
-	# DEL-BY-LEETEN 2013/0811:	${LIB_DIR}/include
 	${MYLIB_DIR}/include
 )
 
 link_directories(
-	# DEL-BY-LEETEN 2013/0811:	${LIB_DIR}/lib
 	${MYLIB_DIR}/lib
 )
 

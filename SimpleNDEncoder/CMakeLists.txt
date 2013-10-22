@@ -21,19 +21,11 @@ target_link_libraries(${PROJECT_NAME}	${ThirdPartyLib_LIBRARIES})
 if( DEFINED WIN32 ) 
   target_link_libraries(${PROJECT_NAME}
     debug	libopt_d	optimized	libopt_r
-    # DEL-BY-LEETEN 2013/0811-BEGIN
-    # debug	ITKNrrdIOd	optimized	ITKNrrdIO
-    # debug	zlibd		optimized	zlib
-    # DEL-BY-LEETEN 2013/0811-END
     )
 else()
   target_link_libraries(${PROJECT_NAME}
     libopt
 	rt	# ADD-BY-LEETEN 10/29/2012 
-	# DEL-BY-LEETEN 2013/0811-BEGIN
-    # ITKNrrdIO	
-    # z
-	# DEL-BY-LEETEN 2013/0811-END
     )
   # ADD-BY-LEETEN 01/02/2013-BEGIN
   if( WITH_BOOST )

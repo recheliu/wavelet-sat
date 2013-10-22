@@ -5,13 +5,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(Ocean)
 
-# MOD-BY-LEETEN 2013/0811-FROM:
-# set(LIB_DIR 	"~/lib" CACHE PATH "The installed path to 3rd party ibraries.")
-# include_directories(${LIB_DIR}/include)
-# link_directories(${LIB_DIR}/lib)
-# MOD-BY-LEETEN 2013/0811-TO:
 find_package(ThirdPartyLib)
-# MOD-BY-LEETEN 2013/0811-END
 
 set(HDF5_DIR	"~/lib" CACHE PATH "The installed path to HDF5.")
 include_directories(${HDF5_DIR}/include)
