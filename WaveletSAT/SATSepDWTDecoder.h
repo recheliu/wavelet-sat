@@ -17,7 +17,9 @@ using namespace std;
 
 #include "SepDWTHeader.h"
 #include "SATSepDWTNetCDF.h"
-#include "SepDWTPool.h"
+// MOD-BY-LEETEN 2013/10/27-FROM:	#include "SepDWTPool.h"
+#include "SepDWTDecoderPool.h"
+// MOD-BY-LEETEN 2013/10/27-END
 #include "DecoderBase.h"	// ADD-BY-LEETEN 01/02/2013
 
 #include "liblog.h"	
@@ -83,7 +85,11 @@ protected:
 			/*!
 			If the poiner is NULL, it means that the coefficients are out of core.
 			*/
-			vector< CSepDWTPool<WT, BT>* > vpcCoefPools;
+
+			// MOD-BY-LEETEN 2013/10/27-FROM:			vector< CSepDWTPool<WT, BT>* > vpcCoefPools;
+			typedef CSepDWTDecoderPool<WT, BT> CSepDWTPool;
+			vector< CSepDWTPool* > vpcCoefPools;
+			// MOD-BY-LEETEN 2013/10/27-END
 
 			vector<TYPE_COEF_BIN>	vCoefBins;
 
@@ -503,7 +509,9 @@ public:
 					bool bIsInCore = this->vbFlagsCoefInCore[uCoefIndex];
 					if( !vpcCoefPools[c] )
 					{
-						vpcCoefPools[c]= new CSepDWTPool<WT, BT>;
+						// MOD-BY-LEETEN 2013/10/27-FROM:						vpcCoefPools[c]= new CSepDWTPool<WT, BT>;
+						vpcCoefPools[c]= new CSepDWTPool();
+						// MOD-BY-LEETEN 2013/10/27-END
 						vpcCoefPools[c]->_Set(
 							(BT)UGetNrOfBins(),
 							vuLocalCoefLengths,

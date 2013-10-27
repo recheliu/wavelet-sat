@@ -17,7 +17,9 @@ using namespace std;
 #endif	// #if	!defined(WITH_NETCDF4)
 
 #include "SepDWTHeader.h"	
-#include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
+// MOD-BY-LEETEN 2013/10/27-FROM:	#include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
+#include "SepDWTEncoderPool.h"
+// MOD-BY-LEETEN 2013/10/27-END
 #include "EncoderBase.h"	
 #include "SATSepDWTNetCDF.h"	// ADD-BY-LEETEN 12/16/2012
 
@@ -105,7 +107,10 @@ protected:
 		size_t uNrOfCoefsInFullArray;	
 
 		// ADD-BY-LEETEN 10/29/2012-BEGIN
-		vector< CSepDWTPool<WT, BT> > vcCoefPools;
+		// MOD-BY-LEETEN 2013/10/27-FROM:		vector< CSepDWTPool<WT, BT> > vcCoefPools;
+		typedef CSepDWTEncoderPool<WT, BT> CSepDWTPool;
+		vector< CSepDWTPool > vcCoefPools;
+		// MOD-BY-LEETEN 2013/10/27-END
 		// ADD-BY-LEETEN 11/11/2012-END
 		// ADD-BY-LEETEN 10/29/2012-END
 
@@ -1015,6 +1020,7 @@ public:
 			// ADD-BY-LEETEN 2013/07/12-END
 		}
 		
+		#if	0	// DEL-BY-LEETEN 2013/10/27-BEGIN
 		//! Return the sum of all bins at the given position
 		virtual	
 		void
@@ -1087,6 +1093,7 @@ public:
 			for(size_t b = 0; b < UGetNrOfBins(); b++)
 				vdSums[b] /= (ST)dWaveletDenomiator;
 		}
+		#endif	// DEL-BY-LEETEN 2013/10/27-END
 
 		CWaveletSATEncoder():
 			// ADD-BY-LEETEN 2013/07/14-BEGIN

@@ -38,7 +38,11 @@ set(HEADER_FILES
 
 		DWT.h	
 		SepDWTHeader.h
-		SepDWTPool.h	# ADD-BY-LEETEN 11/11/2012
+		# MOD-BY-LEETEN 2013/10/27:	SepDWTPool.h	# ADD-BY-LEETEN 11/11/2012
+		SepDWTPoolBase.h
+		SepDWTEncoderPool.h
+		SepDWTDecoderPool.h
+		# MOD-BY-LEETEN 2013/10/27-END
 		WaveletSATEncoder.h
 		WaveletSATGPUEncoder.h	# ADD-BY-LEETEN 01/10/2012
 
