@@ -575,6 +575,13 @@ public:
 			void* _Reserved = NULL
 		) 
 		{
+			// ADD-BY-LEETEN 2013/10/30-BEGIN
+			if( uWavelet >= this->vpcCoefPools.size() ) {
+				LOG_ERROR(fprintf(stderr, "Error: invalid index."));
+				return;
+			}
+			// ADD-BY-LEETEN 2013/10/30-END
+
 			if( this->vpcCoefPools[uWavelet] )
 			{
 				this->vpcCoefPools[uWavelet]->_GetCoefSparse
@@ -618,6 +625,60 @@ public:
 			}
 		}
 		// ADD-BY-LEETEN 01/05/2013-END
+
+		// ADD-BY-LEETEN 2013/10/30-BEGIN
+		virtual
+		void
+		_GetCoefSparse
+		(
+			const vector<size_t>& vuWaveletSub,
+			const vector<size_t>& vuLocal,
+			vector< pair<BT, WT> >& vpairCoefBinValues,
+			void* _Reserved = NULL
+		) 
+		{
+			vector<size_t> vuGlobalCoefBase;
+			vector<size_t> vuLocalCoefLengths;
+			_ConvertWaveletSubToLevels(vuWaveletSub, vuGlobalCoefBase, vuLocalCoefLengths);
+
+			_GetCoefSparse(
+				UConvertSubToIndex(vuWaveletSub, vuDimLevels),
+				UConvertSubToIndex(vuLocal, vuLocalCoefLengths), 
+				vpairCoefBinValues);
+		}
+
+		virtual
+		void
+		_GetCoefSparse
+		(
+			size_t uWavelet,
+			const vector<size_t>& vuLocal,
+			vector< pair<BT, WT> >& vpairCoefBinValues,
+			void* _Reserved = NULL
+		) 
+		{
+			vector<size_t> vuGlobalCoefBase;
+			vector<size_t> vuLocalCoefLengths;
+			size_t uNrOfLocalCoefs;
+			_ConvertWaveletToLevels(uWavelet, vuGlobalCoefBase, vuLocalCoefLengths, uNrOfLocalCoefs);
+			size_t uLocal = UConvertSubToIndex(vuLocal, vuLocalCoefLengths);
+			_GetCoefSparse(uWavelet, uLocal, vpairCoefBinValues);
+		}
+
+		virtual
+		void
+		_GetCoefSparse
+		(
+			const vector<size_t>& vuWaveletSub,
+			size_t uLocal,
+			vector< pair<BT, WT> >& vpairCoefBinValues,
+			void* _Reserved = NULL
+		) 
+		{
+			size_t uWavelet = UConvertSubToIndex(vuWaveletSub, vuDimLevels);
+			_GetCoefSparse(uWavelet, uLocal, vpairCoefBinValues);
+		}
+		// ADD-BY-LEETEN 2013/10/30-END
 
 		//! Return the sum of all bins at the given position
 		virtual	

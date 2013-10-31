@@ -244,7 +244,9 @@ public:
 		void
 		_ConvertWaveletSubToLevels
 		(
-			vector<size_t>	vuWaveletSub,
+			// MOD-BY-LEETEN 2013/10/30-FROM:			vector<size_t>	vuWaveletSub,
+			const vector<size_t>&	vuWaveletSub,
+			// MOD-BY-LEETEN 2013/10/30-END
 			vector<size_t>& vuGlobalCoefBase,
 			vector<size_t>& vuLocalCoefLengths,
 			void *_Reserved = NULL

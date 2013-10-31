@@ -156,6 +156,7 @@ namespace WaveletSAT
 			}
 		}
 
+		virtual	// ADD-BY-LEETEN 2013/10/30
 		void
 		_GetCoefSparse
 		(
@@ -201,7 +202,9 @@ namespace WaveletSAT
 		void
 		_GetCoefSparse
 		(
-			const vector<size_t> vuSubs,
+			// MOD-BY-LEETEN 2013/10/30:			const vector<size_t> vuSubs,
+			const vector<size_t>& vuSubs,
+			// MOD-BY-LEETEN 2013/10/30-END
 			vector< pair<BT, WT> >& vpairCoefs,
 			void* _Reserved = NULL
 		) const

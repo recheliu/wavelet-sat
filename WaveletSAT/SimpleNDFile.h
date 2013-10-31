@@ -77,6 +77,7 @@ public:
 		this->valueMax = valueMax;
 	}
 
+	#if	0	// DEL-BY-LEETEN 2013/10/30-BEGIN
 	// ADD-BY-LEETEN 12/29/2012-BEGIN
 	void
 	_DecodeSAT(
@@ -221,6 +222,7 @@ public:
 		LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
 	}
 	// ADD-BY-LEETEN 12/30/2012-END
+
 	// ADD-BY-LEETEN 2013/09/03-BEGIN
 	#if	!WITH_SAT_FILE
 	// Given the level and local coordinate within the level, 
@@ -240,5 +242,6 @@ public:
 	}
 	#endif	// #if	!WITH_SAT_FILE
 	// ADD-BY-LEETEN 2013/09/03-END
+	#endif	// DEL-BY-LEETEN 2013/10/30-END
 };
 

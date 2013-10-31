@@ -574,6 +574,7 @@ main(int argn, char* argv[])
 	}
 	}	// ADD-By-LEETEN 02/19/2013
 
+	#if	0	// DEL-BY-LEETEN 2013/10/30-BEGIN
 	    if( iIsComputingEntropy )
 	      {
 		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
@@ -600,7 +601,7 @@ main(int argn, char* argv[])
 			szEntropyFilepathPrefix
 			);
 	}
-
+	#endif	// DEL-BY-LEETEN 2013/10/30-END
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleNDFile._ShowStatistics();
