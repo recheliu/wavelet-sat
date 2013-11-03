@@ -622,6 +622,7 @@ public:
 					for(size_t i = 0; i < uCount; i++)
 						vpairCoefBinValues.push_back(pair<BT, WT>((BT)vCoefBins[i], (WT)vCoefValues[i]));
 				}	
+				sort(vpairCoefBinValues.begin(), vpairCoefBinValues.end());			// ADD-BY-LEETEN 2013/11/02/2013
 			}
 		}
 		// ADD-BY-LEETEN 01/05/2013-END

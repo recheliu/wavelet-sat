@@ -29,6 +29,7 @@ namespace WaveletSAT
 		CDecodingSparseArrays *pcDecodingSparseArrays;
 
 	protected:
+
 		void
 		_AppendDecodingSparseArray
 		(
@@ -83,6 +84,30 @@ namespace WaveletSAT
 		/*
 		The public interface. 
 		*/
+		// ADD-BY-LEETEN 2013/11/02/2013-BEGIN
+		void
+		_Finalize
+		(
+			WT WaveletWeight,
+			void* _Reserved = NULL
+		)
+		{
+			if( bIsSparse ) {
+				for(CDecodingSparseArrays::iterator 
+						iterSparseArrays = pcDecodingSparseArrays->begin(); 
+					iterSparseArrays != pcDecodingSparseArrays->end(); 
+					iterSparseArrays++) 
+				{
+					if( iterSparseArrays->second ) 
+					{
+						CDecodingSparseArray& sparseArray = *iterSparseArrays->second;
+						sort(sparseArray.begin(), sparseArray.end());
+					}
+				}
+			}
+		}
+		// ADD-BY-LEETEN 2013/11/02/2013-END
+
 		void
 		_Copy(
 			size_t uIndex,
