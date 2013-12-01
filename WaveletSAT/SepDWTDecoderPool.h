@@ -102,9 +102,54 @@ namespace WaveletSAT
 					{
 						CDecodingSparseArray& sparseArray = *iterSparseArrays->second;
 						sort(sparseArray.begin(), sparseArray.end());
+		
+						// ADD-BY-LEETEN 2013/12/01-BEGIN
+						#if	!WITHOUT_BIN_AGGREGATION
+						WT dCumsum = 0.0;
+						for(vector<pair<BT, WT>>::iterator
+								iter = sparseArray.begin();
+							iter != sparseArray.end();
+							iter++) 
+						{
+							dCumsum += iter->second;
+							iter->second = dCumsum;
+						}
+						#endif	// #if	!WITHOUT_BIN_AGGREGATION
+						// ADD-BY-LEETEN 2013/12/01-END
 					}
 				}
 			}
+
+			// ADD-BY-LEETEN 2013/12/01-BEGIN
+			#if	!WITHOUT_BIN_AGGREGATION
+			else
+			{
+				for(CFullArrays::iterator 
+						iterFullArrays = pcFullArrays->begin(); 
+					iterFullArrays != pcFullArrays->end(); 
+					iterFullArrays ++) 
+				{
+					if( pcFullArrays->end() 
+							 != iterFullArrays &&
+						NULL != iterFullArrays->second &&
+						NULL != iterFullArrays->second->second
+						) 
+					{
+						vector<WT>& vdValues = *iterFullArrays->second->second;
+						WT dCumsum = 0.0;
+						for(vector<WT>::iterator 
+								iterValues = vdValues.begin();
+							iterValues != vdValues.end();
+							iterValues++) 
+						{
+							dCumsum += *iterValues;
+							*iterValues = dCumsum;
+						}
+					}
+				}
+			}
+			#endif	// #if	!WITHOUT_BIN_AGGREGATION
+			// ADD-BY-LEETEN 2013/12/01-END
 		}
 		// ADD-BY-LEETEN 2013/11/02/2013-END
 
@@ -181,6 +226,89 @@ namespace WaveletSAT
 			}
 		}
 
+		// ADD-BY-LEETEN 2013/12/01-BEGIN
+		#if	!WITHOUT_BIN_AGGREGATION
+		static 
+		bool 
+		BCompareBin
+		(
+			const pair<BT, WT>& pairBin1,
+			const pair<BT, WT>& pairBin2
+		)
+		{
+			return ( pairBin1.first < pairBin2.first ) ;
+		}
+
+		// Return the cumsums till the left edge of the specified bins.
+		virtual	
+		void
+		_GetCumsums
+		(
+			size_t uIndex,
+			const vector<BT>& vsBins,
+			vector<WT>& udValues,
+			void* _Reserved = NULL
+		) const 
+		{
+			udValues.clear();
+			if( !bIsSparse )
+			{
+				CFullArrays::iterator iterFullArrays = pcFullArrays->find(uIndex);
+				if( pcFullArrays->end() 
+						 != iterFullArrays &&
+					NULL != iterFullArrays->second &&
+					NULL != iterFullArrays->second->second
+					) 
+				{
+					vector<WT>& vFullArray = *iterFullArrays->second->second;
+					for(vector<BT>::const_iterator 
+							iterBins = vsBins.begin();
+						iterBins != vsBins.end();
+						iterBins ++ ) 
+					{
+						BT usBin = *iterBins;
+						WT dCumsum = ( !usBin ) ? 0.0 : vFullArray[min(usBin - 1, vFullArray.size()-1)];
+						udValues.push_back(dCumsum);
+					}
+				}
+			}
+			else
+			{
+				CDecodingSparseArrays::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
+				if( pcDecodingSparseArrays->end() 
+						 != iterSparseArrays && 
+					NULL != iterSparseArrays->second )
+				{
+					const vector< pair<BT, WT> >& vpairSparse = *iterSparseArrays->second;
+					
+					for(vector<BT>::const_iterator 
+							iterBins = vsBins.begin();
+						iterBins != vsBins.end();
+						iterBins ++ ) 
+					{
+						BT usBin = *iterBins;
+						WT dCumsum = 0.0;
+						if( usBin ) 
+						{
+							usBin--;
+
+							// Among the bins smaller than usBin, find the largest one.
+							pair<BT, WT> pairValue = make_pair<BT, WT>(usBin, (WT)0.0);	
+							vector< pair<BT, WT> >::const_iterator iterLowerBound = 
+								lower_bound(vpairSparse.begin(), vpairSparse.end(), pairValue, BCompareBin); 
+
+							dCumsum = ( iterLowerBound != vpairSparse.end() )?
+								iterLowerBound->second:
+								vpairSparse[vpairSparse.size() - 1].second;
+						}
+						udValues.push_back(dCumsum);
+					}
+				}
+			}	
+		}
+		#endif			//	#if	!WITHOUT_BIN_AGGREGATION
+		// ADD-BY-LEETEN 2013/12/01-END
+
 		virtual	// ADD-BY-LEETEN 2013/10/30
 		void
 		_GetCoefSparse
@@ -221,6 +349,21 @@ namespace WaveletSAT
 					copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
 				}
 			}	
+
+			// ADD-BY-LEETEN 2013/12/01-BEGIN
+			#if	!WITHOUT_BIN_AGGREGATION
+			WT dCumsum = 0.0;
+			for(vector< pair<BT, WT> >::iterator 
+					iterCoefs = vpairCoefs.begin();
+				iterCoefs != vpairCoefs.end();
+				iterCoefs ++)
+			{
+				WT dTemp = iterCoefs->second;
+				iterCoefs->second -= dCumsum;
+				dCumsum = dTemp;
+			}
+			#endif	// #if	!WITHOUT_BIN_AGGREGATION
+			// ADD-BY-LEETEN 2013/12/01-END
 		}
 		
 		virtual

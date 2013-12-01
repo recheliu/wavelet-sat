@@ -77,6 +77,125 @@ public:
 		this->valueMax = valueMax;
 	}
 
+	// ADD-BY-LEETEN 2013/12/01-BEGIN
+	void
+	_ComputeEntropy(
+		vector<int> viLeft,
+		vector<int> viRight,
+		size_t uNrOfEntropyBins,
+		vector<ST>& vEntropyField,
+		void *_Reserved = NULL
+	)
+	{
+		LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		const size_t uDataSize = this->uDataSize;
+		vector<size_t> vuDecodedLengths;
+
+		this->_GetDecodedSize(vuDecodedLengths);
+
+		////////////////////////////////////////////////////////
+		// decide the offsets
+		size_t uNrOfCorners = (size_t)1<<this->UGetNrOfDims();
+
+		vector< long long > vllOffsets;	vllOffsets.resize(uNrOfCorners);
+		vector< int > viSigns;			viSigns.resize(uNrOfCorners);
+		for(size_t i = 0; i < uNrOfCorners; i++)
+		{
+			int iSign = 1; 
+			long long llOffset = 0;
+			for(size_t 
+				d = this->UGetNrOfDims(), j = i; 
+				d > 0 ; 
+				d--, j /= 2)
+			{
+				bool bIsLower = (0 == j % 2)?0:1;
+				iSign *= (bIsLower)?(-1):(+1);
+				llOffset = (llOffset * (long long)vuDecodedLengths[d - 1]) + (long long)((bIsLower)?viLeft[d - 1]:viRight[d - 1]);
+			}
+			viSigns[i] = iSign;
+			vllOffsets[i] = llOffset;
+		}
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	
+
+		/////////////// compute the SAT
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	
+		vector<ST> vSAT;	
+		vector<ST> vLocalHist;	
+		vector<ST> vTempEntropyField;	
+		vector<ST> vSum;			
+
+		size_t uNrOfAggregatedBins = ( 0 == uNrOfEntropyBins ) ? this->UGetNrOfBins() : uNrOfEntropyBins;
+		size_t uBinInterval = this->UGetNrOfBins() / uNrOfAggregatedBins;
+		for(size_t b = 0; b < uNrOfAggregatedBins; b++)
+		{
+			LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+
+			_DecodeAggregatedBin((BT)b * uBinInterval, (BT)(b + 1) * uBinInterval - 1, vSAT);
+
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			if( vSAT.size() != vLocalHist.size() )
+				vLocalHist.resize(vSAT.size());
+			if( vSAT.size() != vTempEntropyField.size() )
+				vTempEntropyField.resize(vSAT.size());
+			if( vSAT.size() != vSum.size() )
+				vSum.resize(vSAT.size());
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			// compute the local sum
+			vLocalHist.assign(vLocalHist.size(), (ST)0);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			for(size_t i = 0; i < uNrOfCorners; i++)
+			{
+				size_t uBegin, uEnd;
+				if( !vllOffsets[i] )
+					continue;
+				if( vllOffsets[i] > 0 )
+				{
+					uBegin = 0;
+					uEnd = vSAT.size() - vllOffsets[i]; 
+				}
+				if( vllOffsets[i] < 0 )
+				{
+					uBegin = (size_t)-vllOffsets[i];
+					uEnd = vSAT.size(); 
+				}
+				for(size_t d = uBegin; d < uEnd; d++)
+					vLocalHist[d] += vSAT[d + vllOffsets[i]] * (ST)viSigns[i];
+			}
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			for(size_t d = 0; d < vLocalHist.size(); d++)
+			{
+				if( vLocalHist[d] <= (DT)0 )
+					continue;
+				vTempEntropyField[d] += ScanHistogramForEntropy(vLocalHist[d]);
+				vSum[d] += vLocalHist[d];
+			}
+
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+			LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+		}
+		for(size_t i = 0; i < vTempEntropyField.size(); i++)
+		{
+			vTempEntropyField[i] = -vTempEntropyField[i] / vSum[i] + log(vSum[i]);
+			vTempEntropyField[i] /= (ST)M_LN2;
+		}
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	// ADD-BY-LEETEN 01/02/2013
+
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		_ClampToDataSize(vTempEntropyField, vEntropyField);
+		_ClampBorder(vEntropyField, viLeft, viRight);
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+		LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+	}
+	// ADD-BY-LEETEN 2013/12/01-END
+
 	#if	0	// DEL-BY-LEETEN 2013/10/30-BEGIN
 	// ADD-BY-LEETEN 12/29/2012-BEGIN
 	void

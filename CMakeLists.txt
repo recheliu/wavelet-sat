@@ -127,6 +127,17 @@ if( WITH_CUDA )
 		${PROJECT_BINARY_DIR}/CudaDWT
 		)
 endif()
+
+	# ADD-BY-LEETEN 2013/12/01-BEGIN
+
+	set(WITHOUT_BIN_AGGREGATION	OFF	CACHE 	BOOL "Is bin aggregation not supported?")	
+	if( WITHOUT_BIN_AGGREGATION	) 
+		add_definitions(-DWITHOUT_BIN_AGGREGATION)
+	endif()	
+
+	# Only build the python binding if the SAT is not written to file.
+	add_subdirectory(python)		
+	# ADD-BY-LEETEN 2013/12/01-END
 # ADD-BY-LEETEN 01/10/2012-END
 endif()	# ADD-BY-LEETEN 01/18/2012
 
@@ -140,7 +151,7 @@ add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 add_subdirectory(Ocean)		# ADD-BY-LEETEN 01/18/2012
 add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
 
-add_subdirectory(python)		# ADD-BY-LEETEN 03/28/2013
+# DEL-BY-LEETEN 2013/12/01:	add_subdirectory(python)		# ADD-BY-LEETEN 03/28/2013
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )

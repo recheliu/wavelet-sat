@@ -208,6 +208,15 @@ main(int argn, char* argv[])
 	_OPTAddComment("--entropy-win-radius", 
 		"Window Radius for entropy field computation");
 
+	// ADD-BY-LEETEN 2013/12/01-BEGIN
+	int iNrOfEntropyBins = 0;
+	_OPTAddIntegerVector(
+		"--n-entropy-bins", 1,
+		&iNrOfEntropyBins, iNrOfEntropyBins);
+	_OPTAddComment("--n-entropy-bins", 
+		"#Bins for entropy field computation");
+	// ADD-BY-LEETEN 2013/12/01-END
+
 	char* szEntropyFilepathPrefix = NULL;
 	_OPTAddStringVector(
 		"--entropy-filepath-prefix", 1,
@@ -602,6 +611,45 @@ main(int argn, char* argv[])
 			);
 	}
 	#endif	// DEL-BY-LEETEN 2013/10/30-END
+
+	// ADD-BY-LEETEN 2013/12/01-BEGIN
+    if( iIsComputingEntropy )
+    {
+		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
+
+		/////////////////////////////////////////////////////////////
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, bIsPrintingTiming);
+		vector<int> viLeft, viRight;
+		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
+		{
+			viLeft.push_back(-iEntropyWinRadius);
+			viRight.push_back(+iEntropyWinRadius);
+		}
+		vector<double> valEntropyField;
+		cSimpleNDFile._ComputeEntropy(viLeft, viRight, iNrOfEntropyBins, valEntropyField);
+		LIBCLOCK_END(bIsPrintingTiming);	
+
+		/////////////////////////////////////////////////////////////
+		vector<size_t> vuDimLengths;
+		cSimpleNDFile._GetDataSize(vuDimLengths);
+
+		size_t uDataSize = 1;
+		for(size_t d = 0; d < vuDimLengths.size(); d++)
+			uDataSize *= vuDimLengths[d];
+		vector<float> vfNormalizedEntropy;
+		vfNormalizedEntropy.resize(uDataSize);
+
+		for(size_t i = 0; i < uDataSize; i++) 
+			vfNormalizedEntropy[i] = (float)valEntropyField[i];
+
+		WaveletSAT::_SaveNrrd<float>(
+			vuDimLengths,
+			vfNormalizedEntropy.data(),
+			szEntropyFilepathPrefix
+			);
+	}
+	// ADD-BY-LEETEN 2013/12/01-END
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleNDFile._ShowStatistics();
