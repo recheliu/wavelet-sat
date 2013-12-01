@@ -9,9 +9,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(WaveletSAT)
 
 # ADD-BY-LEETEN 09/02/2011-BEGIN
-# MOD-BY-LEETEN 2013/0811-FROM:	set(LIB_DIR 		"~/lib"		CACHE PATH "The path to 3rd party libraries.")	
 find_package(ThirdPartyLib)
-# MOD-BY-LEETEN 2013/0811-END
 
 set(MYLIB_DIR 		"~/mylib" 	CACHE PATH "The path to MyLib.")	
 
@@ -150,8 +148,6 @@ add_subdirectory(TestDatatypePerf)	# ADD-BY-LEETEN 10/21/2012
 
 add_subdirectory(Ocean)		# ADD-BY-LEETEN 01/18/2012
 add_subdirectory(MJO)		# ADD-BY-LEETEN 03/28/2013
-
-# DEL-BY-LEETEN 2013/12/01:	add_subdirectory(python)		# ADD-BY-LEETEN 03/28/2013
 
 # ADD-BY-LEETEN 01/10/2012-BEGIN
 if( WITH_CUDA )

@@ -583,35 +583,6 @@ main(int argn, char* argv[])
 	}
 	}	// ADD-By-LEETEN 02/19/2013
 
-	#if	0	// DEL-BY-LEETEN 2013/10/30-BEGIN
-	    if( iIsComputingEntropy )
-	      {
-		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
-		/////////////////////////////////////////////////////////////
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		cSimpleNDFile._SetInteger(cSimpleNDFile.PRINT_DECODE_BIN_TIMING, bIsPrintingTiming);
-		vector<int> viLeft, viRight;
-		for(size_t d = 0; d < cSimpleNDFile.UGetNrOfDims(); d++)
-		{
-			viLeft.push_back(-iEntropyWinRadius);
-			viRight.push_back(+iEntropyWinRadius);
-		}
-		vector<double> valEntropyField;
-		cSimpleNDFile._ComputeEntropy(viLeft, viRight, valEntropyField);
-		LIBCLOCK_END(bIsPrintingTiming);	
-
-		/////////////////////////////////////////////////////////////
-		vector<size_t> vuDimLengths;
-		cSimpleNDFile._GetDataSize(vuDimLengths);
-		WaveletSAT::_SaveNrrd<double>(
-			vuDimLengths,
-			valEntropyField.data(),
-			szEntropyFilepathPrefix
-			);
-	}
-	#endif	// DEL-BY-LEETEN 2013/10/30-END
-
 	// ADD-BY-LEETEN 2013/12/01-BEGIN
     if( iIsComputingEntropy )
     {

@@ -60,12 +60,6 @@ protected:
 			size_t uNrOfRangeQueries;
 			// ADD-BY-LEETEN 01/05/2012-END
 
-			#if	0	// DEL-BY-LEETEN 2013/12/01-BEGIN
-			vector<BT>	vusCachedNextOffsets;
-			// vector<unsigned short>	vusCachedBins;
-			// vector<WT>				vCachedValues;
-			#endif	// DEL-BY-LEETEN 2013/12/01-END
-
 			//! The base to the global pool of values per wavelet
 			vector<size_t> vuGlobalValueBase;
 
@@ -156,11 +150,6 @@ public:
 					)
 		{
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
-			#if	0	// DEL-BY-LEETEN 2013/12/01-BEGIN
-			vusCachedNextOffsets.resize(this->uNrOfCoefs);
-			// vusCachedBins.resize(this->uNrOfCoefs);
-			// vCachedValues.resize(this->uNrOfCoefs);
-			#endif	// DEL-BY-LEETEN 2013/12/01-END
 
 			vuGlobalValueBase.resize(this->uNrOfUpdatingCoefs);
 			vuLocalValueCount.resize(this->uNrOfUpdatingCoefs);
@@ -917,146 +906,6 @@ public:
 		}
 		// ADD-BY-LEETEN 01/18/2012-END
 
-		#if	0	// MOD-BY-LEETEN 2013/12/01-FROM:
-		// ADD-BY-LEETEN 12/29/2012-BEGIN
-		virtual
-		void
-		_DecodeBin
-		(
-			const BT& usBin,
-			vector<ST>& vSAT,
-			void *_Reserved = NULL
-		)
-		{
-		  // ADD-BY-LEETEN 01/02/2013-BEGIN
-		  const bool bIsPrintingDecodeBinTiming = this->bIsPrintingDecodeBinTiming;
-		  // ADD-BY-LEETEN 01/02/2013-END
-			if( uNrOfCoefs != vSAT.size() )
-				vSAT.resize(uNrOfCoefs);
-
-			LIBCLOCK_INIT(	bIsPrintingDecodeBinTiming, __FUNCTION__);
-			LIBCLOCK_BEGIN(	bIsPrintingDecodeBinTiming);
-			vector<size_t> vuEmpty;
-			vector<size_t> vuGlobalCoefBase, vuLocalCoefLengths;
-
-			for(size_t c = 0, w = 0; w < uNrOfUpdatingCoefs; w++)
-			{
-				vector<TYPE_COEF_BIN>	vCoefBins;		
-				vector<TYPE_COEF_VALUE> vCoefValues;	
-				if( !this->vpcCoefPools[w] )
-				{
-					size_t uLocalValueBase = this->vuGlobalValueBase[w];
-					size_t uNrOfLocalValues = this->vuLocalValueCount[w];
-					vCoefBins.resize(uNrOfLocalValues);
-					vCoefValues.resize(uNrOfLocalValues);
-
-					ASSERT_NETCDF(nc_get_vara(
-						iNcId,
-						ncVarCoefBin,
-						&uLocalValueBase,
-						&uNrOfLocalValues,
-						vCoefBins.data()));
-	
-					ASSERT_NETCDF(nc_get_vara(
-						iNcId,
-						ncVarCoefValue,
-						&uLocalValueBase,
-						&uNrOfLocalValues,
-						vCoefValues.data()));
-				}
-				///////////////////////////////////////
-				size_t uNrOfLocalCoefs = 1;
-				_ConvertWaveletToLevels(w, vuGlobalCoefBase, vuLocalCoefLengths, uNrOfLocalCoefs);
-				for(size_t lc = 0,		uLocalValueBase = 0, gc = 0;
-					lc < uNrOfLocalCoefs; 
-					lc++,				uLocalValueBase += (size_t)vusCoefCounts[gc], c++)
-				{
-					gc = vuMapLocalToGlobal[c];
-					BT usCount = vusCoefCounts[gc];
-					BT usNextOffset = vusCachedNextOffsets[gc];
-					BT usFetchedBin; // = vusCachedBins[gc];
-					WT FetchedValue; // = vCachedValues[gc];
-
-					// move the cache bin till it is great than or equal to the given bin
-					if( !this->vbFlagsCoefInCore[gc] )
-					{
-						for(; usNextOffset < usCount; usNextOffset++)
-						{
-							// if( !usNextOffset || usBin < usFetchedBin)  
-							usFetchedBin = vCoefBins[uLocalValueBase + (size_t)usNextOffset];
-							FetchedValue = (WT)vCoefValues[uLocalValueBase + (size_t)usNextOffset];
-							if( usFetchedBin >= usBin )
-								break;
-						}
-					}
-					else
-					{
-						for(; usNextOffset < usCount; usNextOffset++)
-						{
-							// if( !usNextOffset || usBin < usFetchedBin) 
-							this->vpcCoefPools[w]->_GetAtOffset(usNextOffset, vuEmpty, lc, usFetchedBin, FetchedValue);
-							if( usFetchedBin >= usBin )
-								break;
-						}
-					}
-					// if the cached bin is equal to the given bin, the value is the cached one
-					vSAT[gc] = ( 0 < usCount && usNextOffset < usCount && usFetchedBin == usBin )?FetchedValue:(WT)0;
-					// update the cache 
-					vusCachedNextOffsets[gc] = usNextOffset;
-				}
-			}
-			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
-
-			//////////////////////////////////////////////////
-			// now apply IDWT
-			LIBCLOCK_BEGIN(bIsPrintingDecodeBinTiming);
-		      for(size_t uOffset = 1, d = 0, uCoefLength = 1; 
-				d < UGetNrOfDims(); 
-				uOffset *= uCoefLength, d++)
-			{
-			  uCoefLength = this->vuCoefLengths[d]; // ADD-BY-LEETEN 12/31/2012
-
-				if( 1 == uCoefLength )
-					continue;
-
-				vector<ST> pvDsts[2];
-				for(size_t i = 0; i < 2; i++)
-					pvDsts[i].resize(uCoefLength);
-
-				/*
-				vector<size_t> vuScanLineIndices;
-				vuScanLineIndices.resize(uCoefLength);
-				*/
-
-				size_t uNrOfLevels = vuDimLevels[d] - 1;
-				size_t uNrOfScanLines = this->uNrOfCoefs / uCoefLength;
-
-				for(size_t i = 0; i < uNrOfScanLines; i++)
-				{
-					size_t uScanlineBase = vvuSliceScanlineBase[d][i];
-					ST *vSrc = &vSAT.data()[uScanlineBase];
-					pvDsts[0][0] = vSrc[0];
-					_IDWT1D(
-						vSrc, 
-						uOffset,
-						pvDsts[0].data(), 
-						pvDsts[1].data(), 
-						vuCoefLengths[d],
-						vuDimLengths[d],
-						2, 
-						uNrOfLevels - 1);
-					vector<ST>& vDST = pvDsts[uNrOfLevels%2];
-					for(size_t si = 0, di = 0; di < uCoefLength; di++, si += uOffset)
-							vSrc[si] = vDST[di];
-				}
-			}
-			LIBCLOCK_END(bIsPrintingDecodeBinTiming);
-			LIBCLOCK_PRINT(bIsPrintingDecodeBinTiming);
-		}
-		// ADD-BY-LEETEN 12/29/2012-END
-
-		#else	// MOD-BY-LEETEN 2013/12/01-TO:
-
 		virtual
 		void
 		_DecodeBin
@@ -1171,7 +1020,6 @@ public:
 			LIBCLOCK_PRINT(bIsPrintingDecodeBinTiming);
 		}
 		#endif	// #if	!WITHOUT_BIN_AGGREGATION
-		#endif	// MOD-BY-LEETEN 2013/12/01-END
 
 		// ADD-BY-LEETEN 01/02/2013-BEGIN
 		virtual
