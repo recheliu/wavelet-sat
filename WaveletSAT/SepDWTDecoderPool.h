@@ -25,8 +25,15 @@ namespace WaveletSAT
 	{
 	protected:	
 		typedef vector<pair<BT, WT>> CDecodingSparseArray;
+		#if	WITHOUT_FULL_ARRAYS	// ADD-BY-LEETEN 12/07/2013
 		typedef unordered_map< size_t, CDecodingSparseArray* > CDecodingSparseArrays;
 		CDecodingSparseArrays *pcDecodingSparseArrays;
+		// ADD-BY-LEETEN 12/07/2013-BEGIN
+		#else	// #if	WITHOUT_FULL_ARRAYS	
+		typedef vector< CDecodingSparseArray* > CDecodingSparseArrays;
+		CDecodingSparseArrays vcDecodingSparseArrays;
+		#endif	// #if	WITHOUT_FULL_ARRAYS	
+		// ADD-BY-LEETEN 12/07/2013-END
 
 	protected:
 
@@ -40,6 +47,7 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) 
 		{
+			#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 			CDecodingSparseArrays::iterator iterSparseArrays = this->pcDecodingSparseArrays->find(uIndex);
 			CDecodingSparseArray* pcSparseArray = NULL;
 			if( iterSparseArrays != pcDecodingSparseArrays->end() )
@@ -51,7 +59,16 @@ namespace WaveletSAT
 				pcSparseArray = new CDecodingSparseArray();
 				this->pcDecodingSparseArrays->insert(pair<size_t, CDecodingSparseArray*>(uIndex, pcSparseArray));
 			}
-
+			// ADD-BY-LEETEN 12/07/2013-BEGIN
+			#else	// #if	WITHOUT_FULL_ARRAYS	
+			CDecodingSparseArray* pcSparseArray = vcDecodingSparseArrays[uIndex];
+			if( !pcSparseArray )
+			{
+				pcSparseArray = new CDecodingSparseArray();
+				vcDecodingSparseArrays[uIndex] = pcSparseArray;
+			}
+			#endif	// #if	WITHOUT_FULL_ARRAYS	
+			// ADD-BY-LEETEN 12/07/2013-END
 			pcSparseArray->push_back(pair<BT, WT>(usBin, Value));
 		}
 
@@ -65,6 +82,7 @@ namespace WaveletSAT
 			void* _Reserved = NULL
 		) 
 		{
+			#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 			CDecodingSparseArrays::iterator iterDecodingSparseArrays = pcDecodingSparseArrays->find(uIndex);
 			if( pcDecodingSparseArrays->end()
 					 != iterDecodingSparseArrays &&
@@ -77,6 +95,20 @@ namespace WaveletSAT
 					Value = vpair[usOffset].second;
 				}
 			}
+			// ADD-BY-LEETEN 12/07/2013-BEGIN
+			#else	// #if	WITHOUT_FULL_ARRAYS	
+			CDecodingSparseArray* pcSparseArray = pcDecodingSparseArrays[uIndex];
+			if( pcSparseArray )
+			{
+				vector<pair<BT, WT>>& vpair = *pcSparseArray->second;
+				if( (size_t)usOffset < vpair.size() )
+				{
+					Bin = vpair[usOffset].first;
+					Value = vpair[usOffset].second;
+				}
+			}
+			#endif	// #if	WITHOUT_FULL_ARRAYS	
+			// ADD-BY-LEETEN 12/07/2013-END
 		}
 
 	public:
@@ -93,6 +125,7 @@ namespace WaveletSAT
 		)
 		{
 			if( bIsSparse ) {
+				#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 				for(CDecodingSparseArrays::iterator 
 						iterSparseArrays = pcDecodingSparseArrays->begin(); 
 					iterSparseArrays != pcDecodingSparseArrays->end(); 
@@ -101,6 +134,18 @@ namespace WaveletSAT
 					if( iterSparseArrays->second ) 
 					{
 						CDecodingSparseArray& sparseArray = *iterSparseArrays->second;
+				// ADD-BY-LEETEN 12/07/2013-BEGIN
+				#else	// #if	WITHOUT_FULL_ARRAYS	
+				for(CDecodingSparseArrays::iterator 
+						iterSparseArrays = vcDecodingSparseArrays.begin(); 
+					iterSparseArrays != vcDecodingSparseArrays.end(); 
+					iterSparseArrays++) 
+				{
+					if( *iterSparseArrays ) 
+					{
+						CDecodingSparseArray& sparseArray = *(*iterSparseArrays);
+				#endif	// #if	WITHOUT_FULL_ARRAYS	
+				// ADD-BY-LEETEN 12/07/2013-END
 						sort(sparseArray.begin(), sparseArray.end());
 		
 						// ADD-BY-LEETEN 2013/12/01-BEGIN
@@ -196,7 +241,13 @@ namespace WaveletSAT
 
 			if( bIsSparse )
 			{	
+				#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 				this->pcDecodingSparseArrays = new CDecodingSparseArrays();
+				// ADD-BY-LEETEN 12/07/2013-BEGIN
+				#else	// #if	WITHOUT_FULL_ARRAYS	
+				vcDecodingSparseArrays.resize(UGetProduct(vuLengths));
+				#endif	// #if	WITHOUT_FULL_ARRAYS	
+				// ADD-BY-LEETEN 12/07/2013-END
 			}
 		}
 
@@ -274,13 +325,21 @@ namespace WaveletSAT
 			}
 			else
 			{
+				#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 				CDecodingSparseArrays::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
 				if( pcDecodingSparseArrays->end() 
 						 != iterSparseArrays && 
 					NULL != iterSparseArrays->second )
 				{
 					const vector< pair<BT, WT> >& vpairSparse = *iterSparseArrays->second;
-					
+				// ADD-BY-LEETEN 12/07/2013-BEGIN
+				#else	// #if	WITHOUT_FULL_ARRAYS	
+				if( vcDecodingSparseArrays[uIndex] )
+				{
+					const vector< pair<BT, WT> >& vpairSparse = *vcDecodingSparseArrays[uIndex];
+				#endif	// #if	WITHOUT_FULL_ARRAYS	
+				// ADD-BY-LEETEN 12/07/2013-END
+
 					for(vector<BT>::const_iterator 
 							iterBins = vsBins.begin();
 						iterBins != vsBins.end();
@@ -339,6 +398,7 @@ namespace WaveletSAT
 			}
 			else
 			{
+				#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 				CDecodingSparseArrays::iterator iterSparseArrays = pcDecodingSparseArrays->find(uIndex);
 				if( pcDecodingSparseArrays->end() 
 						 != iterSparseArrays && 
@@ -348,6 +408,16 @@ namespace WaveletSAT
 					vpairCoefs.resize(vpairSparse.size());
 					copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
 				}
+				// ADD-BY-LEETEN 12/07/2013-BEGIN
+				#else	// #if	WITHOUT_FULL_ARRAYS	
+				if( vcDecodingSparseArrays[uIndex] ) 
+				{
+					const vector< pair<BT, WT> >& vpairSparse = *vcDecodingSparseArrays[uIndex];
+					vpairCoefs.resize(vpairSparse.size());
+					copy(vpairSparse.begin(), vpairSparse.end(), vpairCoefs.begin());
+				}
+				#endif	// #if	WITHOUT_FULL_ARRAYS	
+				// ADD-BY-LEETEN 12/07/2013-END
 			}	
 
 			// ADD-BY-LEETEN 2013/12/01-BEGIN
@@ -394,6 +464,7 @@ namespace WaveletSAT
 		virtual
 		~CSepDWTDecoderPool()
 		{
+			#if	WITHOUT_FULL_ARRAYS		// ADD-BY-LEETEN 12/07/2013
 			if( this->pcDecodingSparseArrays ) {
 				for(CDecodingSparseArrays::iterator 
 						iterSparseArrays = pcDecodingSparseArrays->begin(); 
@@ -406,6 +477,20 @@ namespace WaveletSAT
 					}
 				}
 			}
+			// ADD-BY-LEETEN 12/07/2013-BEGIN
+			#else	// #if	WITHOUT_FULL_ARRAYS	
+			for(CDecodingSparseArrays::iterator 
+					iterSparseArrays = vcDecodingSparseArrays.begin(); 
+				iterSparseArrays != vcDecodingSparseArrays.end(); 
+				iterSparseArrays++) 
+			{
+				if( *iterSparseArrays ) 
+				{
+					delete *iterSparseArrays;
+				}
+			}
+			#endif	// #if	WITHOUT_FULL_ARRAYS	
+			// ADD-BY-LEETEN 12/07/2013-END
 		}
 		// ADD-BY-LEETEN 11/12/2012-END
 	};

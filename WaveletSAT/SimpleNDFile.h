@@ -77,11 +77,70 @@ public:
 		this->valueMax = valueMax;
 	}
 
+	// ADD-BY-LEETEN 2013/12/07-BEGIN
+	void
+	_ComputeRegionSum
+	(
+		const vector<int>& viLeft,
+		const vector<int>& viRight,
+		const vector<ST>& vSAT,
+		vector<ST>& vRegionSum,
+		void *_Reserved = NULL
+	)
+	{
+
+		size_t uNrOfCorners = (size_t)1<<this->UGetNrOfDims();
+		vector< long long > vllOffsets;	vllOffsets.resize(uNrOfCorners);
+		vector< int > viSigns;			viSigns.resize(uNrOfCorners);
+		for(size_t i = 0; i < uNrOfCorners; i++)
+		{
+			int iSign = 1; 
+			long long llOffset = 0;
+			for(size_t 
+				d = this->UGetNrOfDims(), j = i; 
+				d > 0 ; 
+				d--, j /= 2)
+			{
+				bool bIsLower = (0 == j % 2)?0:1;
+				iSign *= (bIsLower)?(-1):(+1);
+				llOffset = (llOffset * (long long)vuCoefLengths[d - 1]) + (long long)((bIsLower)?viLeft[d - 1]:viRight[d - 1]);
+			}
+			viSigns[i] = iSign;
+			vllOffsets[i] = llOffset;
+		}
+
+		for(size_t i = 0; i < uNrOfCorners; i++)
+		{
+			size_t uBegin, uEnd;
+			if( !vllOffsets[i] )
+				continue;
+			if( vllOffsets[i] > 0 )
+			{
+				uBegin = 0;
+				uEnd = vSAT.size() - vllOffsets[i]; 
+			}
+			if( vllOffsets[i] < 0 )
+			{
+				uBegin = (size_t)-vllOffsets[i];
+				uEnd = vSAT.size(); 
+			}
+			for(size_t d = uBegin; d < uEnd; d++)
+				vRegionSum[d] += vSAT[d + vllOffsets[i]] * (ST)viSigns[i];
+		}
+	}
+	// ADD-BY-LEETEN 2013/12/07-EN
+
+
 	// ADD-BY-LEETEN 2013/12/01-BEGIN
 	void
 	_ComputeEntropy(
+		#if	0	// MOD-BY-LEETEN 2013/12/07-FROM:
 		vector<int> viLeft,
 		vector<int> viRight,
+		#else	// MOD-BY-LEETEN 2013/12/07-TO:
+		const vector<int>& viLeft,
+		const vector<int>& viRight,
+		#endif	// MOD-BY-LEETEN 2013/12/07-END
 		size_t uNrOfEntropyBins,
 		vector<ST>& vEntropyField,
 		void *_Reserved = NULL
@@ -90,6 +149,8 @@ public:
 		LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
 		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
 		const size_t uDataSize = this->uDataSize;
+
+		#if	0	// DEL-BY-LEETEN 2013/12/07-BEGIN
 		vector<size_t> vuDecodedLengths;
 
 		this->_GetDecodedSize(vuDecodedLengths);
@@ -116,6 +177,7 @@ public:
 			viSigns[i] = iSign;
 			vllOffsets[i] = llOffset;
 		}
+		#endif	// DEL-BY-LEETEN 2013/12/07-END
 		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	
 
 		/////////////// compute the SAT
@@ -149,6 +211,7 @@ public:
 			vLocalHist.assign(vLocalHist.size(), (ST)0);
 
 			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			#if	0	// MOD-BY-LEETEN 2013/12/07-FROM:
 			for(size_t i = 0; i < uNrOfCorners; i++)
 			{
 				size_t uBegin, uEnd;
@@ -167,6 +230,15 @@ public:
 				for(size_t d = uBegin; d < uEnd; d++)
 					vLocalHist[d] += vSAT[d + vllOffsets[i]] * (ST)viSigns[i];
 			}
+			#else	// MOD-BY-LEETEN 2013/12/07-TO:
+			_ComputeRegionSum
+			(
+				viLeft,
+				viRight,
+				vSAT,
+				vLocalHist
+			);
+			#endif	// MOD-BY-LEETEN 2013/12/07-END
 			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
 
 			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
@@ -196,5 +268,89 @@ public:
 	}
 	// ADD-BY-LEETEN 2013/12/01-END
 
+	// ADD-BY-LEETEN 2013/12/07-BEGIN
+	void
+	_ComputeMedian(
+		const vector<int>& viLeft,
+		const vector<int>& viRight,
+		size_t uNrOfBins,
+		vector<ST>& vMedians,
+		void *_Reserved = NULL
+	)
+	{
+		LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		const size_t uDataSize = this->uDataSize;
+		vector<size_t> vuDecodedLengths;
+
+		this->_GetDecodedSize(vuDecodedLengths);
+
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);	
+
+		// Compute the sum for all regions so we can decide the median.
+		vector<ST> vSAT;	
+		vector<ST> vRegionSum;	
+		vector<ST> vAggregatedBin;	
+		vector<ST> vRegionCumsum;	
+		vector<ST> vTempMedians;	
+
+		_DecodeAggregatedBin(0, this->UGetNrOfBins(), vSAT);
+
+		if( vRegionSum.size() != vSAT.size() )
+			vRegionSum.resize(vSAT.size());
+		if( vAggregatedBin.size() != vSAT.size() )
+			vAggregatedBin.resize(vSAT.size());
+		if( vRegionCumsum.size() != vSAT.size() )
+			vRegionCumsum.resize(vSAT.size());
+		if( vTempMedians.size() != vSAT.size() )
+			vTempMedians.resize(vSAT.size());
+		
+		vRegionCumsum.assign(vRegionCumsum.size(), (ST)0);
+		vTempMedians.assign(vTempMedians.size(), (ST)0);
+
+		_ComputeRegionSum(viLeft, viRight, vSAT, vRegionSum);
+
+		/////////////// compute the SAT
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);	
+
+		size_t uNrOfAggregatedBins = ( 0 == uNrOfBins ) ? this->UGetNrOfBins() : uNrOfBins ;
+		size_t uBinInterval = this->UGetNrOfBins() / uNrOfAggregatedBins;
+		for(size_t b = 0; b < uNrOfAggregatedBins; b++)
+		{
+			LIBCLOCK_INIT(this->bIsPrintingDecodeBinTiming, __FUNCTION__);
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			_DecodeAggregatedBin((BT)b * uBinInterval, (BT)(b + 1) * uBinInterval - 1, vSAT);
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			// compute the local sum
+			vAggregatedBin.assign(vAggregatedBin.size(), (ST)0);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			_ComputeRegionSum(viLeft, viRight, vSAT, vAggregatedBin);
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+			LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+			for(size_t d = 0; d < vAggregatedBin.size(); d++)
+			{
+				ST dProb = vAggregatedBin[d] / vRegionSum[d];
+				ST dCumProb = vRegionCumsum[d];
+				if( dCumProb <= 0.5 && dCumProb + dProb > 0.5 ) {
+					vTempMedians[d] = (ST)uBinInterval * ((ST)b +  (0.5 - dCumProb )/dProb); 
+				}
+				vRegionCumsum[d] = dCumProb + dProb;
+			}
+
+			LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+			LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+		}
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+
+		LIBCLOCK_BEGIN(this->bIsPrintingDecodeBinTiming);
+		_ClampToDataSize(vTempMedians, vMedians);
+		_ClampBorder(vMedians, viLeft, viRight);
+		LIBCLOCK_END(this->bIsPrintingDecodeBinTiming);
+		LIBCLOCK_PRINT(this->bIsPrintingDecodeBinTiming);
+	}
+	// ADD-BY-LEETEN 2013/12/07-END
 };
 

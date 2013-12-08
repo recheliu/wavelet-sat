@@ -228,6 +228,21 @@ namespace WaveletSAT
 		}
 	};
 
+	// ADD-BY-LEETEN 2013/12/07-BEGIN
+	inline 
+	size_t
+	UGetProduct
+	(
+		const vector<size_t> vuLengths,
+		void* _Reserved = NULL
+	)
+	{
+		size_t uProd = 1;
+		for(size_t d = 0; d < vuLengths.size(); d++)
+			uProd *= vuLengths[d];
+		return uProd;
+	}
+	// ADD-BY-LEETEN 2013/12/07-END
 	inline	// ADD-BY-LEETEN 01/27/2012
 	size_t
 	UConvertSubToIndex
