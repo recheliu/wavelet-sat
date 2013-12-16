@@ -347,10 +347,10 @@ namespace WaveletSAT
 					{
 						BT usBin = *iterBins;
 						WT dCumsum = 0.0;
+						#if	0	// MOD-BY-LEETEN 2013/12/14-FROM:
 						if( usBin ) 
 						{
 							usBin--;
-
 							// Among the bins smaller than usBin, find the largest one.
 							pair<BT, WT> pairValue = make_pair<BT, WT>(usBin, (WT)0.0);	
 							vector< pair<BT, WT> >::const_iterator iterLowerBound = 
@@ -360,6 +360,39 @@ namespace WaveletSAT
 								iterLowerBound->second:
 								vpairSparse[vpairSparse.size() - 1].second;
 						}
+						#else	// MOD-BY-LEETEN 2013/12/14-TO:
+						/*
+						// The code after the comment is equivalent to the pseudo code here.
+
+						dCumsum = 0.0;
+						for(vector< pair<BT, WT> >::const_iterator 
+								iterLowerBound = vpairSparse.begin();
+							iterLowerBound != vpairSparse.end();
+							iterLowerBound ++) 
+						{
+							if( usBin <= iterLowerBound->first ) 
+							{
+								break;
+							}
+							dCumsum = iterLowerBound->second;
+						}
+						*/
+						pair<BT, WT> pairValue = make_pair<BT, WT>(usBin, (WT)0.0);	
+						vector< pair<BT, WT> >::const_iterator iterLowerBound = 
+							lower_bound(vpairSparse.begin(), vpairSparse.end(), pairValue, BCompareBin); 
+
+						if( vpairSparse.end() ==  iterLowerBound ) 
+						{
+							dCumsum = vpairSparse[vpairSparse.size() - 1].second;
+						} 
+						else
+						if( vpairSparse.begin() != iterLowerBound )
+						{
+							size_t uOffset = (size_t)(iterLowerBound - vpairSparse.begin());
+							dCumsum = vpairSparse[uOffset - 1].second;
+						}
+						#endif	// MOD-BY-LEETEN 2013/12/14-END
+
 						udValues.push_back(dCumsum);
 					}
 				}

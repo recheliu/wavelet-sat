@@ -123,6 +123,7 @@ namespace WaveletSAT
 	)
 	{
 		size_t uHalfLength = uLength / 2;
+		// uBound: The bound covered by the data domain.
 		size_t uBound = min(uHalfLength, (size_t)ceil((double)uDataLength/(double)uWaveletLength));
 		for(size_t c = 0, s = uHalfLength*uStep; c < uBound; c++, s+= uStep)
 		{
