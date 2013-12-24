@@ -293,3 +293,9 @@ main(int argn, char* argv[])
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;
 }
+
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

@@ -46,3 +46,9 @@ if( WITH_NETCDF )
 	endif()
 endif()
 # ADD-BY-LEETEN 10/28/2012-END
+
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################

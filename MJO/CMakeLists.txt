@@ -90,3 +90,9 @@ target_link_libraries(
 	    endif()
 endif()
 # ADD-BY-LEETEN 01/31/2013-END
+
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################

@@ -179,3 +179,9 @@ install(
 	DESTINATION ".")
 # ADD-BY-LEETEN 2013/07/06-END
 
+
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################

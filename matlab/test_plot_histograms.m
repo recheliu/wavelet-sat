@@ -65,3 +65,10 @@ for li = 1:n_levels
         title(nc_filepath);
     end
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Copyright (c) 2013 Teng-Yok Lee
+%
+% See the file LICENSE.txt for copying permission.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

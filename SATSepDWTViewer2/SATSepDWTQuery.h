@@ -24,3 +24,8 @@ namespace SATSepDWT
 		int4 i4Size;
 	};
 }
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

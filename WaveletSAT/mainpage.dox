@@ -13,4 +13,8 @@ The main decoder class is CSimpleNDFile. Its usage can be seen in the sample cod
 
 More details are in the page https://sites.google.com/site/wikiforrecheliusprojects/wavelet-sat.
 	
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+	
 */

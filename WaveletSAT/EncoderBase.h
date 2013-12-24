@@ -120,3 +120,9 @@ protected:
 		// ADD-BY-LEETEN 12/12/2012-END
 	};
 }
+
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

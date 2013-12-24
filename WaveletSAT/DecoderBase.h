@@ -190,3 +190,9 @@ namespace WaveletSAT
 		}
 	};
 }
+
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

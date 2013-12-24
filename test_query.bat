@@ -52,3 +52,9 @@ for %%w in (!WS!) do (
 	)
 )
 ENDLOCAL
+
+REM 
+REM Copyright (c) 2013 Teng-Yok Lee
+REM
+REM See the file LICENSE.txt for copying permission.
+REM

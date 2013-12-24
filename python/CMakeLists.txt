@@ -49,3 +49,10 @@ TARGET_LINK_LIBRARIES(${MODULE_NAME}
 	${PYTHON_LIBRARIES} 
 	${ThirdPartyLib_LIBRARIES}
 	)
+
+	
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################

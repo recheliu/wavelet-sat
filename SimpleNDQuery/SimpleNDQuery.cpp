@@ -1,6 +1,6 @@
 #include <math.h>
 #include <assert.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "libclock.h"
 #include "libopt.h"
 
@@ -598,7 +598,11 @@ main(int argn, char* argv[])
 			viRight.push_back(+iEntropyWinRadius);
 		}
 		vector<double> valEntropyField;
+#if	1	// TMP-MOD
 		cSimpleNDFile._ComputeEntropy(viLeft, viRight, iNrOfEntropyBins, valEntropyField);
+#else
+		cSimpleNDFile._ComputeMedian(viLeft, viRight, iNrOfEntropyBins, valEntropyField);
+#endif
 		LIBCLOCK_END(bIsPrintingTiming);	
 
 		/////////////////////////////////////////////////////////////

@@ -21,3 +21,8 @@ CSimpleNDFile<CBlock::typeData> *CBlock::pcSimpleND;
 vector<CBlock*> CBlock::vpcBlocksRenderedByPCP;
 float4 CBlock::f4PCPColor;
 // ADD-BY-LEETEN 06/23/2013-END
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

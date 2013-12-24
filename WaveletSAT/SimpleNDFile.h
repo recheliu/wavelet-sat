@@ -380,3 +380,9 @@ public:
 	// ADD-BY-LEETEN 2013/12/07-END
 };
 
+
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

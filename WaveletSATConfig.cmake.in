@@ -80,3 +80,9 @@ endif()
 include_directories(${WaveletSAT_INCLUDE_DIRS})
 link_directories(${WaveletSAT_LIBRARY_DIRS})
 
+
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################

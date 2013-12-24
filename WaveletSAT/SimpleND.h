@@ -256,3 +256,9 @@ public:
 	// ADD-BY-LEETEN 04/20/2013-END
 };
 
+
+/***********************************************************
+Copyright (c) 2013 Teng-Yok Lee
+
+See the file LICENSE.txt for copying permission.
+***********************************************************/

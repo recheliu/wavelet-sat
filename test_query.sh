@@ -76,3 +76,9 @@ do
 	done
     done
 done
+
+############################################################
+# Copyright (c) 2013 Teng-Yok Lee
+#
+# See the file LICENSE.txt for copying permission.
+############################################################
