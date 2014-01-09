@@ -318,7 +318,9 @@ namespace WaveletSAT
 						iterBins ++ ) 
 					{
 						BT usBin = *iterBins;
-						WT dCumsum = ( !usBin ) ? 0.0 : vFullArray[min(usBin - 1, vFullArray.size()-1)];
+						// MOD-BY-LEETEN 2014/01/08:						WT dCumsum = ( !usBin ) ? 0.0 : vFullArray[min(usBin - 1, vFullArray.size()-1)];
+						WT dCumsum = ( !usBin ) ? 0.0 : vFullArray[min((size_t)usBin - 1, vFullArray.size()-1)];
+						// MOD-BY-LEETEN 2014/01/08-END
 						udValues.push_back(dCumsum);
 					}
 				}

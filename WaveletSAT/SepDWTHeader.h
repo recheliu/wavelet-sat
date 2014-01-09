@@ -104,6 +104,14 @@ protected:
 		vector< size_t >			vuNrsOfLocalCoefs;	//!< vector of #coefficients per wavele
 		// ADD-BY-LEETEN 12/29/2012-END
 
+		// ADD-BY-LEETEN 2014/01/08-BEGIN
+		//! vector of D-dim tuples as the lengths fo the wavelet functions.
+		vector< vector<size_t> >	vvuWaveletLengths;	
+
+		//! vector of D-dim tuples as the coefficient lengths within the data.
+		vector< vector<size_t> >	vvuLocalDataLengths;
+		// ADD-BY-LEETEN 2014/01/08-END
+
 		// ADD-BY-LEETEN 12/30/2012-BEGIN
 		//! The base of all scanlines for all dimensions
 		vector< vector<size_t> > vvuSliceScanlineBase;
@@ -155,6 +163,16 @@ public:
 			PARAMETER_END
 		};
 
+		// ADD-BY-LEETEN 2014/01/08-BEGIN
+		struct CDimLevel {
+			size_t uWaveletLength;
+			size_t uCoefLength;
+			size_t uDataLength;
+		};
+
+		vector< vector<CDimLevel> > vvcDimLevels;
+		// ADD-BY-LEETEN 2014/01/08-END
+
 		// ADD-BY-LEETEN 05/05/2013-BEGIN
 		const vector<size_t>& 
 		VGetDimLevels
@@ -190,6 +208,11 @@ public:
 		}
 
 		// ADD-BY-LEETEN 12/28/2012-BEGIN
+		/*!
+		Convert the (global) index of a wavelet basis to its corresponding subscripts and levels. 
+		Also, for the wavelet function for that level, return the global base, local coef. lengths, 
+		and the offset in this level.
+		*/
 		virtual
 		void
 		_ConvertIndexToLevels
@@ -209,6 +232,7 @@ public:
 			if( UGetNrOfDims() != vuGlobalCoefBase.size() )		vuGlobalCoefBase.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuLocalCoefLengths.size() )	vuLocalCoefLengths.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuLocalCoefSub.size() )		vuLocalCoefSub.resize(UGetNrOfDims());
+			#if	0	// MOD-BY-LEETEN 2014/01/08-FROM:
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
 				vuLevel[d] = (!vuSub[d])?0:(size_t)(1 + floor(log( (double)vuSub[d]) / M_LN2));
@@ -216,6 +240,17 @@ public:
 				vuLocalCoefLengths[d] = (!vuLevel[d])?1:(1 << (vuLevel[d] - 1));
 				vuLocalCoefSub[d] = vuSub[d] - vuGlobalCoefBase[d];
 			}
+			#else	// MOD-BY-LEETEN 2014/01/08-TO:
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vuLevel[d] = (!vuSub[d])?0:(size_t)(1 + floor(log( (double)vuSub[d]) / M_LN2));
+			}
+			_ConvertWaveletSubToLevels(vuLevel, vuGlobalCoefBase, vuLocalCoefLengths);
+			for(size_t d = 0; d < UGetNrOfDims(); d++)
+			{
+				vuLocalCoefSub[d] = vuSub[d] - vuGlobalCoefBase[d];
+			}
+			#endif	// MOD-BY-LEETEN 2014/01/08-END
 		}
 		// ADD-BY-LEETEN 12/28/2012-END
 
@@ -252,6 +287,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
+			#if	0	// MOD-BY-LEETEN 2014/01/08-FROM:
 			if( UGetNrOfDims() != vuGlobalCoefBase.size() )
 				vuGlobalCoefBase.resize(UGetNrOfDims());
 			if( UGetNrOfDims() != vuLocalCoefLengths.size() )
@@ -262,8 +298,135 @@ public:
 				vuGlobalCoefBase[d] = (!uLevel)?0:(1 << (uLevel - 1));
 				vuLocalCoefLengths[d] = (!uLevel)?1:(1 << (uLevel - 1));
 			}
+			#else	// MOD-BY-LEETEN 2014/01/08-TO:
+			size_t uNrOfLocalCoefs;
+			_ConvertWaveletToLevels(UConvertSubToIndex(vuWaveletSub, vuDimLevels), vuGlobalCoefBase, vuLocalCoefLengths, uNrOfLocalCoefs);
+			#endif	// MOD-BY-LEETEN 2014/01/08-END
 		}
 		// ADD-BY-LEETEN 12/29/2012-END
+
+		// ADD-BY-LEETEN 2014/01/08-BEGIN
+		//////////////////////////////////////////////////////////////////////////
+		size_t UGetDimLevelWaveletLength
+		(
+			const size_t uDim,
+			const size_t uLevel,
+			void *_Reserved = NULL
+		)
+		{
+			ASSERT_OR_LOG(uDim < UGetNrOfDims(), "");
+			ASSERT_OR_LOG(uLevel < vvcDimLevels[uDim].size(), "");
+			return vvcDimLevels[uDim][uLevel].uWaveletLength;
+		}
+
+		size_t UGetDimLevelCoefLength
+		(
+			const size_t uDim,
+			const size_t uLevel,
+			void *_Reserved = NULL
+		)
+		{
+			ASSERT_OR_LOG(uDim < UGetNrOfDims(), "");
+			ASSERT_OR_LOG(uLevel < vvcDimLevels[uDim].size(), "");
+			return vvcDimLevels[uDim][uLevel].uCoefLength;
+		}
+
+		size_t UGetDimLevelDataLength
+		(
+			const size_t uDim,
+			const size_t uLevel,
+			void *_Reserved = NULL
+		)
+		{
+			ASSERT_OR_LOG(uDim < UGetNrOfDims(), "");
+			ASSERT_OR_LOG(uLevel < vvcDimLevels[uDim].size(), "");
+			return vvcDimLevels[uDim][uLevel].uDataLength;
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+		const vector<size_t>&
+		VGetGlobalCoefBase
+		(
+			const size_t	uWavelet,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuGlobalBase[uWavelet];
+		}
+
+		const vector<size_t>&
+		VGetGlobalCoefBase
+		(
+			const vector<size_t>&	vuWaveletSub,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuGlobalBase[UConvertSubToIndex(vuWaveletSub, vuDimLevels)];
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+		const vector<size_t>&
+		VGetLocalLengths
+		(
+			const size_t	uWavelet,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuLocalLengths[uWavelet];
+		}
+
+		const vector<size_t>&
+		VGetLocalLengths
+		(
+			const vector<size_t>&	vuWaveletSub,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuLocalLengths[UConvertSubToIndex(vuWaveletSub, vuDimLevels)];
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+		const vector<size_t>&
+		VGetWaveletLengths
+		(
+			const size_t	uWavelet,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuWaveletLengths[uWavelet];
+		}
+
+		const vector<size_t>&
+		VGetWaveletLengths
+		(
+			const vector<size_t>&	vuWaveletSub,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuWaveletLengths[UConvertSubToIndex(vuWaveletSub, vuDimLevels)];
+		}
+
+		//////////////////////////////////////////////////////////////////////////
+		const vector<size_t>&
+		VGetLocalDataLengths
+		(
+			const size_t	uWavelet,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuLocalDataLengths[uWavelet];
+		}
+
+		const vector<size_t>&
+		VGetLocalDataLengths
+		(
+			const vector<size_t>&	vuWaveletSub,
+			void *_Reserved = NULL
+		) const 
+		{
+			return this->vvuLocalDataLengths[UConvertSubToIndex(vuWaveletSub, vuDimLevels)];
+		}
+		// ADD-BY-LEETEN 2014/01/08-END
 
 		// ADD-BY-LEETEN 12/25/2012-BEGIN
 		virtual
@@ -404,12 +567,31 @@ public:
 				vuMaxCounts.push_back(uMaxCountPerCoef);
 			}
 
+			// ADD-BY-LEETEN 2014/01/08-BEGIN
+			vvcDimLevels.resize(UGetNrOfDims());
+			for(size_t d = 0; d < UGetNrOfDims(); d++) 
+			{
+				vvcDimLevels[d].resize(vuDimLevels[d]);
+				for(size_t l = 0; l < vuDimLevels[d]; l++) 
+				{
+					size_t uWaveletLength = (!l)?( 1<<(vuDimLevels[d] - 1) ):(1<<(vuDimLevels[d] - l)); 
+					vvcDimLevels[d][l].uWaveletLength = uWaveletLength;
+					vvcDimLevels[d][l].uDataLength = (size_t)ceil((double)vuDimLengths[d]/(double)uWaveletLength);
+					vvcDimLevels[d][l].uCoefLength = (!l)?1:(1<<(l-1));
+				}
+			}
+			// ADD-BY-LEETEN 2014/01/08-END
+
 			// ADD-BY-LEETEN 12/29/2012-BEGIN
 			vvuGlobalBase.resize(uNrOfUpdatingCoefs);
 			vuGlobalBase.resize(uNrOfUpdatingCoefs);
 			vvuLocalLengths.resize(uNrOfUpdatingCoefs);
 			vuNrsOfLocalCoefs.resize(uNrOfUpdatingCoefs);
 			vuMapLocalToGlobal.resize(uNrOfCoefs);
+			// ADD-BY-LEETEN 2014/01/08-BEGIN
+			vvuWaveletLengths.resize(uNrOfUpdatingCoefs);
+			vvuLocalDataLengths.resize(uNrOfUpdatingCoefs);
+			// ADD-BY-LEETEN 2014/01/08-END
 
 			vector<size_t> vuLevel;
 			for(size_t i = 0, w = 0; w < uNrOfUpdatingCoefs; w++)
@@ -417,12 +599,20 @@ public:
 				_ConvertIndexToSub(w, vuLevel, vuDimLevels);
 				vvuGlobalBase[w].resize(vuLevel.size());
 				vvuLocalLengths[w].resize(vuLevel.size());
+				// ADD-BY-LEETEN 2014/01/08-BEGIN
+				vvuWaveletLengths[w].resize(vuLevel.size());
+				vvuLocalDataLengths[w].resize(vuLevel.size());
+				// ADD-BY-LEETEN 2014/01/08-END
 				size_t uLength = 1;
 				for(size_t d = 0; d < vuLevel.size(); d++)
 				{
 					size_t uLevel = vuLevel[d];
 					vvuGlobalBase[w][d] = (!uLevel)?0:(1 << (uLevel - 1));
 					vvuLocalLengths[w][d] = (!uLevel)?1:(1 << (uLevel - 1));
+					// ADD-BY-LEETEN 2014/01/08-BEGIN
+					vvuWaveletLengths[w][d] = UGetDimLevelWaveletLength(d, uLevel);
+					vvuLocalDataLengths[w][d] = UGetDimLevelDataLength(d, uLevel);
+					// ADD-BY-LEETEN 2014/01/08-END
 					uLength *= vvuLocalLengths[w][d];
 				}
 				vuNrsOfLocalCoefs[w] = uLength;

@@ -22,6 +22,7 @@ using namespace std;
 // MOD-BY-LEETEN 2013/10/27-END
 #include "DecoderBase.h"	// ADD-BY-LEETEN 01/02/2013
 
+#include "libclock.h"	// ADD-BY-LEETEN 2014/01/08
 #include "liblog.h"	
 
 #if	WITH_NETCDF
