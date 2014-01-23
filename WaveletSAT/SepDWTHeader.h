@@ -307,12 +307,19 @@ public:
 
 		// ADD-BY-LEETEN 2014/01/08-BEGIN
 		//////////////////////////////////////////////////////////////////////////
+		#if	0	// MOD-BY-LEETEN 2014/01/22-FROM:
 		size_t UGetDimLevelWaveletLength
+		#else	// MOD-BY-LEETEN 2014/01/22-TO:
+		const
+		size_t 
+		UGetDimLevelWaveletLength
+		#endif	// MOD-BY-LEETEN 2014/01/22-END
 		(
 			const size_t uDim,
 			const size_t uLevel,
 			void *_Reserved = NULL
-		)
+		) 
+		const	// ADD-BY-LEETEN 2014/01/22
 		{
 			ASSERT_OR_LOG(uDim < UGetNrOfDims(), "");
 			ASSERT_OR_LOG(uLevel < vvcDimLevels[uDim].size(), "");
