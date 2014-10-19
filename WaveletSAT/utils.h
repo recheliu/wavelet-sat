@@ -1,9 +1,7 @@
 #pragma once
 
-// ADD-BY-LEETEN 01/31/2013-BEGIN
 #include <type_traits>
 using namespace std;
-// ADD-BY-LEETEN 01/31/2013-END
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -16,12 +14,10 @@ using namespace std;
 	#include <sys/resource.h>
 #endif	// #if defined (WIN32)
 
-// ADD-BY-LEETEN 01/23/2013-BEGIN
 #include <netcdf.h>
 #include "NrrdIO.h"
 
 #include "gnuplot.h"
-// ADD-BY-LEETEN 01/23/2013-END
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -29,7 +25,6 @@ Then the user call _Update(vuPos, value) to update the value at the given locati
 */
 namespace WaveletSAT
 {
-	// ADD-BY-LEETEN 01/23/2013-BEGIN
 	namespace Statistics 
 	{
 		template<typename ST,	typename BT, typename WT>
@@ -185,7 +180,6 @@ namespace WaveletSAT
 		// launch GNUPLOT to plot the FTLE
 		static char szGnuplotCommand[2048];
 		sprintf(szGnuplotCommand, "%s -e \""
-			// ADD-BY-LEETEN 10/06/2011-BEGIN
 			"set autoscale;"
 			"unset label;"
 			"set terminal png;"		
@@ -205,10 +199,8 @@ namespace WaveletSAT
 		system(szGnuplotCommand);
 		#endif	// #if	WITH_GNUPLOT
 	}
-	// ADD-BY-LEETEN 01/23/2013-END
 
-	// ADD-BY-LEETEN 10/30/2012-BEGIN
-	inline	// ADD-BY-LEETEN 01/27/2012
+	inline	
 	void
 	_ConvertIndexToSub
 	(
@@ -228,7 +220,6 @@ namespace WaveletSAT
 		}
 	};
 
-	// ADD-BY-LEETEN 2013/12/07-BEGIN
 	inline 
 	size_t
 	UGetProduct
@@ -242,8 +233,8 @@ namespace WaveletSAT
 			uProd *= vuLengths[d];
 		return uProd;
 	}
-	// ADD-BY-LEETEN 2013/12/07-END
-	inline	// ADD-BY-LEETEN 01/27/2012
+
+	inline	
 	size_t
 	UConvertSubToIndex
 	(
@@ -258,7 +249,6 @@ namespace WaveletSAT
 			uIndex += vuSubSize * vuSub[d];
 		return uIndex;
 	}
-	// ADD-BY-LEETEN 10/30/2012-END
 
 inline
 size_t

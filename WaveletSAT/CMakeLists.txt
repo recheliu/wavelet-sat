@@ -7,7 +7,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #The name of the project
 PROJECT(WaveletSAT)
 
-# ADD-BY-LEETEN 01/23/2013-BEGIN
 set(WITH_GNUPLOT OFF			CACHE BOOL	"The flag whethre GNUPLOT is enabled.")
 set(GNUPLOT_BIN_DIR "/usr/bin"	CACHE PATH	"The path to the executable of GNU Plot.")
 if(WITH_GNUPLOT)
@@ -24,17 +23,16 @@ configure_file(
 	${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h.in
 	${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h
 )
-# ADD-BY-LEETEN 01/23/2013-END
 
 # The source codes
 set(HEADER_FILES
-		${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h	# ADD-BY-LEETEN 01/23/2013
-		Base.h			# ADD-BY-LEETEN 12/30/2012
+		${CMAKE_CURRENT_SOURCE_DIR}/gnuplot.h	
+		Base.h			
 		
 		HeaderBase.h
-		DecoderBase.h 	# ADD-BY-LEETEN 01/02/2013
+		DecoderBase.h 	
 		EncoderBase.h
-		NetCDFBase.h	# ADD-BY-LEETEN 01/02/2013
+		NetCDFBase.h	
 
 		DWT.h	
 		SepDWTHeader.h
@@ -42,24 +40,20 @@ set(HEADER_FILES
 		SepDWTEncoderPool.h
 		SepDWTDecoderPool.h
 		WaveletSATEncoder.h
-		WaveletSATGPUEncoder.h	# ADD-BY-LEETEN 01/10/2012
+		WaveletSATGPUEncoder.h	
 
-		# ADD-BY-LEETEN 01/02/2013-BEGIN
 		SATFileNetCDF.h	
 		SATFileDecoder.h
 		SATFileEncoder.h	
-		# ADD-BY-LEETEN 01/02/2013-END
 		
 		SimpleND.h
 
-		# ADD-BY-LEETEN 12/16/2012-BEGIN
 		SATSepDWTNetCDF.h	# The class that contains the information for NetCDF format
 		SimpleNDFile.h
-		# ADD-BY-LEETEN 12/16/2012-END
 
-		SATSepDWTDecoder.h	# ADD-BY-LEETEN 12/25/2012
+		SATSepDWTDecoder.h	
 		
-		utils.h			# ADD-BY-LEETEN 10/29/2012
+		utils.h			
 	)
 	
 add_custom_target (

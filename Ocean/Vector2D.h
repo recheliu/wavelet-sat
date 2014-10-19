@@ -4,21 +4,18 @@
 
 template<
 	typename DT = WaveletSAT::typeBin,		//!< Type of the data. Here the data is the bin
-	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-	typename ST = float,		//!< Type of the sum
-	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#if	!WITH_DOUBLE_COEF	
+		typename ST = float,		//!< Type of the sum
 	#else	// #if	!WITH_DOUBLE_COEF
-	typename ST = double,		//!< Type of the sum
+		typename ST = double,		//!< Type of the sum
 	#endif	// #if	!WITH_DOUBLE_COEF
-	// ADD-BY-LEETEN 03/29/2013-END
+
 	typename BT = WaveletSAT::typeBin,		//!< Type of the bin
-	#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-	typename WT = float						//!< Type of the wavelet coefficients
-	// ADD-BY-LEETEN 03/29/2013-BEGIN
+	#if	!WITH_DOUBLE_COEF	
+		typename WT = float						//!< Type of the wavelet coefficients
 	#else	// #if	!WITH_DOUBLE_COEF
-	typename WT = double					//!< Type of the wavelet coefficients
+		typename WT = double					//!< Type of the wavelet coefficients
 	#endif	// #if	!WITH_DOUBLE_COEF
-	// ADD-BY-LEETEN 03/29/2013-END
 >
 class CVector2D:
 		virtual public CSimpleND<DT, ST, BT, WT>
@@ -219,7 +216,7 @@ public:
 	{
 		_ReadVectorComponent(0, szVecDirPath, szUVecFileName, szUVecVarName);
 		_ReadVectorComponent(1, szVecDirPath, szVVecFileName, szVVecVarName);
-		const size_t& uDataSize = this->uDataSize; // ADD-BY-LEETEN 01/31/2013
+		const size_t& uDataSize = this->uDataSize; 
 		vuBins.assign(uDataSize, 0);
 		for(size_t d = 0; d < uDataSize; d++)
 			vuBins[d] = (DT)UGetBin(pvfComps[0][d], pvfComps[1][d]);
@@ -250,10 +247,8 @@ public:
 		void *_Reserved = NULL
 	)
 	{
-	  // ADD-BY-LEETEN 01/31/2013-BEGIN
 	  const size_t& uDataSize = this->uDataSize;
 	  const vector<size_t>& vuDimLengths = this->vuDimLengths;
-		// ADD-BY-LEETEN 01/31/2013-END
 		for(size_t d = 0; d < uDataSize; d++)
 		{
 			vector<size_t> vuPos;

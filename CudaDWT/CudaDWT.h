@@ -12,13 +12,13 @@
 #endif	// #if defined(WIN32)
 
 
-#include "Base.h"	// ADD-BY-LEETEN 2013/07/06
+#include "Base.h"
 
 namespace CudaDWT
 {
 	typedef WaveletSAT::typeWavelet	typeCoef;
-	typedef	double	typeValue;		// ADD-BY-LEETEN 2013/07/23
-	typedef unsigned long long typeKey;	// ADD-BY-LEETEN 2013/07/31
+	typedef	double	typeValue;		
+	typedef unsigned long long typeKey;	
 	enum
 	{
 		GPU_MAX_NR_OF_DIMS = 3,
@@ -35,11 +35,9 @@ namespace CudaDWT
 	class CCudaDWT
 	{
 	protected:
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		dim3 v3Blk;
 
 		dim3 v3Grid;
-		// ADD-BY-LEETEN 01/11/2013-END
 
 		//
 		uint4 *pu4BinSub_device;
@@ -52,11 +50,10 @@ namespace CudaDWT
 
 		unsigned int *puOnes_device;
 		unsigned int *puCompactedSegCounts_device;
-		// ADD-BY-LEETEN 01/13/2013-END
 
 		bool bIsInitialized;
 
-		bool bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
+		bool bWithCpuBucketSort;
 	public:
 		CCudaDWT():
 			bIsInitialized(false)
@@ -81,14 +78,14 @@ namespace CudaDWT
 			size_t				uNrOfElements,
 			const uint4			pu4BinSubs[],
 			const typeValue pfValues[],
-			bool bWithCpuBucketSort = false,	// ADD-BY-LEETEN 01/13/2013
+			bool bWithCpuBucketSort = false,	
 			void* _Reserved = NULL
 		);
 
 		void
 		_Encode
 		(
-			size_t				uNrOfBins,	// ADD-BY-LEETEN 2013/07/13
+			size_t				uNrOfBins,	
 			size_t				uNrOfElements,
 			size_t				uNrOfDims,
 			const unsigned int	puLevels[],
@@ -98,9 +95,9 @@ namespace CudaDWT
 			typeKey		puKeys_host[],
 			typeCoef	pfCoefs_host[],
 
-			unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
+			unsigned int		puSegCounts_host[],	
 
-			int iTimingPrintingLevel = 0,	// ADD-BY-LEETEN 01/11/2013
+			int iTimingPrintingLevel = 0,	
 			void* _Reserved = NULL
 		);
 

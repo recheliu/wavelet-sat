@@ -12,10 +12,8 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	SimpleNDEncoder.cpp
 )
 
-# ADD-BY-LEETEN 2013/0811-BEGIN
 find_package(ThirdPartyLib)
 target_link_libraries(${PROJECT_NAME}	${ThirdPartyLib_LIBRARIES})
-# ADD-BY-LEETEN 2013/0811-END
 
 
 if( DEFINED WIN32 ) 
@@ -25,19 +23,16 @@ if( DEFINED WIN32 )
 else()
   target_link_libraries(${PROJECT_NAME}
     libopt
-	rt	# ADD-BY-LEETEN 10/29/2012 
+	rt	
     )
-  # ADD-BY-LEETEN 01/02/2013-BEGIN
   if( WITH_BOOST )
     target_link_libraries(${PROJECT_NAME}
       boost_system
       boost_filesystem
       )
   endif()
-  # ADD-BY-LEETEN 01/02/2013-END
 endif()
 
-# ADD-BY-LEETEN 10/28/2012-BEGIN
 if( WITH_NETCDF )
 	if( DEFINED WIN32 )
 	else()
@@ -47,7 +42,6 @@ if( WITH_NETCDF )
 			)
 	endif()
 endif()
-# ADD-BY-LEETEN 10/28/2012-END
 
 ############################################################
 # Copyright (c) 2013 Teng-Yok Lee

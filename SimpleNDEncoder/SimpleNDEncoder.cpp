@@ -10,13 +10,12 @@
 // namespace po = boost::program_options;
 
 Nrrd *nin;
-#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-typedef float typeData;
-// ADD-BY-LEETEN 03/29/2013-BEGIN
+#if	!WITH_DOUBLE_COEF	
+	typedef float typeData;
 #else	// #if	!WITH_DOUBLE_COEF
-typedef double typeData;
+	typedef double typeData;
 #endif	// #if	!WITH_DOUBLE_COEF
-// ADD-BY-LEETEN 03/29/2013-END
+
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
 CSimpleND<typeData, typeData, WaveletSAT::typeBin, typeData> cSimpleND;
@@ -139,48 +138,38 @@ main(int argn, char* argv[])
 	_OPTAddComment("--netcdf-deflate-level",
 		"Deflate level for NetCDF file. The value is between 0 (store only) and 9 (maximal).");
 
-	// ADD-BY-LEETEN 01/10/2013-BEGIN
 	int iIsUsingGPUs = 0;
 	_OPTAddBoolean("--is-using-gpus", &iIsUsingGPUs, iIsUsingGPUs);
 	_OPTAddComment("--is-using-gpus",
 		"The flag whether GPUs are used.");
-	// ADD-BY-LEETEN 01/10/2013-END
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
+
 	int iMaxNrOfEntriesOnGPUs = 4096;
 	_OPTAddIntegerVector(
 		"--max-n-entries-on-gpus", 1,
 		&iMaxNrOfEntriesOnGPUs, iMaxNrOfEntriesOnGPUs);
 	_OPTAddComment("--max-n-entries-on-gpus",
 		"Max #Entries to be executed per GPU call. The unit is 1024.");
-	// ADD-BY-LEETEN 01/11/2013-END
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
+
 	int iTimingPrintingLevel = 1;
 	_OPTAddIntegerVector(
 		"--timing-printing-level", 1,
 		&iTimingPrintingLevel, iTimingPrintingLevel);
 	_OPTAddComment("--timing-printing-level",
 		"The level to print the performance timing.");
-	// ADD-BY-LEETEN 01/11/2013-END
 
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	int iIsCompBinsOnly = 0;
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
-	// ADD-BY-LEETEN 03/28/2013-END
 
-	// ADD-BY-LEETEN 04/20/2013-BEGIN
 	int iIsUsingContourSpectrum = 0;
 	_OPTAddBoolean(
 		"--is-using-contour-spectrum", &iIsUsingContourSpectrum, iIsUsingContourSpectrum);
 	_OPTAddComment("--is-using-contour-spectrum", 
 		"Is the contour spectrum algorithm enabled?");
-	// ADD-BY-LEETEN 04/20/2013-END
 
-	// ADD-BY-LEETEN 2013/07/14-BEGIN
 	int iMinNrOfBufferedHeaders = 1;
 	_OPTAddIntegerVector(
 		"--min-n-buffered-headers", 1,
 		&iMinNrOfBufferedHeaders, iMinNrOfBufferedHeaders);
-	// ADD-BY-LEETEN 2013/07/14-END
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
@@ -188,11 +177,9 @@ main(int argn, char* argv[])
 	assert(szVolFilePath);
 	assert(szNcFilePathPrefix);
 
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
 	bool bIsPrintingTiming = (iTimingPrintingLevel>0)?true:false;
 	LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	// ADD-BY-LEETEN 01/11/2013-END
 
 	LOG_VAR(szVolFilePath);
 	_ReadVolume(szVolFilePath);
@@ -202,31 +189,25 @@ main(int argn, char* argv[])
 	size_t uWinSize = 1;
 	size_t uNrOfBins = (size_t)iNrOfBins;
 
-	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
+	LOG_VAR(iSizeOfFullArrays);	
 
-	// ADD-BY-LEETEN 2013/07/14-BEGIN
 	#if	!WITH_SAT_FILE	
 	cSimpleND._SetInteger(CSimpleND<double>::MIN_NR_OF_BUFFERED_HEADERS, (long)iMinNrOfBufferedHeaders);
 	#endif	// #if	!WITH_SAT_FILE	
-	// ADD-BY-LEETEN 2013/07/14-END
 	cSimpleND._SetInteger(CSimpleND<double>::SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
-	#if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+	#if WITH_NETCDF 
 	cSimpleND._SetInteger(CSimpleND<double>::DEFLATE_LEVEL, (long)iNetCDFDeflateLevel);
-        #endif // #if WITH_NETCDF // ADD-BY-LEETEN 11/09/2012
+    #endif // #if WITH_NETCDF 
 
-	// ADD-BY-LEETEN 01/10/2012-BEGIN
 	#if	WITH_CUDA
 	cSimpleND._SetInteger(cSimpleND.IS_USING_GPUS, (long)iIsUsingGPUs);
-	cSimpleND._SetInteger(cSimpleND.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	// ADD-BY-LEETEN 01/11/2013
-	// ADD-BY-LEETEN 01/11/2013-BEGIN
+	cSimpleND._SetInteger(cSimpleND.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	
 	cSimpleND._SetInteger(cSimpleND.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
-	// ADD-BY-LEETEN 01/11/2013-END
 	#endif	// #if	WITH_CUDA
-	// ADD-BY-LEETEN 01/10/2012-END
 
 	// Step 1: Setup up the data size
 	vector<size_t> vuDimLengths;
-	size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+	size_t uNrOfValues = 1;	
 	for(size_t d = 0; d < uNrOfDims; d++)
 	{
 		size_t uDimLength = (size_t)nin->axis[d].size;
@@ -242,10 +223,8 @@ main(int argn, char* argv[])
 	// Step 2: Allocate the needed #SATs
 	cSimpleND._SetHistogram(dValueMin, dValueMax);
 	cSimpleND._Allocate();
-	// ADD-BY-LEETEN 04/20/2013-BEGIN
 	cSimpleND._SetData(&vdData);
 	cSimpleND._SetInteger(CSimpleND<double>::WITH_CONTOUR_SPECTRUM, iIsUsingContourSpectrum);
-	// ADD-BY-LEETEN 04/20/2013-END
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -264,7 +243,6 @@ main(int argn, char* argv[])
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	// Step 4: Finalize the SAT computation
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	#if	WITH_SAT_FILE
 	if( iIsCompBinsOnly )
 	{
@@ -275,20 +253,16 @@ main(int argn, char* argv[])
 	else
 	{
 	#endif	// #if	WITH_SAT_FILE
-	// ADD-BY-LEETEN 03/28/2013-END
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	cSimpleND._Finalize();
-	LIBCLOCK_END(bIsPrintingTiming);
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cSimpleND._Finalize();
+		LIBCLOCK_END(bIsPrintingTiming);
 
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	cSimpleND._SaveFile(szNcFilePathPrefix);
-	LIBCLOCK_END(bIsPrintingTiming);
-
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cSimpleND._SaveFile(szNcFilePathPrefix);
+		LIBCLOCK_END(bIsPrintingTiming);
 	#if	WITH_SAT_FILE
 	}
 	#endif	// #if	WITH_SAT_FILE
-	// ADD-BY-LEETEN 03/28/2013-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;

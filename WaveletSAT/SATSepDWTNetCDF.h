@@ -46,17 +46,13 @@ protected:
 		int ncVarCoefValue;
 		nc_type typeCoefValue;
 public:
-		// ADD-BY-LEETEN 12/16/2012-BEGIN
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0A00,
-			// ADD-BY-LEETEN 12/12/2012-BEGIN
 			DEFLATE_LEVEL,
-			// ADD-BY-LEETEN 12/12/2012-END
 			PARAMETER_END
 		};
 
-		// ADD-BY-LEETEN 01/27/2013-BEGIN
 		#if !WITH_NETCDF4
 		typedef int	TYPE_COEF_COUNT;
 		typedef int	TYPE_COEF_OFFSET;
@@ -67,7 +63,6 @@ public:
 		typedef unsigned int		TYPE_COEF_BIN;
 		#endif // #if !WITH_NETCDF4
 		typedef double TYPE_COEF_VALUE;
-		// ADD-BY-LEETEN 01/27/2013-END
 
 		virtual	
 		void
@@ -84,11 +79,9 @@ public:
 		      break;
 		    }
 		}
-		// ADD-BY-LEETEN 12/16/2012-END
 
 		CSATSepDWTNetCDF():
 			CNetCDFBase(),
-			// ADD-BY-LEETEN 12/25/2012-BEGIN
 			#if !WITH_NETCDF4
 			typeCoefOffset(NC_INT),
 			typeCoefCount(NC_INT),
@@ -99,7 +92,6 @@ public:
 			typeCoefBin(NC_UINT),
 			#endif // #if !WITH_NETCDF4
 			typeCoefValue(NC_DOUBLE),
-			// ADD-BY-LEETEN 12/25/2012-END
 			szDimValue("VALUE"),
 			szVarCoefOffset("COEF_OFFSET"),
 			szVarCoefCount("COEF_COUNT"),

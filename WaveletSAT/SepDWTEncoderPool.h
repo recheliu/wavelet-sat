@@ -29,7 +29,6 @@ namespace WaveletSAT
 		typedef unordered_map<size_t, CEncodingSparseArray*> CEncodingSparseArrays; 
 		CEncodingSparseArrays *pcEncodingSparseArrays;
 		
-		// ADD-BY-LEETEN 2013/07/12-BEGIN
 		#if	WITH_STREAMING
 		struct CFileBuffer {
 			vector<size_t> vuHeaderGlobalOffsets;
@@ -46,7 +45,6 @@ namespace WaveletSAT
 			size_t uMaxNrOfHeaders;
 		} cFileBuffer;
 		#endif	// #if	WITH_STREAMING
-		// ADD-BY-LEETEN 2013/07/12-END
 
 	protected:
 		void
@@ -185,7 +183,7 @@ namespace WaveletSAT
 			}
 			else
 			{
-				if( Value )	// ADD-BY-LEETEN 2013/07/08
+				if( Value )	
 					mapSparseArray.insert(pair<BT, WT>(usBin, Value));
 			}
 

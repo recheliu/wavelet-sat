@@ -24,7 +24,7 @@ namespace WaveletSAT
 		virtual public CDecoderBase<ST, BT>
 	{
 protected:
-	  bool bIsOutOfCore; // ADD-BY-LEETEN 01/02/2013
+	  bool bIsOutOfCore; 
 		double* pdSAT;
 public:
 		////////////////////////////////////////////////////////////////////
@@ -65,7 +65,6 @@ public:
 			CDecoderBase<ST, BT>::_GetInteger(eName, plValue);
 		}
 
-		// ADD-BY-LEETEN 01/18/2012-BEGIN
 		virtual	
 		void
 		_GetDecodedSize
@@ -78,7 +77,6 @@ public:
 				vuDecodedSize.resize(UGetNrOfDims());
 			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDecodedSize.begin());
 		} 
-		// ADD-BY-LEETEN 01/18/2012-END
 
 		virtual
 		void
@@ -86,7 +84,6 @@ public:
 			void *_Reserved = NULL
 		) 
 		{
-		  // ADD-BY-LEETEN 01/02/2013-BEGIN
 		  size_t uNrOfBins = this->UGetNrOfBins();
 		  bIsOutOfCore = ( uNrOfBins * uDataSize * sizeof(*pdSAT) <= uSizeOfFullArrays )?false:true;
 		  if( !bIsOutOfCore )
@@ -96,11 +93,9 @@ public:
 				nc_get_var(iNcId, ncVarSAT, (void*)&pdSAT[0]) );
 		    }
 		  else
-		    // ADD-BY-LEETEN 01/02/2013-END
 			pdSAT = new double[uDataSize];
 		}
 		
-		// ADD-BY-LEETEN 12/23/2012-BEGIN
 		virtual	
 		void
 		_ShowStatistics
@@ -108,9 +103,7 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-		  // ADD-BY-LEETEN 01/02/2013-BEGIN
 		  const char *szFilepath = this->szFilepath;
-		  // ADD-BY-LEETEN 01/02/2013-END
 			#if		WITH_BOOST
 			size_t uFileSize = fs::file_size( szFilepath );
 			#else	// #if WITH_BOOST
@@ -205,7 +198,6 @@ public:
 			if( UGetNrOfBins() != vSums.size() )
 				vSums.resize(UGetNrOfBins());
 
-			// ADD-BY-LEETEN 01/05/2012-BEGIN
 			if( !bIsOutOfCore )
 			{
 				size_t uIndex = UConvertSubToIndex(vuPos, this->vuDimLengths);
@@ -213,7 +205,6 @@ public:
 					vSums[b] = pdSAT[offset];
 				return;
 			}
-			// ADD-BY-LEETEN 01/05/2012-END
 
 			double* pdSums = new double[UGetNrOfBins()];
 
@@ -241,7 +232,6 @@ public:
 			delete [] pdSums;
 		}
 
-		// ADD-BY-LEETEN 01/05/2013-BEGIN
 		//! Return the sum of all bins at the given position
 		virtual	
 		void
@@ -272,7 +262,6 @@ public:
 					vdSums[b] += (ST)iSign * vQuerySums[b];
 			}
 		}
-		// ADD-BY-LEETEN 01/05/2013-END
 
 		virtual
 		void
@@ -286,14 +275,12 @@ public:
 			if( uDataSize != vSAT.size() )
 				vSAT.resize(uDataSize);
 
-			// ADD-BY-LEETEN 01/02/2013-BEGIN
 		  if( !bIsOutOfCore )
 		    {
 		      for(size_t d = 0; d < uDataSize; d++)
 				vSAT[d] = (ST)pdSAT[(size_t)usBin * uDataSize + d];
 		      return;
 		    }
-		  // ADD-BY-LEETEN 01/02/2013-END
 			size_t puStarts[NC_MAX_DIMS];
 			size_t puCounts[NC_MAX_DIMS];
 			for(size_t d = 0; d < UGetNrOfDims() + 1; d++)

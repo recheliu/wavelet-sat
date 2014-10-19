@@ -23,11 +23,9 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	SimpleNDQuery.cpp
 )
 
-# ADD-BY-LEETEN 2013/0811-BEGIN
 target_link_libraries(${PROJECT_NAME}
 	${ThirdPartyLib_LIBRARIES}
 	)
-# ADD-BY-LEETEN 2013/0811-END
 
 if( DEFINED WIN32 ) 
   target_link_libraries(${PROJECT_NAME}
@@ -36,19 +34,16 @@ if( DEFINED WIN32 )
 else()
   target_link_libraries(${PROJECT_NAME}
     libopt
-	rt	# ADD-BY-LEETEN 10/29/2012 
+	rt	
     )
-  # ADD-BY-LEETEN 12/31/2012-BEGIN
   if( WITH_BOOST )
     target_link_libraries(${PROJECT_NAME}
       boost_system
       boost_filesystem
       )
   endif()
-  # ADD-BY-LEETEN 12/31/2012-END
 endif()
 
-# ADD-BY-LEETEN 10/28/2012-BEGIN
 if( WITH_NETCDF )
 	if( DEFINED WIN32 )
 	else()
@@ -58,7 +53,6 @@ if( WITH_NETCDF )
 			)
 	endif()
 endif()
-# ADD-BY-LEETEN 10/28/2012-END
 
 ############################################################
 # Copyright (c) 2013 Teng-Yok Lee

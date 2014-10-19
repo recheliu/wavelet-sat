@@ -1,6 +1,6 @@
 #pragma once
 
-#include	<algorithm>	// ADD-BY-LEETEN 03/17/2013
+#include	<algorithm>	
 
 #include <unordered_map>	
 #include <vector>
@@ -19,7 +19,7 @@ namespace WaveletSAT
 		typename BT = typeBin		//!< Type of the bin
 	>
 	class CSepDWTPoolBase
-		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
+		:virtual public CBase	
 	{
 	protected:	
 		// the pool of coefficients 

@@ -31,7 +31,6 @@ namespace WaveletSAT
 
 			//! The #query since the I/O counters are reset.
 			size_t uNrOfQueries;
-			// ADD-BY-LEETEN 12/28/2012-END
 
 			const char* szFilepath;	
 
@@ -108,7 +107,6 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		) = 0;
 		
-		// ADD-BY-LEETEN 12/23/2012-BEGIN
 		virtual	
 		void
 		_ShowStatistics
@@ -134,7 +132,6 @@ namespace WaveletSAT
 			void *_Reserved = NULL
 		) = 0;
 
-		// ADD-BY-LEETEN 01/18/2012-BEGIN
 		virtual	
 		void
 		_GetDecodedSize
@@ -142,9 +139,7 @@ namespace WaveletSAT
 			vector<size_t>& vuDecodedSize,
 			void *_Reserved = NULL
 		) const = 0;
-		// ADD-BY-LEETEN 01/18/2012-END
 
-		// ADD-BY-LEETEN 01/05/2013-BEGIN
 		//! Return the sum of all bins at the given position
 		virtual	
 		void
@@ -155,9 +150,7 @@ namespace WaveletSAT
 			vector<ST>& vdSums,
 			void *_Reserved = NULL
 		) = 0;
-		// ADD-BY-LEETEN 01/05/2013-END
 
-		// ADD-BY-LEETEN 12/29/2012-BEGIN
 		virtual
 		void
 		_DecodeBin

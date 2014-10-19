@@ -1,20 +1,16 @@
 #pragma once
 
-// ADD-BY-LEETEN 04/20/2013-BEGIN
 #include <exception>
 #include <unordered_map>
 using namespace std;
 #include "contourspectrum.h"
-// ADD-BY-LEETEN 04/20/2013-END
 
 #include "WaveletSATEncoder.h"
-// ADD-BY-LEETEN 01/10/2012-BEGIN
 #if	WITH_CUDA
 #include "WaveletSATGPUEncoder.h"	
 #endif	// #if	WITH_CUDA
-// ADD-BY-LEETEN 01/10/2012-END
-#include "SATFileEncoder.h"		// ADD-BY-LEETEN 01/02/2013
-#if WITH_NETCDF // ADD-BY-LEETEN 10/29/2012	
+#include "SATFileEncoder.h"
+#if WITH_NETCDF 
 #include <netcdf.h>
 #endif
 
@@ -25,30 +21,25 @@ template<
 	typename WT = WaveletSAT::typeWavelet	//!< Type of the wavelet coefficientsd
 >
 class CSimpleND:
-	#if	!WITH_SAT_FILE	// ADD-BY-LEETEN 01/05/2013
-	#if	!WITH_CUDA		// ADD-BY-LEETEN 01/10/2012
+	#if	!WITH_SAT_FILE	
+	#if	!WITH_CUDA		
 	virtual public WaveletSAT::CWaveletSATEncoder<DT, ST, BT, WT>
-	// ADD-BY-LEETEN 01/10/2012-BEGIN
+
 	#else	// #if	!WITH_CUDA	
 	virtual public WaveletSAT::CWaveletSATGPUEncoder<DT, ST, BT, WT>
 	#endif	// #if	!WITH_CUDA	
-	// ADD-BY-LEETEN 01/10/2012-END
-	// ADD-BY-LEETEN 01/05/2013-BEGIN
+
 	#else	// #if	!WITH_SAT_FILE	
 	virtual public WaveletSAT::CSATFileEncoder<DT, ST, BT>
 	#endif	// #if	!WITH_SAT_FILE	
-	// ADD-BY-LEETEN 01/05/2013-END
 {
 	DT valueMin, valueMax;
-	// ADD-BY-LEETEN 04/20/2013-BEGIN
 	bool bIsWithContourSpectrum;
 	double dMinSum;
 	const vector<DT>* pvData;
 
 	vector<double> vdBinEdges;
-	// ADD-BY-LEETEN 04/20/2013-END
 public:
-	// ADD-BY-LEETEN 04/20/2013-BEGIN
 	enum EParameter
 	{
 		PARAMETER_BEGIN = 0x0F00,
@@ -76,7 +67,6 @@ public:
 		void* _Reserved = NULL
 	)
 	{
-		// ADD-BY-LEETEN 10/18/2012-BEGIN
 		switch(eName)
 		{
 		case WITH_CONTOUR_SPECTRUM:
@@ -94,7 +84,6 @@ public:
 		WaveletSAT::CSATFileEncoder<DT, ST, BT>::_SetInteger(eName, lValue);
 		#endif	// #if	!WITH_SAT_FILE	
 	}
-	// ADD-BY-LEETEN 04/20/2013-END
 
 	virtual 
 	void 
@@ -106,8 +95,7 @@ public:
 		void *_Reserved = NULL
 	)
 	{
-	  const size_t& uNrOfBins = this->uNrOfBins; // ADD-BY-LEETEN 01/04/2013
-		// ADD-BY-LEETEN 04/20/2013-BEGIN
+	  const size_t& uNrOfBins = this->uNrOfBins; 
 		if( this->bIsWithContourSpectrum && 
 			(3 == vuPos.size() || 2 == vuPos.size() ) )
 		{
@@ -196,13 +184,12 @@ public:
 		}
 		else
 		{
-		// ADD-BY-LEETEN 04/20/2013-END
-		DT clampedValue = min(max(value, valueMin), valueMax);
-		size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
-		uBin = min(uBin, uNrOfBins - 1);
-		vpBins.clear();
-		vpBins.push_back(pair<BT, ST>((BT)uBin, (ST)1));
-		}	// ADD-BY-LEETEN 04/20/2013
+			DT clampedValue = min(max(value, valueMin), valueMax);
+			size_t uBin = (size_t)floorf((float)(uNrOfBins * (clampedValue - valueMin))/(float)(valueMax - valueMin));
+			uBin = min(uBin, uNrOfBins - 1);
+			vpBins.clear();
+			vpBins.push_back(pair<BT, ST>((BT)uBin, (ST)1));
+		}	
 	}
 	
 	////////////////////////////////////////////////////////////
@@ -228,7 +215,6 @@ public:
 		_Update(vuPos, value);
 	}
 
-	// ADD-BY-LEETEN 04/20/2013-BEGIN
 	#if !WITH_SAT_FILE
 	double 
 	DGetThreshold
@@ -253,7 +239,6 @@ public:
 		dMinSum = HUGE_VAL;
 		pvData = NULL;
 	}
-	// ADD-BY-LEETEN 04/20/2013-END
 };
 
 

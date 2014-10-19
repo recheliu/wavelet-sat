@@ -7,11 +7,9 @@ using namespace std;
 #include "cuda_macro.h"
 #include "CudaDWT.h"
 
-// ADD-BY-LEETEN 03/29/2013-BEGIN
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
-// ADD-BY-LEETEN 03/29/2013-END
 
 #define BLOCK_SIZE_X	16
 #define BLOCK_SIZE_Y	8
@@ -37,10 +35,8 @@ namespace CudaDWT
 			FREE_MEMORY(pfCompactedCoefs_device);
 			FREE_MEMORY(puCompactedKeys_device);
 
-			// ADD-BY-LEETEN 01/13/2013-BEGIN
 			FREE_MEMORY(puOnes_device);
 			FREE_MEMORY(puCompactedSegCounts_device);
-			// ADD-BY-LEETEN 01/13/2013-END
 		}
 	}
 
@@ -72,7 +68,6 @@ namespace CudaDWT
 		vector<unsigned int> vuOnes;
 		vuOnes.assign(uMaxNrOfElementsOnTheDevice, 1);
 		CUDA_SAFE_CALL(cudaMemcpy(puOnes_device, vuOnes.data(), sizeof(puOnes_device[0]) * vuOnes.size(), cudaMemcpyHostToDevice));
-		// ADD-BY-LEETEN 01/13/2013-END
 
 		bIsInitialized = true;
 	}
@@ -81,18 +76,16 @@ namespace CudaDWT
 	CCudaDWT::
 	_InitEncoder
 	(
-		// ADD-BY-LEETEN 01/18/2012-BEGIN
 		size_t uNrOfDims,
 		unsigned int puCoefLengths[],
-		// ADD-BY-LEETEN 01/18/2012-END
 		size_t				uNrOfElements,
 		const uint4			pu4BinSubs[],
 		const typeValue	pfValues[],
-		bool bWithCpuBucketSort,	// ADD-BY-LEETEN 01/13/2013
+		bool bWithCpuBucketSort,	
 		void* _Reserved
 	)
 	{
-		this->bWithCpuBucketSort = bWithCpuBucketSort;	// ADD-BY-LEETEN 01/13/2012
+		this->bWithCpuBucketSort = bWithCpuBucketSort;	
 
 		// upload the tuples in the pool to the device side
 		CUDA_SAFE_CALL(
@@ -109,7 +102,6 @@ namespace CudaDWT
 				sizeof(pfValues_device[0]) * uNrOfElements, 
 				cudaMemcpyHostToDevice));
 
-		// ADD-BY-LEETEN 01/18/2012-BEGIN
 		CUDA_SAFE_CALL(
 			cudaMemcpyToSymbol(
 				puCoefLengths_const, 
@@ -117,22 +109,19 @@ namespace CudaDWT
 				uNrOfDims * sizeof(puCoefLengths_const[0]), 
 				0,
 				cudaMemcpyHostToDevice));
-		// ADD-BY-LEETEN 01/18/2012-END
 
-		// ADD-BY-LEETEN 01/11/2013-BEGIN
 		v3Blk = dim3(BLOCK_SIZE);
 		size_t uNrOfBlocks = (size_t)ceilf((float)uNrOfElements / (float)v3Blk.x);
 		size_t uGridSizeX = (size_t)ceil(sqrtf((float)uNrOfBlocks));
 		size_t uGridSizeY = (size_t)ceil((float)uNrOfBlocks/(float)uGridSizeX);
 		v3Grid = dim3( (unsigned int)uGridSizeX, (unsigned int)uGridSizeY );
-		// ADD-BY-LEETEN 01/11/2013-END
 	}
 
 	void
 	CCudaDWT::
 	_Encode
 	(
-		size_t				uNrOfBins,	// ADD-BY-LEETEN 2013/07/13
+		size_t				uNrOfBins,	
 		size_t				uNrOfElements,
 		size_t				uNrOfDims,
 		const unsigned int	puLevels[],
@@ -141,13 +130,13 @@ namespace CudaDWT
 		size_t				*puNrOfElements,
 		typeKey				puKeys_host[],
 		typeCoef			pfCoefs_host[],
-		unsigned int		puSegCounts_host[],	// ADD-BY-LEETEN 01/13/2013
+		unsigned int		puSegCounts_host[],
 
-		int iTimingPrintingLevel,	// ADD-BY-LEETEN 01/11/2013
+		int iTimingPrintingLevel,	
 		void* _Reserved
 	)
 	{
-		bool bIsPrintingTiming = (iTimingPrintingLevel > 0)?true:false;	// ADD-BY-LEETEN 01/11/2013
+		bool bIsPrintingTiming = (iTimingPrintingLevel > 0)?true:false;	
 		LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 
 		// copy the lengths of the local coefficient array, wavelet lengths, and levels
@@ -176,7 +165,7 @@ namespace CudaDWT
 		_ProjToWavelet_kernel<<<v3Grid, v3Blk, 0>>>(
 			&pu4BinSub_device[0],	// the tuples of <bin, data_subscripts> of all elements
 			&pfValues_device[0],	// the counts of all elements
-			(unsigned int)uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
+			(unsigned int)uNrOfBins,		
 			(unsigned int)uNrOfDims, 
 			(unsigned int)uNrOfElements,
 			&puKeys_device[0],		// output: the keys of all elements. The keys are composed of bin and local_subscripts
@@ -185,18 +174,15 @@ namespace CudaDWT
 		CUT_CHECK_ERROR("_ProjToWavelet_kernel() failed");
 		LIBCLOCK_END(bIsPrintingTiming);
 
-		// ADD-BY-LEETEN 01/13/2013-BEGIN
 		if( !bWithCpuBucketSort )	
 		{
-		// ADD-BY-LEETEN 01/13/2013-END
-		// sort the wavelet projection according to the key composed by the bin and local subscripts
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		thrust::device_ptr<typeKey> vKeys_device(puKeys_device);
-		thrust::device_ptr<typeCoef> vCoefs_device(pfCoefs_device);
-		thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
-		// ADD-BY-LEETEN 03/29/2013-END
-		LIBCLOCK_END(bIsPrintingTiming);
-		}	// ADD-BY-LEETEN 01/13/2013
+			// sort the wavelet projection according to the key composed by the bin and local subscripts
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			thrust::device_ptr<typeKey> vKeys_device(puKeys_device);
+			thrust::device_ptr<typeCoef> vCoefs_device(pfCoefs_device);
+			thrust::sort_by_key(vKeys_device, vKeys_device + uNrOfElements, vCoefs_device);
+			LIBCLOCK_END(bIsPrintingTiming);
+		}	
 
 		thrust::device_ptr<typeKey> vuKeys_device(puKeys_device);
 		thrust::device_ptr<unsigned int> vuOnes_device(puOnes_device);
@@ -226,7 +212,6 @@ namespace CudaDWT
 				uNrOfCompactedSegCounts_host * sizeof(puSegCounts_host[0]),
 				cudaMemcpyDeviceToHost) );
 		LIBCLOCK_END(bIsPrintingTiming);
-		// ADD-BY-LEETEN 01/13/2013-END
 		thrust::device_ptr<typeCoef> vfCoefs_device(pfCoefs_device);
 		thrust::device_ptr<typeCoef> vfCompactedCoefs_device(pfCompactedCoefs_device);
 		size_t uNrOfCompactedCoefs_host;

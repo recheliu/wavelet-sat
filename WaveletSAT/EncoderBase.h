@@ -33,7 +33,7 @@ namespace WaveletSAT
 		typename BT = typeBin	//!< Type of the bin
 	>
 	class CEncoderBase
-		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
+		:virtual public CBase	
 	{
 protected:	
 		//! Update the specified bin.
@@ -108,7 +108,6 @@ protected:
 			void *_Reserved = NULL
 		) = 0;
 
-		// ADD-BY-LEETEN 12/12/2012-BEGIN
 		//! Save the coefficients to a file
 		virtual 
 		void
@@ -117,7 +116,6 @@ protected:
 		 const char* szFilepathPrefix, 
 			void *_Reserved = NULL
 		) = 0;
-		// ADD-BY-LEETEN 12/12/2012-END
 	};
 }
 

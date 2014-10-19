@@ -4,8 +4,8 @@
 using namespace std;
 #include <math.h>
 
-#include "Base.h"	// ADD-BY-LEETEN 12/30/2012
-#include "utils.h"	// ADD-BY-LEETEN 10/30/2012
+#include "Base.h"	
+#include "utils.h"	
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -29,7 +29,7 @@ namespace WaveletSAT
 	1. Call _GetAllSums() to get all SAT values for the given location.
 	*/
 	class CHeaderBase
-		:virtual public CBase	// ADD-BY-LEETEN 12/30/2012
+		:virtual public CBase	
 	{
 protected:	
 		//! The size of the allocated memory for the coefficients
@@ -43,11 +43,9 @@ protected:
 
 		size_t uNrOfBins;
 		
-		// ADD-BY-LEETEN 12/16/2012-BEGIN
 public:
 		////////////////////////////////////////////////////////////////////
 		//! Data Size
-		// ADD-BY-LEETEN 05/05/2013-BEGIN
 		const vector<size_t>&
 		VGetDimLengths
 		(
@@ -56,7 +54,6 @@ public:
 		{
 			return vuDimLengths;
 		}
-		// ADD-BY-LEETEN 05/05/2013-END
 		virtual 
 		void
 		_GetDataSize
@@ -69,7 +66,6 @@ public:
 			  vuDataSize.resize(UGetNrOfDims());
 			copy(vuDimLengths.begin(), vuDimLengths.end(), vuDataSize.begin());
 		}
-		// ADD-BY-LEETEN 12/16/2012-END
 
 		//! #Dimensions
 		/*!
@@ -106,7 +102,7 @@ public:
 		{
 			PARAMETER_BEGIN = 0x0900,
 
-			DATA_SIZE,	// ADD-BY-LEETEN 12/30/2012
+			DATA_SIZE,	
 
 			//! Total size in MB of all bin SATs.
 			SIZE_OF_FULL_ARRAYS,
@@ -122,17 +118,14 @@ public:
 			void* _Reserved = NULL
 		)
 		{
-			// ADD-BY-LEETEN 10/18/2012-BEGIN
 			switch(eName)
 			{
 			case SIZE_OF_FULL_ARRAYS:
 				uSizeOfFullArrays = (size_t)lValue * 1024 * 1024;
 				break;
 			}
-			// ADD-BY-LEETEN 10/18/2012-END
 		}
 
-		// ADD-BY-LEETEN 12/30/2012-BEGIN
 		virtual
 		void
 		_GetInteger(
@@ -148,7 +141,6 @@ public:
 				break;
 			}
 		}
-		// ADD-BY-LEETEN 12/30/2012-END
 
 		virtual
 		double 

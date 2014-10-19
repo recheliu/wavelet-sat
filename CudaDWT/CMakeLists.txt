@@ -29,7 +29,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	RELEASE_OUTPUT_NAME "${PROJECT_NAME}_r"
 	)
 
-# ADD-BY-LEETEN 01/18/2012-BEGIN
 install(
 	TARGETS ${PROJECT_NAME}
 	ARCHIVE	DESTINATION lib
@@ -39,7 +38,7 @@ install(
 	FILES CudaDWT.h
 	DESTINATION include
 	)
-# ADD-BY-LEETEN 01/18/2012-END
+
 ############################################################
 # Copyright (c) 2013 Teng-Yok Lee
 #

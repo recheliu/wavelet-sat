@@ -4,11 +4,10 @@
 using namespace std;
 #include <math.h>
 
-#include <string.h> // ADD-BY-LEETEN 04/11/2013
+#include <string.h> 
 
-#include "utils.h"		// ADD-BY-LEETEN 10/29/2012
+#include "utils.h"		
 
-// ADD-BY-LEETEN 2013/07/13-BEGIN
 #if		!defined(WITH_NETCDF)
 #define WITH_NETCDF		1
 #endif	// #if	!defined(WITH_NETCDF)
@@ -17,28 +16,23 @@ using namespace std;
 #endif	// #if	!defined(WITH_NETCDF4)
 
 #include "SepDWTHeader.h"	
-// MOD-BY-LEETEN 2013/10/27-FROM:	#include "SepDWTPool.h"		// ADD-BY-LEETEN 11/11/2012
 #include "SepDWTEncoderPool.h"
-// MOD-BY-LEETEN 2013/10/27-END
 #include "EncoderBase.h"	
-#include "SATSepDWTNetCDF.h"	// ADD-BY-LEETEN 12/16/2012
+#include "SATSepDWTNetCDF.h"
 
 #include "liblog.h"	
 
-// ADD-BY-LEETEN 12/12/2012-BEGIN
-#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
+#if	!WITH_SMART_PTR	
 #include "libbuf.h"
-// ADD-BY-LEETEN 12/30/2012-BEGIN
+
 #else	// #if	!WITH_SMART_PTR	
 #include <boost/shared_array.hpp>
 #endif	// #if	!WITH_SMART_PTR	
-// ADD-BY-LEETEN 12/30/2012-END
 
 #if	WITH_NETCDF
 #include <netcdf.h>
 #include "lognc.h"
 #endif	// #if	WITH_NETCDF
-// ADD-BY-LEETEN 12/12/2012-END
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -68,16 +62,13 @@ namespace WaveletSAT
 		typename WT = typeWavelet	//!< Type of the wavelet coefficientsd
 	>
 	class CWaveletSATEncoder:
-		virtual public CSATSepDWTNetCDF,	// ADD-BY-LEETEN 12/16/2012
+		virtual public CSATSepDWTNetCDF,
 		virtual public CSepDWTHeader,
 		virtual public CEncoderBase<DT, ST, BT>	
 	{
 protected:	
-		// ADD-BY-LEETEN 2013/07/14-BEGIN
 		size_t	uMinNrOfBufferedHeaders;
 		size_t	uMaxMemoryUsage;
-		// ADD-BY-LEETEN 2013/07/14-END
-		// ADD-BY-LEETEN 2013/07/12-BEGIN
 		#if		WITH_STREAMING		
 		FILE *fpCoefBins;
 		const char* szCoefBinTempFilename;
@@ -88,9 +79,7 @@ protected:
 
 		size_t uNrOfWrittenCoefs;
 		#endif	// #if		WITH_STREAMING		
-		// ADD-BY-LEETEN 2013/07/12-END
 
-	  // ADD-BY-LEETEN 12/15/2012-BEGIN
 	  //! Number of non-0 coefficients from all bin SATs.
 	  size_t uNrOfNonZeroValues;
 
@@ -98,23 +87,15 @@ protected:
 
 	  size_t uNrOfValuesOnSparseArray;
 
-	  // ADD-BY-LEETEN 12/15/2012-END
-
 		//! The flag whether the method _Finalize() should multiple the result by the wavelet coefficients
 		bool bIsFinalizedWithoutWavelet;
 
 		//! #Coefs stored in full arrays
 		size_t uNrOfCoefsInFullArray;	
 
-		// ADD-BY-LEETEN 10/29/2012-BEGIN
-		// MOD-BY-LEETEN 2013/10/27-FROM:		vector< CSepDWTPool<WT, BT> > vcCoefPools;
 		typedef CSepDWTEncoderPool<WT, BT> CSepDWTPool;
 		vector< CSepDWTPool > vcCoefPools;
-		// MOD-BY-LEETEN 2013/10/27-END
-		// ADD-BY-LEETEN 11/11/2012-END
-		// ADD-BY-LEETEN 10/29/2012-END
 
-		// ADD-BY-LEETEN 04/26/2013-BEGIN
 		virtual	
 		void 
 		_Update
@@ -133,9 +114,7 @@ protected:
 			for(typename vector< pair<BT, ST> >::iterator ivpBin  = vpBins.begin(); ivpBin != vpBins.end(); ivpBin++)
 				_UpdateBin(vuPos, value, ivpBin->first, ivpBin->second);
 		}
-		// ADD-BY-LEETEN 04/26/2013-END
 
-		// ADD-BY-LEETEN 2013/07/12-BEGIN
 		#if	WITH_STREAMING
 		virtual
 		void
@@ -184,17 +163,14 @@ protected:
 			fwrite(&pCoefBins[0], sizeof(TYPE_COEF_BIN), uNrOfBufferedCoefs, fpCoefBins);
 			fwrite(&pCoefValues[0], sizeof(TYPE_COEF_VALUE), uNrOfBufferedCoefs, fpCoefValues);
 			uNrOfWrittenCoefs += uNrOfBufferedCoefs;
-			// ADD-BY-LEETEN 2013/07/14-BEGIN
 			size_t uMemoryUsage = WaveletSAT::UGetMemoryUsage();
 			uMaxMemoryUsage = max(uMaxMemoryUsage, uMemoryUsage);
-			// ADD-BY-LEETEN 2013/07/14-END
 			this->vcCoefPools[c]._ResetFileBuffer();
 		}
 		#endif	// #if	WITH_STREAMING
-		// ADD-BY-LEETEN 2013/07/12-END
 
 		//! Update the specified bin.
-		virtual // ADD-BY-LEETEN 01/03/2013
+		virtual 
 		void 
 		_UpdateBin
 		(
@@ -209,7 +185,7 @@ protected:
 			vuLocalCoefSub.resize(UGetNrOfDims());
 
 			// now find the combination of the coefficients of all dimensions
-			vdBinWeights[uBin] += dWeight;	// ADD-BY-LEETEN 10/10/2012
+			vdBinWeights[uBin] += dWeight;	
 
 			vector<long> vlWavelets;
 			vector<size_t> vuSubs;	// the subscripts of different level
@@ -232,14 +208,11 @@ protected:
 				WT dWavelet = (WT)dWeight * (WT)lWavelet;
 				this->vcCoefPools[c]._AddAt(uBin, vuLocalCoefSub, dWavelet);
 
-				// ADD-BY-LEETEN 2013/07/12-BEGIN
 				#if	WITH_STREAMING
 				if( this->vcCoefPools[c].BIsReadyToFlush() ) 
 					_FlushBuffer(c);
 				#endif	//	#if	WITH_STREAMING
-				// ADD-BY-LEETEN 2013/07/12-END
 			}
-			// ADD-BY-LEETEN 11/11/2012-END
 		}
 public:
 		////////////////////////////////////////////////////////////////////
@@ -250,7 +223,7 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0400,
-			MIN_NR_OF_BUFFERED_HEADERS,	// ADD-BY-LEETEN 2013/07/14
+			MIN_NR_OF_BUFFERED_HEADERS,	
 			PARAMETER_END
 		};
 
@@ -266,7 +239,6 @@ public:
 		  CSepDWTHeader::_SetInteger(eName, lValue);
 		  // CEncoderBase<T, double>::_SetInteger(eName, lValue);
 			
-		// ADD-BY-LEETEN 2013/07/14-BEGIN
 		  switch(eName) {
 		  case MIN_NR_OF_BUFFERED_HEADERS:
 			  uMinNrOfBufferedHeaders = (size_t)lValue;
@@ -276,10 +248,8 @@ public:
 			  }
 			  break;
 		  }
-		// ADD-BY-LEETEN 2013/07/14-END
 		}
 
-		// ADD-BY-LEETEN 2013/07/12-BEGIN
 		#if	WITH_STREAMING
 		void
 		_OpenFile
@@ -404,9 +374,7 @@ public:
 			uNrOfWrittenCoefs = 0;
 		}
 		#endif	//	#if	WITH_STREAMING
-		// ADD-BY-LEETEN 2013/07/12-END
 
-		// ADD-BY-LEETEN 12/12/2012-BEGIN
 		virtual 
 		void
 		_SaveFile
@@ -416,7 +384,6 @@ public:
 		)
 		{
 			#if WITH_NETCDF 
-			// ADD-BY-LEETEN 12/15/2012-BEGIN
 			#if !WITH_NETCDF4
 			const char* szFileExt = "wnc";
 			#else // #if !WITH_NETCDF4
@@ -425,8 +392,7 @@ public:
 
 			char szFilepath[NC_MAX_NAME+1];
 			sprintf(szFilepath, "%s.%s", szFilepathPrefix, szFileExt);
-			// ADD-BY-LEETEN 12/15/2012-END
-			#if	!WITH_STREAMING	// ADD-BY-LEETEN 2013/07/12
+			#if	!WITH_STREAMING	
 			// Create the file.
 			#if !WITH_NETCDF4 
 			ASSERT_NETCDF(nc_create(
@@ -540,7 +506,6 @@ public:
 					piDimIds,
 					&ncVarCoefBin));
 
-			// ADD-BY-LEETEN 12/16/2012-BEGIN
 			#if WITH_NETCDF4 
 			ASSERT_NETCDF(nc_def_var_deflate(
 				   iNcId,
@@ -567,7 +532,6 @@ public:
 				   1, 
 				   iDeflateLevel));
 			#endif // #if WITH_NETCDF4
-			// ADD-BY-LEETEN 12/16/2012-END
 
 			// finish the definition mode
 			ASSERT_NETCDF(nc_enddef(iNcId));
@@ -602,7 +566,6 @@ public:
 
 				vector< pair<BT, WT> > vpairLocalCoefBinValue;
 
-				// ADD-BY-LEETEN 12/30/2012-BEGIN
 				#if	!WITH_SMART_PTR
 				TBuffer<TYPE_COEF_COUNT>	pLocalCoefCounts;
 				TBuffer<TYPE_COEF_OFFSET>	pLocalCoefOffsets;
@@ -612,7 +575,6 @@ public:
 				boost::shared_array<TYPE_COEF_COUNT>	pLocalCoefCounts(new TYPE_COEF_COUNT[uNrOfLocalCoefs]);
 				boost::shared_array<TYPE_COEF_OFFSET>	pLocalCoefOffsets(new TYPE_COEF_OFFSET[uNrOfLocalCoefs]);
 				#endif		// #if	!WITH_SMART_PTR
-				// ADD-BY-LEETEN 12/30/2012-END
 
 				for(size_t bc = 0; bc < uNrOfLocalCoefs; bc++)
 				{
@@ -634,7 +596,7 @@ public:
 					pLocalCoefOffsets[bc] = (TYPE_COEF_OFFSET)uNrOfWrittenValues + vpairLocalCoefBinValue.size();
 					vpairLocalCoefBinValue.insert(vpairLocalCoefBinValue.end(), vpairCoefBinValue.begin(), vpairCoefBinValue.end());
 				}
-				// ADD-BY-LEETEN 12/15/2012-BEGIN
+
 				// write the header
 				for(size_t d = 0; d < vuLocalCoefLengths.size(); d++)
 				  {
@@ -660,18 +622,16 @@ public:
 				puStart[0] = uNrOfWrittenValues;
 				puCount[0] = vpairLocalCoefBinValue.size();
 
-				#if	!WITH_SMART_PTR	// ADD-BY-LEETEN 12/30/2012
+				#if	!WITH_SMART_PTR	
 				TBuffer<TYPE_COEF_BIN> pLocalCoefBins;
 				pLocalCoefBins.alloc(vpairLocalCoefBinValue.size());
 
 				TBuffer<TYPE_COEF_VALUE> pLocalCoefValues;
 				pLocalCoefValues.alloc(vpairLocalCoefBinValue.size());
-				// ADD-BY-LEETEN 12/30/2012-BEGIN
 				#else	// #if	!WITH_SMART_PTR	
 				boost::shared_array<TYPE_COEF_BIN>		pLocalCoefBins(new TYPE_COEF_BIN[vpairLocalCoefBinValue.size()]);
 				boost::shared_array<TYPE_COEF_VALUE>	pLocalCoefValues(new TYPE_COEF_VALUE[vpairLocalCoefBinValue.size()]);
 				#endif	// #if	!WITH_SMART_PTR	
-				// ADD-BY-LEETEN 12/30/2012-END
 
 				for(size_t c = 0; c < vpairLocalCoefBinValue.size(); c++)
 				  {
@@ -692,22 +652,18 @@ public:
 								 puCount,
 								 (void*)&pLocalCoefValues[0]));
 				uNrOfWrittenValues += vpairLocalCoefBinValue.size();
-				// ADD-BY-LEETEN 12/15/2012-END
 			}
 
 			// close the file
 			ASSERT_NETCDF(nc_close(iNcId));
-			// ADD-BY-LEETEN 2013/07/12-BEGIN
 			#else	// #if	!WITH_STREAMING	
 			unlink(szFilepath);
 			ASSERT_OR_LOG(-1 != rename(szTempFilename, szFilepath), perror(""));
 			#endif	// #if	!WITH_STREAMING		
-			// ADD-BY-LEETEN 2013/07/12-END
 			#else	// #if WITH_NETCDF 
 			#endif	// #if WITH_NETCDF 
 			// write the data resolution
 		}
-		// ADD-BY-LEETEN 12/12/2012-END
 
 		//! Finalize the computation of SAT
 		virtual	
@@ -717,8 +673,8 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			LOG_VAR(uMaxMemoryUsage);	// ADD-BY-LEETEN 2013/07/14
-			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
+			LOG_VAR(uMaxMemoryUsage);
+			_ShowMemoryUsage(false); 
 
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
@@ -731,8 +687,7 @@ public:
 
 			_ShowMemoryUsage(false);
 
-			#if	!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
-			// ADD-BY-LEETEN 12/15/2012-BEGIN
+			#if	!WITH_STREAMING		
 			uNrOfNonZeroValues = 0;
 			uNrOfValuesInFullArray = 0;
 			uNrOfValuesOnSparseArray = 0;
@@ -744,8 +699,6 @@ public:
 				uNrOfValuesOnSparseArray += uS;
 			}
 			uNrOfNonZeroValues = uNrOfValuesInFullArray + uNrOfValuesOnSparseArray;
-			// ADD-BY-LEETEN 12/15/2012-END
-			// ADD-BY-LEETEN 2013/07/12-BEGIN
 			#else	//	#if	!WITH_STREAMING		
 			fclose(fpCoefBins);
 			fclose(fpCoefValues);
@@ -837,7 +790,6 @@ public:
 
 			ASSERT_NETCDF(nc_close(iNcId));
 			#endif	//	#if	!WITH_STREAMING		
-			// ADD-BY-LEETEN 2013/07/12-END
 		}
 
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -864,7 +816,7 @@ public:
 		//! Allocate the space to store coefficients for all bins. 
 		/*! 
 		*/
-		virtual	// ADD-BY-LEETEN 09/29/2012
+		virtual	
 		void 
 		_Allocate
 		(
@@ -890,7 +842,7 @@ public:
 			if( uNrOfCoefsInFullArray )
 			{
 				size_t uDiff = uSizeOfFullArrays;
-				double dCurrentAspectRatio = -1.0; // ADD-BY-LEETEN 10/31/2012
+				double dCurrentAspectRatio = -1.0; 
 				for(size_t l = 0; l < uLevelsProduct; l++)
 				{
 					vector<size_t> vuLevel;
@@ -943,23 +895,16 @@ public:
 						bIsSparse = true;
 				}
 
-				// ADD-BY-LEETEN 11/11/2012-BEGIN
 				if( !uNrOfCoefsInFullArray )
 				  bIsSparse = true;
-				// ADD-BY-LEETEN 11/11/2012-END
 
-				// ADD-BY-LEETEN 2013/07/07-BEGIN
 				// decide the wavelet weight
 				double dWavelet = +1.0;
 
-				// ADD-BY-LEETEN 2013/07/08-BEGIN
 				vector<size_t> vuWaveletLengths;
 				vuWaveletLengths.resize(UGetNrOfDims());
-				// ADD-BY-LEETEN 2013/07/08-END
 
-				// ADD-BY-LEETEN 2013/07/12-BEGIN
 				vector<size_t> vuGlobalCoefBase;
-				// ADD-BY-LEETEN 2013/07/12-END
 
 				for(size_t d = 0; d < vuLocalCoefSub.size(); d++)
 				{
@@ -967,71 +912,54 @@ public:
 					if( uLevel >= 1 )
 						dWavelet *= (double)(1 << (uLevel - 1));
 
-					// ADD-BY-LEETEN 2013/07/08-BEGIN
 					vuWaveletLengths[d] = (size_t)1<<(( !uLevel )?(vuDimLevels[d] - 1):(vuDimLevels[d] - uLevel));
-					// ADD-BY-LEETEN 2013/07/08-END
 
-					// ADD-BY-LEETEN 2013/07/12-BEGIN
 					#if		WITH_STREAMING		
 					vuGlobalCoefBase.push_back( (!uLevel)?0:(1<<(uLevel - 1)) );
 					#endif	//	#if	WITH_STREAMING		
-					// ADD-BY-LEETEN 2013/07/12-END
 				}
 
 				dWavelet = sqrt(dWavelet);
 				double dWeight = dWavelet/dWaveletDenomiator;
-				// ADD-BY-LEETEN 2013/08/11-BEGIN
 				this->vcCoefPools[c]._SetWaveletWeight(dWeight);
 				this->vcCoefPools[c]._SetDataDimLengths(vuDimLengths);
 				this->vcCoefPools[c]._SetWaveletLengths(vuWaveletLengths);
-				// ADD-BY-LEETEN 2013/08/11-END
-				#if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
-				#if		!WITH_STREAMING		// ADD-BY-LEETEN 2013/07/12
+				#if	WITH_DYNAMIC_ARRAY_ALLOCATION		
+				#if		!WITH_STREAMING		
 
-				// ADD-BY-LEETEN 2013/07/12-BEGIN
 				#else	// #if		!WITH_STREAMING		
 				this->vcCoefPools[c]._SetBuffer
 				(
-					uMinNrOfBufferedHeaders,	// ADD-BY-LEETEN 2013/07/14
+					uMinNrOfBufferedHeaders,	
 					vuGlobalCoefBase
 				);
 				#endif	// #if		!WITH_STREAMING		
-				// ADD-BY-LEETEN 2013/07/12-END
 
-				// ADD-BY-LEETEN 2013/07/14-BEGIN
 				bIsSparse = true;
-				// ADD-BY-LEETEN 2013/07/14-END
-				#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		// ADD-BY-LEETEN 2013/07/23
+				#endif	// #if	WITH_DYNAMIC_ARRAY_ALLOCATION		
 
 				this->vcCoefPools[c]._Set(
 					(BT)this->UGetNrOfBins(),
 					vuPoolDimLengths,
-					this->vuMaxCounts[c],	// ADD-BY-LEETEN 11/11/2012
+					this->vuMaxCounts[c],
 					bIsSparse);
 			}
-			// ADD-BY-LEETEN 11/11/2012-END
 
-			_ShowMemoryUsage(false); // ADD-BY-LEETEN 11/14/2012
+			_ShowMemoryUsage(false); 
 
-			// ADD-BY-LEETEN 2013/07/12-BEGIN
 			#if		WITH_STREAMING		
 			_OpenFile();
 			#endif	// #if		WITH_STREAMING		
-			// ADD-BY-LEETEN 2013/07/12-END
 		}
 		
 		CWaveletSATEncoder():
-			// ADD-BY-LEETEN 2013/07/14-BEGIN
 			uMaxMemoryUsage(0),	
 			uMinNrOfBufferedHeaders(8),
-			// ADD-BY-LEETEN 2013/07/14-END
-			// ADD-BY-LEETEN 2013/07/12-BEGIN
 			#if		WITH_STREAMING		
 			szCoefBinTempFilename("coef.bin.tmp"),
 			szCoefValueTempFilename("coef.value.tmp"),
 			uNrOfWrittenCoefs(0),	
 			#endif	// #if		WITH_STREAMING		
-			// ADD-BY-LEETEN 2013/07/12-END
 			bIsFinalizedWithoutWavelet(false)
 		{
 		}

@@ -22,6 +22,29 @@ using namespace WaveletSAT;
 
 // Ref: http://wiki.python.org/moin/boost.python/PointersAndSmartPointers
 
+// ADD-BY-LEETEN 2014/01/08-BEGIN
+struct pyVector: public vector<double> {
+	double 
+	get(
+		const size_t& index
+	)
+	{
+		const vector<double>& vec = *this;
+		return vec[index];
+	}
+
+	void 
+	set(
+		const size_t& index,
+		double value
+	)
+	{
+		vector<double>& vec = *this;
+		vec[index] = value;
+	}
+};
+// ADD-BY-LEETEN 2014/01/08-END
+
 struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, WaveletSAT::typeBin, WaveletSAT::typeWavelet> {
 
 	// ADD-BY-LEETEN 2013/09/03-BEGIN
@@ -214,6 +237,139 @@ struct pySATSepDWTDecoder: public CSimpleNDFile<double, WaveletSAT::typeSum, Wav
 		LIBCLOCK_PRINT(verbose);
 	}
 	// ADD-BY-LEETEN 2013/09/16-END
+
+	#if	1	// TEST-ADD
+	/*
+	void
+	clamp_to_datasize
+	(
+		const boost::python::list& src,
+		boost::python::list& dst,
+		const boolean verbose
+	)
+	{
+		vector<double> vdSrc;
+		_ConvertListToVector<double>(src, vdSrc);
+		vector<double> vdDst;
+		_ClampToDataSize(vdSrc, vdDst);
+		_ConvertVectorToList<double>(vdDst, dst);
+	}
+
+	void
+	comp_region_sum
+	(
+		const boost::python::list& left_offset, 
+		const boost::python::list& right_offset,
+		const boost::python::list& sat,
+		const boost::python::list& sat_lengths,	
+		boost::python::list& region_sum,
+		const boolean verbose
+	)
+	{
+		vector<int> viLeftOffset;		
+		_ConvertListToVector<int>(left_offset, viLeftOffset);
+		vector<int> viRightOffset;		
+		_ConvertListToVector<int>(right_offset, viRightOffset);
+		vector<double> vdSAT;			
+		_ConvertListToVector<double>(sat, vdSAT);
+		vector<size_t> vuSATLengths;		
+		_ConvertListToVector<size_t>(sat_lengths, vuSATLengths);
+
+		vector<double> vdRegionSum;
+		vdRegionSum.resize(vdSAT.size());
+		_ComputeRegionSum
+		(
+			viLeftOffset,
+			viRightOffset,
+			vdSAT,
+			vuSATLengths,
+			vdRegionSum
+		);
+		_ConvertVectorToList<double>(vdRegionSum, region_sum);
+	}
+
+	void 
+	get_bin_aggregate
+	(
+		const int bin_left,
+		const int bin_right,
+		boost::python::list& result,
+		const boolean verbose
+	) 
+	{
+		vector<double> vdResult;
+		vdResult.resize(uDataSize);
+		_DecodeAggregatedBin(bin_left, bin_right, vdResult);
+		_ConvertVectorToList<double>(vdResult, result);
+	}
+	*/
+	void
+	clamp_to_datasize
+	(
+		const pyVector& src,
+		pyVector& dst,
+		const boolean verbose
+	)
+	{
+		_ClampToDataSize(src, dst);
+	}
+
+	void
+	comp_region_sum
+	(
+		const boost::python::list& left_offset, 
+		const boost::python::list& right_offset,
+		const pyVector& sat,
+		const boost::python::list& sat_lengths,	
+		pyVector& region_sum,
+		const boolean verbose
+	)
+	{
+		vector<int> viLeftOffset;		
+		_ConvertListToVector<int>(left_offset, viLeftOffset);
+		vector<int> viRightOffset;		
+		_ConvertListToVector<int>(right_offset, viRightOffset);
+		vector<size_t> vuSATLengths;		
+		_ConvertListToVector<size_t>(sat_lengths, vuSATLengths);
+
+		_ComputeRegionSum
+		(
+			viLeftOffset,
+			viRightOffset,
+			sat,
+			vuSATLengths,
+			region_sum
+		);
+	}
+
+	void 
+	clamp_border
+	(
+		const boost::python::list& left_offset, 
+		const boost::python::list& right_offset,
+		pyVector& sat,
+		const boolean verbose
+	) 
+	{
+		vector<int> viLeftOffset;		
+		_ConvertListToVector<int>(left_offset, viLeftOffset);
+		vector<int> viRightOffset;		
+		_ConvertListToVector<int>(right_offset, viRightOffset);
+		_ClampBorder(sat, viLeftOffset, viRightOffset);
+	}
+
+	void 
+	get_bin_aggregate
+	(
+		const int bin_left,
+		const int bin_right,
+		pyVector& bin_aggregate,
+		const boolean verbose
+	) 
+	{
+		_DecodeAggregatedBin(bin_left, bin_right, bin_aggregate);
+	}
+#endif
 };
 
 BOOST_PYTHON_MODULE(sat_dwt_decoder)
@@ -243,8 +399,38 @@ BOOST_PYTHON_MODULE(sat_dwt_decoder)
 			"Apply the filter to all region histograms of the given size.")
 		// ADD-BY-LEETEN 2013/09/16-END
 
+#if	1	// TEST-ADD-BEGIN
+		.def("comp_region_sum", &pySATSepDWTDecoder::comp_region_sum,
+			args("left_offset", "right_offset", "sat", "sat_lengths", "region_sum", "verbose"), 
+			"Get the region sum for the given SAT.")
+
+		.def("clamp_to_datasize", &pySATSepDWTDecoder::clamp_to_datasize,
+			args("src", "dst", "verbose"), 
+			"Clamp the given field to the data size.")
+
+		.def("clamp_border", &pySATSepDWTDecoder::clamp_border,
+			args("left_offset", "right_offset", "sat", "verbose"), 
+			"Clamp the border according to the left_offset and right_offset.")
+
+		.def("get_bin_aggregate", &pySATSepDWTDecoder::get_bin_aggregate,
+			args("bin_left", "bin_right", "result", "verbose"), 
+			"Get the sum of bin SATs with bins from the left edge of bin_left to the right edge of bin_right.")
+#endif
+
 		.def("get_region_histogram", &pySATSepDWTDecoder::get_region_histogram)
 		;	
+
+#if	1	// TEST-ADD
+    class_<pyVector>("std_vector")
+		.def("get", &pyVector::get,
+			args("index"), 
+			"Get the value at the given index.")
+
+		.def("set", &pyVector::set,
+			args("index", "value"), 
+			"Set the value at the given index.")
+		;
+#endif
 }
 
 

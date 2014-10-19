@@ -12,13 +12,11 @@ using namespace std;
 #include "contourspectrum.h"
 
 Nrrd *nin;
-#if	!WITH_DOUBLE_COEF	// ADD-BY-LEETEN 03/29/2013
-typedef float typeData;
-// ADD-BY-LEETEN 03/29/2013-BEGIN
+#if	!WITH_DOUBLE_COEF	
+	typedef float typeData;
 #else	// #if	!WITH_DOUBLE_COEF
-typedef double typeData;
+	typedef double typeData;
 #endif	// #if	!WITH_DOUBLE_COEF
-// ADD-BY-LEETEN 03/29/2013-END
 typeData	dValueMin = (typeData)HUGE_VAL;
 typeData	dValueMax = (typeData)-HUGE_VAL;
 vector<typeData> vdData;

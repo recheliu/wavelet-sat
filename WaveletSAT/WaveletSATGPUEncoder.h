@@ -5,8 +5,8 @@
 using namespace CudaDWT;
 #endif	// #if	WITH_CUDA
 
-#include "libclock.h"	// ADD-BY-LEETEN 2013/07/06
-#include "WaveletSATEncoder.h"	// ADD-BY-LEETEN 12/16/2012
+#include "libclock.h"	
+#include "WaveletSATEncoder.h"	
 
 namespace WaveletSAT
 {
@@ -37,7 +37,7 @@ protected:
 		vector<CudaDWT::typeKey>	vuKeys;
 		vector<typeWavelet>			vfCoefs;
 
-		vector<unsigned int>	vuSegCounts;	// ADD-BY-LEETEN 01/13/2013
+		vector<unsigned int>	vuSegCounts;	
 
 		virtual
 		void
@@ -50,16 +50,13 @@ protected:
 			unsigned int puLevels[CudaDWT::GPU_MAX_NR_OF_DIMS];
 			unsigned int puWaveletLengths[CudaDWT::GPU_MAX_NR_OF_DIMS];
 				
-			// ADD-BY-LEETEN 01/18/2012-BEGIN
 			unsigned int puCoefLengths[CudaDWT::GPU_MAX_NR_OF_DIMS];
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 				puCoefLengths[d] = (unsigned int)vuCoefLengths[d];
-			// ADD-BY-LEETEN 01/18/2012-END
+
 			CCudaDWT::_InitEncoder(
-				// ADD-BY-LEETEN 01/18/2012-BEGIN
 				UGetNrOfDims(), 
 				&puCoefLengths[0],
-				// ADD-BY-LEETEN 01/18/2012-END
 				uNrOfElements,
 				vu4BinSubs.data(),
 				vfWeights.data()
@@ -67,7 +64,7 @@ protected:
 
 			for(size_t c = 0; c < uNrOfUpdatingCoefs; c++)
 			{
-				bool bIsPrintingTiming = ( iTimingPrintingLevel > 0 )?true:false;	// ADD-BY-LEETEN 01/11/2013
+				bool bIsPrintingTiming = ( iTimingPrintingLevel > 0 )?true:false;	
 				LIBCLOCK_INIT(bIsPrintingTiming, __FUNCTION__);
 
 				LIBCLOCK_BEGIN(bIsPrintingTiming);
@@ -83,7 +80,7 @@ protected:
 				LIBCLOCK_BEGIN(bIsPrintingTiming);
 				size_t uNrOfEncodedCoefs;
 				CCudaDWT::_Encode(
-					uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
+					uNrOfBins,		
 					uNrOfElements,
 					UGetNrOfDims(),
 					&puLevels[0],
@@ -93,7 +90,7 @@ protected:
 					vuKeys.data(),
 					vfCoefs.data(),
 
-					vuSegCounts.data(),	// ADD-BY-LEETEN 01/13/2013
+					vuSegCounts.data(),	
 
 					iTimingPrintingLevel - 1
 				);
@@ -109,7 +106,7 @@ protected:
 				for(size_t e = 0; e < uNrOfEncodedCoefs; e++)
 				{
 					CudaDWT::typeKey uKey = (CudaDWT::typeKey )vuKeys[e];
-					unsigned int uCount = vuSegCounts[e];	// ADD-BY-LEETEN 01/13/2013
+					unsigned int uCount = vuSegCounts[e];	
 					BT uBin = (BT)uKey % uNrOfBins;
 					uKey /= uNrOfBins;
 					for(size_t d = 0; d < UGetNrOfDims(); d++)
@@ -120,14 +117,12 @@ protected:
 					}
 					this->vcCoefPools[c]._AddAt(uBin, vuPos, (WT)vfCoefs[e], (size_t)uCount);
 
-					// ADD-BY-LEETEN 2013/07/12-BEGIN
 					#if	WITH_STREAMING
 					if( this->vcCoefPools[c].BIsReadyToFlush() ) 
 					{
 						_FlushBuffer(c);
 					}
 					#endif	// #if	WITH_STREAMING
-					// ADD-BY-LEETEN 2013/07/12-END
 				}
 				LIBCLOCK_END(bIsPrintingTiming);
 
@@ -177,7 +172,7 @@ public:
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0E00,
-			TIMING_PRINTING_LEVEL,	// ADD-BY-LEETEN 01/11/2013
+			TIMING_PRINTING_LEVEL,	
 			IS_USING_GPUS,
 			MAX_NR_OF_ELEMENTS_ON_THE_DEVICE,
 			PARAMETER_END
@@ -194,11 +189,9 @@ public:
 			CWaveletSATEncoder<DT, ST, BT, WT>::_SetInteger(eName, lValue);
 			switch(eName)
 			{
-			// ADD-BY-LEETEN 01/11/2013-BEGIN
 			case TIMING_PRINTING_LEVEL:
 				iTimingPrintingLevel = lValue;
 				break;
-			// ADD-BY-LEETEN 01/11/2013-END
 			case IS_USING_GPUS:
 				bIsUsingGPUs = (lValue)?true:false;
 				break;
@@ -230,7 +223,7 @@ public:
 		//! Allocate the space on the GPU device and setup CUDPP
 		/*! 
 		*/
-		virtual	// ADD-BY-LEETEN 09/29/2012
+		virtual	
 		void 
 		_Allocate
 		(
@@ -250,7 +243,7 @@ public:
 			vfWeights.resize(uMaxNrOfElementsOnTheDevice);
 			vuKeys.resize(uMaxNrOfElementsOnTheDevice);
 			vfCoefs.resize(uMaxNrOfElementsOnTheDevice);
-			vuSegCounts.resize(uMaxNrOfElementsOnTheDevice);	// ADD-BY-LEETEN 01/13/2013
+			vuSegCounts.resize(uMaxNrOfElementsOnTheDevice);	
 		}
 		
 		CWaveletSATGPUEncoder():

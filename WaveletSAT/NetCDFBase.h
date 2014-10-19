@@ -4,7 +4,6 @@
 #include <netcdf.h>
 #include "lognc.h"
 
-// ADD-BY-LEETEN 01/22/2012-BEGIN
 #if defined(WIN32)
 #if	defined(_DEBUG)
 	#pragma comment (lib, "zlibd.lib")
@@ -19,7 +18,6 @@
 #pragma comment (lib, "libsrc4.lib")
 #pragma comment (lib, "libdispatch.lib")
 #endif	// #if defined(WIN32)
-// ADD-BY-LEETEN 01/22/2012-END
 #endif	// #if	WITH_NETCDF
 
 #include "Base.h"
@@ -36,7 +34,7 @@ namespace WaveletSAT
 protected:	
 		int iNcId;
 
-		int iDeflateLevel; // ADD-BY-LEETEN 12/16/2012
+		int iDeflateLevel; 
 
 		char szNetCDFFilepath[NC_MAX_NAME];
 
@@ -46,7 +44,6 @@ protected:
 		const char* szDimDim;
 		int ncDimDim;
 public:
-		// ADD-BY-LEETEN 12/16/2012-BEGIN
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0E00,
@@ -69,7 +66,6 @@ public:
 		      break;
 		    }
 		}
-		// ADD-BY-LEETEN 12/16/2012-END
 
 		CNetCDFBase():
 			iDeflateLevel(0),

@@ -1,6 +1,6 @@
 __constant__ unsigned int puWaveletLengths_const[CudaDWT::GPU_MAX_NR_OF_DIMS];
 __constant__ unsigned int puLevels_const[CudaDWT::GPU_MAX_NR_OF_DIMS];
-__constant__ unsigned int puCoefLengths_const[CudaDWT::GPU_MAX_NR_OF_DIMS];	// ADD-BY-LEETEN 01/18/2012
+__constant__ unsigned int puCoefLengths_const[CudaDWT::GPU_MAX_NR_OF_DIMS];	
 
 __global__ 
 void 
@@ -8,7 +8,7 @@ _ProjToWavelet_kernel
 (
 	const uint4 pu4BinSub_device[],	// the tuples of <bin, data_subscripts> of all elements
 	const CudaDWT::typeValue	pfCounts_device[],	// the counts of all elements
-	const unsigned int uNrOfBins,		// ADD-BY-LEETEN 2013/07/13
+	const unsigned int uNrOfBins,		
 	const unsigned int uNrOfDims, 
 	const unsigned int uNrOfElements,
 	CudaDWT::typeKey puKeys_device[],		// output: the keys of all elements. The keys are composed of bin and local_subscripts

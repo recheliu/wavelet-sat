@@ -20,7 +20,6 @@ protected:
 		int ncVarSAT;
 		const char* szVarSAT;
 
-		// ADD-BY-LEETEN 04/20/2013-BEGIN
 		const char* szVarCoefOffset;
 		int			ncVarCoefOffset;
 		nc_type		nctypeCoefOffset;
@@ -39,10 +38,8 @@ protected:
 		const char* szVarCoefSum;
 		int			ncVarCoefSum;
 		nc_type		nctypeCoefSum;
-		// ADD-BY-LEETEN 04/20/2013-END
 
 public:
-		// ADD-BY-LEETEN 04/20/2013-BEGIN
 		static const char* SZGetVarCoefOffset()	{	return	"COEF_OFFSET";	}
 		static const char* SZGetVarCoefCount()	{	return	"COEF_COUNT";	}
 		static const char* SZGetVarCoefBin()	{	return	"COEF_BIN";		}
@@ -50,9 +47,7 @@ public:
 
 		typedef		unsigned long long typeCoefOffset;
 		typedef		unsigned short typeCoefCount;
-		// ADD-BY-LEETEN 04/20/2013-END
 
-		// ADD-BY-LEETEN 12/16/2012-BEGIN
 		enum EParameter
 		{
 			PARAMETER_BEGIN = 0x0D00,
@@ -69,11 +64,9 @@ public:
 		{
 			CNetCDFBase::_SetInteger(eName, lValue);
 		}
-		// ADD-BY-LEETEN 12/16/2012-END
 
 		CSATFileNetCDF():
 			szVarSAT("SAT"),
-			// ADD-BY-LEETEN 04/20/2013-BEGIN
 			szDimCoef("COEF"),
 			szVarCoefOffset(SZGetVarCoefOffset()),
 			szVarCoefCount(	SZGetVarCoefCount()),
@@ -83,7 +76,6 @@ public:
 			nctypeCoefCount(	NC_USHORT),
 			nctypeCoefBin(		NC_USHORT),
 			nctypeCoefSum(		NC_DOUBLE),
-			// ADD-BY-LEETEN 04/20/2013-END
 			CNetCDFBase()
 		{
 		};

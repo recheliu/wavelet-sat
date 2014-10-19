@@ -4,7 +4,7 @@ import sat_dwt_decoder;
 
 waveletsat_decoder = sat_dwt_decoder.decoder();
 # waveletsat_decoder.load("D:/data/WaveletSAT/video/vis08.wnc4");
-waveletsat_decoder.load("D:/data/WaveletSAT/video/AVSS_AB_Easy.wnc4");
+waveletsat_decoder.load("D:/data/WaveletSAT/video/AVSS_PV_Hard.wnc4");
 
 data_size = [];
 waveletsat_decoder.get_size(data_size);
@@ -17,9 +17,12 @@ print data_level;
 n_bins = waveletsat_decoder.get_n_bins();
 print n_bins;
 
-query_time = 50;
-query_coord = [27, 81];
-query_size = [16, 32];
+# query_time = 50;
+# query_coord = [27, 81];
+# query_size = [16, 32];
+query_time = 78;
+query_coord = [104, 47];
+query_size = [8, 6];
 
 query_level = [];
 query_local_coord = [];
@@ -49,7 +52,12 @@ query_level.append(0);
 # plt.xlim(0, n_bins)
 # plt.show(); 
     
-import matplotlib.pyplot as plt;        
+# TMP-ADD-BEGIN
+import matplotlib
+matplotlib.use('Agg');   
+# TMP-ADD-END
+
+import matplotlib.pyplot as plt;      
 time_window = 1 << (data_level[2]);
 prev_cdf = [];
 level_dist = [];
@@ -92,6 +100,12 @@ for tlevel in range(0, data_level[2]):
  
 plt.show(); 
      
-plt.figure();
+# TMP-MOD:    plt.figure();
+fig = plt.figure();
+# TMP-MOD-END
 plt.plot(level_dist);
 plt.show();
+
+# TMP-ADD-BEGIN
+fig.savefig('test.eps')
+# TMP-ADD-END

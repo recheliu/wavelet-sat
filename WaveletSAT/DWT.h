@@ -1,6 +1,6 @@
 #pragma once
 
-#include <valarray>	// ADD-BY-LEETEN 12/30/2012
+#include <valarray>	
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -38,7 +38,6 @@ namespace WaveletSAT
 		}
 	}	
 
-	// ADD-BY-LEETEN 12/29/2012-BEGIN
 	template<typename T>
 	void
 	_IDWT1D
@@ -66,9 +65,7 @@ namespace WaveletSAT
 			_IDWT1D<T>(vSrc, vDst, uLength * 2, uLevel - 1);
 		}
 	}	
-	// ADD-BY-LEETEN 12/29/2012-END
 
-	// ADD-BY-LEETEN 01/21/2013-BEGIN
 	template<typename T>
 	void
 	_IDWT1D
@@ -106,7 +103,6 @@ namespace WaveletSAT
 		}
 	}	
 
-	// ADD-BY-LEETEN 12/29/2012-BEGIN
 	template<typename T>
 	void
 	_IDWT1D
@@ -146,7 +142,6 @@ namespace WaveletSAT
 				uLevel - 1);
 		}
 	}	
-	// ADD-BY-LEETEN 01/21/2013-END
 }
 
 /***********************************************************

@@ -91,28 +91,22 @@ main(int argn, char* argv[])
 	_OPTAddComment("--timing-printing-level",
 		"The level to print the performance timing.");
 
-	// ADD-BY-LEETEN 04/21/2013-BEGIN
 	int iIsUsingContourSpectrum = 0;
 	_OPTAddBoolean(
 		"--is-using-contour-spectrum", &iIsUsingContourSpectrum, iIsUsingContourSpectrum);
 	_OPTAddComment("--is-using-contour-spectrum", 
 		"Is the contour spectrum algorithm enabled?");
-	// ADD-BY-LEETEN 04/21/2013-END
 
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	int iIsCompBinsOnly = 0;
 	_OPTAddBoolean("--is-comp-bins-only", &iIsCompBinsOnly, iIsCompBinsOnly);
-	// ADD-BY-LEETEN 03/28/2013-END
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 
-	// ADD-BY-LEETEN 04/21/2013-BEGIN
 	if(iIsUsingContourSpectrum)
 	{
 		LOG_ERROR(fprintf(stderr, "Contour Spectrum mode is only supported for 3D scalar field. Skip it."));
 		return 1;
 	}
-	// ADD-BY-LEETEN 04/21/2013-END
 
 	assert(bIsOptParsed);
 	assert(szNcFilePathPrefix);
@@ -128,7 +122,7 @@ main(int argn, char* argv[])
 
 	#if	WITH_CUDA
 	cVector2D._SetInteger(cVector2D.IS_USING_GPUS, (long)iIsUsingGPUs);
-	cVector2D._SetInteger(cVector2D.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	// ADD-BY-LEETEN 01/11/2013
+	cVector2D._SetInteger(cVector2D.TIMING_PRINTING_LEVEL, (long)iTimingPrintingLevel - 1);	
 	cVector2D._SetInteger(cVector2D.MAX_NR_OF_ELEMENTS_ON_THE_DEVICE, iMaxNrOfEntriesOnGPUs * 1024);
 	#endif	// #if	WITH_CUDA
 
@@ -145,7 +139,6 @@ main(int argn, char* argv[])
 	cVector2D._Encode();
 	LIBCLOCK_END(bIsPrintingTiming);
 
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	#if	WITH_SAT_FILE
 	if( iIsCompBinsOnly )
 	{
@@ -156,20 +149,17 @@ main(int argn, char* argv[])
 	else
 	{
 	#endif	// #if	WITH_SAT_FILE
-	// ADD-BY-LEETEN 03/28/2013-END
-	LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 03/30/2013
-	cVector2D._Finalize();	// ADD-BY-LEETEN 03/28/2013
-	LIBCLOCK_END(bIsPrintingTiming);	// ADD-BY-LEETEN 03/30/2013
+		LIBCLOCK_BEGIN(bIsPrintingTiming);	
+		cVector2D._Finalize();	
+		LIBCLOCK_END(bIsPrintingTiming);	
 
-	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	cVector2D._SaveFile(szNcFilePathPrefix);
-	LIBCLOCK_END(bIsPrintingTiming);
+		LIBCLOCK_BEGIN(bIsPrintingTiming);
+		cVector2D._SaveFile(szNcFilePathPrefix);
+		LIBCLOCK_END(bIsPrintingTiming);
 
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	#if	WITH_SAT_FILE
 	}
 	#endif	// #if	WITH_SAT_FILE
-	// ADD-BY-LEETEN 03/28/2013-END
 
 	LIBCLOCK_PRINT(bIsPrintingTiming);
 	return 0;

@@ -1,11 +1,9 @@
 #pragma once
 
-// ADD-BY-LEETEN 12/28/2012-BEGIN
 #if	WITH_BOOST
 #include <boost/filesystem/operations.hpp>
 namespace fs = boost::filesystem;
 #endif	// #if	WITH_BOOST
-// ADD-BY-LEETEN 12/28/2012-END
 
 #include <iostream>
 #include <vector>
@@ -29,7 +27,7 @@ using namespace std;
 #include "lognc.h"
 
 #include "EncoderBase.h"
-#include "SATFileNetCDF.h"	// ADD-BY-LEETEN 01/02/2013
+#include "SATFileNetCDF.h"	
 
 /*
 Usage: The application just calls _SetDimLengths() first and then _AllocateBins() to setup the class. 
@@ -51,7 +49,7 @@ namespace WaveletSAT
 	>
 	class CSATFileEncoder:
 		virtual public CHeaderBase,
-		virtual public CSATFileNetCDF,	// ADD-BY-LEETEN 01/02/2013
+		virtual public CSATFileNetCDF,	
 		virtual public CEncoderBase<DT, ST, BT>
 	{
 protected:	
@@ -102,7 +100,6 @@ public:
 			PARAMETER_END
 		};
 
-		// ADD-BY-LEETEN 11/09/2012-BEGIN
 		virtual
 		void
 		_SetInteger(
@@ -120,7 +117,6 @@ public:
 			CHeaderBase::_SetInteger(eName, lValue);
 			// CEncoderBase<DT, ST>::_SetInteger(eName, lValue);
 		}
-		// ADD-BY-LEETEN 11/09/2012-END
 
 		//! Finalize the computation of SAT
 		/*!
@@ -219,11 +215,9 @@ public:
 					b < UGetNrOfBins(); 
 					b++)
 			{
-				// ADD-By-LEETEN 02/19/2013-BEGIN
 				static int iPrintTiming;
 				LIBCLOCK_INIT(iPrintTiming, __FUNCTION__);	
 				LIBCLOCK_BEGIN(iPrintTiming);	
-				// ADD-By-LEETEN 02/19/2013-END
 				for(size_t i = 0; i < this->uDataSize; i++)
 				{
 					const unordered_map<BT, ST>& mapHist = vmapHists[i];
@@ -231,10 +225,8 @@ public:
 					pSAT[i] = (double)( mapHist.end() == imapHist )?0:imapHist->second;
 				}
 				
-				// ADD-By-LEETEN 02/19/2013-BEGIN
 				LIBCLOCK_END(iPrintTiming);	
 				LIBCLOCK_BEGIN(iPrintTiming);	
-				// ADD-By-LEETEN 02/19/2013-END
 				for(size_t uOffset = 1, d = 0; d < this->UGetNrOfDims(); uOffset *= vuDimLengths[d], d++)
 				{
 					size_t uNrOfScanLines = this->uDataSize / this->vuDimLengths[d];
@@ -250,10 +242,8 @@ public:
 							pSAT[uIndex + uOffset] += pSAT[uIndex];
 					}
 				}
-				// ADD-By-LEETEN 02/19/2013-BEGIN
 				LIBCLOCK_END(iPrintTiming);	
 				LIBCLOCK_BEGIN(iPrintTiming);	
-				// ADD-By-LEETEN 02/19/2013-END
 				// dump this SAT
 				size_t puStart[NC_MAX_DIMS];
 				size_t puCount[NC_MAX_DIMS];
@@ -275,10 +265,8 @@ public:
 						   puStart,
 						   puCount,
 						   (void*)&pSAT[0]));
-				// ADD-By-LEETEN 02/19/2013-BEGIN
 				LIBCLOCK_END(iPrintTiming);	
 				LIBCLOCK_PRINT(iPrintTiming);	
-				// ADD-By-LEETEN 02/19/2013-END
 			}
 			ASSERT_NETCDF(nc_close(iNcId));
 
@@ -286,7 +274,6 @@ public:
 
 		}
 
-		// ADD-BY-LEETEN 12/12/2012-BEGIN
 		//! Save the coefficients to a file
 		virtual 
 		void
@@ -307,9 +294,7 @@ public:
 			remove(szFilepath);
 			rename("sat.nc", szFilepath);
 		}
-		// ADD-BY-LEETEN 12/12/2012-END
 
-		// ADD-BY-LEETEN 04/20/2013-BEGIN
 		virtual 
 		void
 		_DefineBinVar
@@ -338,9 +323,7 @@ public:
 				   iDeflateLevel));
 			#endif	// #if WITH_NETCDF4
 		}
-		// ADD-BY-LEETEN 04/20/2013-END
 
-		// ADD-BY-LEETEN 03/28/2013-BEGIN
 		virtual 
 		void
 		_SaveBins
@@ -400,7 +383,6 @@ public:
 				vncDimData.push_back(iNcDimId);
 			}
 
-			// ADD-BY-LEETEN 04/20/2013-BEGIN
 			// scan through all maps to decide the total #of bins to save
 			size_t uTotalNrOfBins = 0;
 			for(size_t v = 0; v < this->vmapHists.size(); v++)
@@ -412,7 +394,6 @@ public:
 						szDimCoef,
 						(int)uTotalNrOfBins,
 						&ncDimCoef) );
-			// ADD-BY-LEETEN 04/20/2013-END
 
 			// now define the variable for the bins.
 			int piNcDimIds[NC_MAX_DIMS];
@@ -494,7 +475,6 @@ public:
 			ASSERT_NETCDF(nc_close(iNcId));
 			iNcId = 0;
 		}
-		// ADD-BY-LEETEN 03/28/2013-END
 
 		//! Allocate the space to store coefficients for all bins. 
 		/*! 
@@ -508,7 +488,6 @@ public:
 		{
 			vmapHists.resize(uDataSize);
 
-			// ADD-BY-LEETEN 01/09/2013-BEGIN
 			vvuSliceScanlineBase.resize(UGetNrOfDims());
 			for(size_t d = 0; d < UGetNrOfDims(); d++)
 			{
@@ -523,8 +502,6 @@ public:
 					vvuSliceScanlineBase[d][s] = UConvertSubToIndex(vuScanlineBase, vuDimLengths);
 				}
 			}
-			// ADD-BY-LEETEN 12/30/2012-END
-			// ADD-BY-LEETEN 01/09/2013-END
 		}
 		
 		//! Compute and display statistics for the computed wavelet coefficients.
@@ -535,20 +512,16 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			// ADD-BY-LEETEN 12/28/2012-BEGIN
 			#if		WITH_BOOST
 			size_t uFileSize = fs::file_size( szNetCdfPathFilename );
 			#else	// #if WITH_BOOST
-			// ADD-BY-LEETEN 12/28/2012-END
-		  // ADD-BY-LEETEN 11/09/2012-BEGIN
 		  FILE *fp;
 		  fp = fopen(szNetCdfPathFilename, "rb");
 		  fseek(fp, 0, SEEK_END);
 		  size_t uFileSize = ftell(fp);
 		  fclose(fp);
-			#endif	// #if WITH_BOOST	// ADD-BY-LEETEN 12/28/2012
+			#endif	// #if WITH_BOOST	
 		  LOG_VAR(uFileSize);
-		  // ADD-BY-LEETEN 11/09/2012-END
 		}
 
 		//! Return the sum of all bins at the given position
@@ -561,7 +534,6 @@ public:
 			void *_Reserved = NULL
 		)
 		{
-			// ADD-BY-LEETEN 01/02/2013-BEGIN
 			if( !iNcId )
 			{
 				/////////////////////////////////////////////
@@ -580,7 +552,6 @@ public:
 				ASSERT_NETCDF(
 					nc_inq_varid(iNcId, szVarSAT, &ncVarSAT) );
 			}
-			// ADD-BY-LEETEN 01/02/2013-END
 
 			vdSums.resize(UGetNrOfBins());
 
@@ -614,7 +585,7 @@ public:
 		{
 		}
 
-		virtual	// ADD-BY-LEETEN 01/02/2013
+		virtual	
 		~CSATFileEncoder()
 		{
 		}

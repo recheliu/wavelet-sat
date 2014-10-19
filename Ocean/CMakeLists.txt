@@ -56,24 +56,21 @@ ADD_EXECUTABLE(${PROJECT_NAME}
 	WaveletSAT_Ocean_main.cpp
 )
 
-# ADD-BY-LEETEN 2013/0811-BEGIN
 target_link_libraries(${PROJECT_NAME}
 	${ThirdPartyLib_LIBRARIES}
 	)
-# ADD-BY-LEETEN 2013/0811-END
-if( DEFINED WIN32) # ADD-BY-LEETEN 01/31/2013
-target_link_libraries(
-	${PROJECT_NAME}
-	debug	libopt_d	optimized	libopt_r
-	)
-
-if( NOT WITH_SAT_FILE AND WITH_CUDA )
+if( DEFINED WIN32) 
 	target_link_libraries(
 		${PROJECT_NAME}
-		debug	CudaDWT_d	optimized	CudaDWT_r
+		debug	libopt_d	optimized	libopt_r
 		)
-endif()
-# ADD-BY-LEETEN 01/31/2013-BEGIN
+
+	if( NOT WITH_SAT_FILE AND WITH_CUDA )
+		target_link_libraries(
+			${PROJECT_NAME}
+			debug	CudaDWT_d	optimized	CudaDWT_r
+			)
+	endif()
 else()
 target_link_libraries(
 	${PROJECT_NAME}
@@ -90,7 +87,6 @@ target_link_libraries(
 		)
 	    endif()
 endif()
-# ADD-BY-LEETEN 01/31/2013-END
 
 ############################################################
 # Copyright (c) 2013 Teng-Yok Lee

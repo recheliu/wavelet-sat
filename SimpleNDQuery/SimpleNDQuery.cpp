@@ -13,7 +13,6 @@ Nrrd *nin;
 CSimpleNDFile<double, double, WaveletSAT::typeBin, double> cSimpleNDFile;
 vector<double> vdData;
 
-// ADD-BY-LEETEN 03/28/2013-BEGIN
 #include "lognc.h"
 
 vector<WaveletSAT::typeBin> vusCoefBins;
@@ -73,7 +72,6 @@ _ReadBins(
 	ASSERT_NETCDF(
 		nc_close(iNcId) );
 }
-// ADD-BY-LEETEN 03/28/2013-END
 
 //! Convert the volume to an array of double type
 template<typename T>
@@ -177,12 +175,10 @@ main(int argn, char* argv[])
 		"--n-testing-values", 1,
 		&iNrOfTestingValues, iNrOfTestingValues);
 	
-	// ADD-BY-LEETEN 01/09/2013-BEGIN
 	int iQueryWinLength = 1;
 	_OPTAddIntegerVector(
 		"--query-win-length", 1,
 		&iQueryWinLength, iQueryWinLength);
-	// ADD-BY-LEETEN 01/09/2013-END
 
 	int iIsTestingQuery = 0; 
 	_OPTAddBoolean(
@@ -192,14 +188,11 @@ main(int argn, char* argv[])
 	_OPTAddBoolean(
 		"--is-verbose", &iIsVerbose, iIsVerbose);
 
-	// ADD-BY-LEETEN 12/30/2012-BEGIN
-	// ADD-BY-LEETEN 12/31/2012-BEGIN
 	int iIsComputingEntropy = 0; 
 	_OPTAddBoolean(
 		"--is-computing-entropy", &iIsComputingEntropy, iIsComputingEntropy);
 	_OPTAddComment("--is-computing-entropy", 
 		"The flag indicating whether the entropy field is computed or not.");
-	// ADD-BY-LEETEN 12/31/2012-END
 
 	int iEntropyWinRadius = 1;
 	_OPTAddIntegerVector(
@@ -208,14 +201,12 @@ main(int argn, char* argv[])
 	_OPTAddComment("--entropy-win-radius", 
 		"Window Radius for entropy field computation");
 
-	// ADD-BY-LEETEN 2013/12/01-BEGIN
 	int iNrOfEntropyBins = 0;
 	_OPTAddIntegerVector(
 		"--n-entropy-bins", 1,
 		&iNrOfEntropyBins, iNrOfEntropyBins);
 	_OPTAddComment("--n-entropy-bins", 
 		"#Bins for entropy field computation");
-	// ADD-BY-LEETEN 2013/12/01-END
 
 	char* szEntropyFilepathPrefix = NULL;
 	_OPTAddStringVector(
@@ -223,14 +214,11 @@ main(int argn, char* argv[])
 		&szEntropyFilepathPrefix, szEntropyFilepathPrefix);
 	_OPTAddComment("--entropy-filepath-prefix", 
 		"Filepath prefix of the entropy field");
-	// ADD-BY-LEETEN 12/30/2012-END
 
-	// ADD-BY-LEETEN 03/28/2013-BEGIN
 	char *szBinFilePath = NULL;
 	_OPTAddStringVector(
 		"--bin-filepath", 1,
 		&szBinFilePath, szBinFilePath);
-	// ADD-BY-LEETEN 03/28/2013-END
 
 	int iSizeOfFullArrays = 0;
 	_OPTAddIntegerVector(
@@ -239,7 +227,6 @@ main(int argn, char* argv[])
 	_OPTAddComment("--size-of-full-arrays", 
 		"Size (in MB) of the full arrays from all bin SATs");
 
-	// ADD-BY-LEETEN 01/23/2013-BEGIN
 	enum {
 		STAT_MEAN,
 		STAT_COUNT,
@@ -269,32 +256,28 @@ main(int argn, char* argv[])
 	int iIsComputingBlockStat = 0; 
 	_OPTAddBoolean(
 		"--is-computing-block-stat", &iIsComputingBlockStat, iIsComputingBlockStat);
-	// ADD-BY-LEETEN 01/23/2013-END
 
-	// ADD-BY-LEETEN 2013/07/03-BEGIN
 	int iIsTestingBruteForce = 0; 
 	_OPTAddBoolean(
 		"--is-testing-brute-force", &iIsTestingBruteForce, iIsTestingBruteForce);
-	// ADD-BY-LEETEN 2013/07/03-END
 
 	bool bIsOptParsed = BOPTParse(argv, argn, 1);
 	assert(bIsOptParsed);
 	assert(szNcFilePath);
-	LOG_VAR(szNcFilePath);	// ADD-BY-LEETEN 12/25/2012
+	LOG_VAR(szNcFilePath);
 
 	// load the WaveletSAT
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
-	LOG_VAR(iSizeOfFullArrays);	// ADD-BY-LEETEN 11/14/2012
+	LOG_VAR(iSizeOfFullArrays);	
 	cSimpleNDFile._SetInteger(cSimpleNDFile.SIZE_OF_FULL_ARRAYS, (long)iSizeOfFullArrays);
 	cSimpleNDFile._LoadFile(szNcFilePath);
 	LIBCLOCK_END(bIsPrintingTiming);
 
 	if(iIsTestingQuery)
 	{
-		// ADD-BY-LEETEN 03/28/2013-BEGIN
 		if( szBinFilePath )
 		{
-			LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+			LIBCLOCK_BEGIN(bIsPrintingTiming);	
 
 			cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
 
@@ -308,7 +291,7 @@ main(int argn, char* argv[])
 			size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
 			vector<size_t> vuDimLengths;
 			cSimpleNDFile._GetDataSize(vuDimLengths);
-			size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+			size_t uNrOfValues = 1;	
 			for(size_t d = 0; d < uNrOfDims; d++)
 				uNrOfValues *= vuDimLengths[d];
 
@@ -357,10 +340,8 @@ main(int argn, char* argv[])
 					vuOffset.resize(uNrOfDims);
 					for(size_t d = 0; d < uNrOfDims; d++)
 						vuOffset[d] = vuBase[d] - uWinSize;
-					// ADD-BY-LEETEN 2013/07/03-BEGIN
 					if( !iIsTestingBruteForce )
-					// ADD-BY-LEETEN 2013/07/03-END
-					cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
+						cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
 
 					for(size_t w = 0; w < uWinLength; w++)
 					{
@@ -407,10 +388,8 @@ main(int argn, char* argv[])
 					}
 				}
 
-				// ADD-BY-LEETEN 2013/07/03-BEGIN
 				if( iIsTestingBruteForce )
 					continue;
-				// ADD-BY-LEETEN 2013/07/03-END
 
 				// truncate the numerical error
 				double dError = 0.0;
@@ -445,10 +424,9 @@ main(int argn, char* argv[])
 			long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		}
 		else
-		// ADD-BY-LEETEN 03/28/2013-END
 		if(!szVolFilePath)
 		{
-			LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+			LIBCLOCK_BEGIN(bIsPrintingTiming);	
 
 			cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
 			////////////////////////////////////////////////////////////////////////////
@@ -462,7 +440,7 @@ main(int argn, char* argv[])
 
 			vector<size_t> vuDimLengths;
 			cSimpleNDFile._GetDataSize(vuDimLengths);
-			size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
+			size_t uNrOfValues = 1;	
 			for(size_t d = 0; d < uNrOfDims; d++)
 				uNrOfValues *= vuDimLengths[d];
 			LIBCLOCK_END(bIsPrintingTiming);
@@ -492,98 +470,97 @@ main(int argn, char* argv[])
 		}
 		else
 		{
-		LIBCLOCK_BEGIN(bIsPrintingTiming);	// ADD-BY-LEETEN 12/30/2012
+			LIBCLOCK_BEGIN(bIsPrintingTiming);	
 
-		cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
-		////////////////////////////////////////////////////////////////////////////
-		// Now we can start to query SATs
-		// load the data for testing
-		LOG_VAR(szVolFilePath);
-		_ReadVolume(szVolFilePath);
+			cSimpleNDFile._SetInteger(cSimpleNDFile.RESET_IO_COUNTERS, 0);
+			////////////////////////////////////////////////////////////////////////////
+			// Now we can start to query SATs
+			// load the data for testing
+			LOG_VAR(szVolFilePath);
+			_ReadVolume(szVolFilePath);
 
-		size_t uNrOfDims = (size_t)nin->dim;
-		size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
-		size_t uWinSize = iQueryWinLength;
-		size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
+			size_t uNrOfDims = (size_t)nin->dim;
+			size_t uNrOfTestingValues = (size_t)iNrOfTestingValues;
+			size_t uWinSize = iQueryWinLength;
+			size_t uNrOfBins = cSimpleNDFile.UGetNrOfBins();	// it will be decided later
 
-		vector<size_t> vuDimLengths;
-		size_t uNrOfValues = 1;	// ADD-BY-LEETEN 09/07/2012
-		for(size_t d = 0; d < uNrOfDims; d++)
-		{
-			size_t uDimLength = (size_t)nin->axis[d].size;
-			vuDimLengths.push_back( uDimLength );
-			uNrOfValues *= uDimLength;
-		}
-
-		cSimpleNDFile._SetHistogram(dValueMin, dValueMax);
-
-		// decide the threshld to filter numerical error
-		double dThreshold = cSimpleNDFile.DGetThreshold();
-
-		LIBCLOCK_END(bIsPrintingTiming);
-
-		LIBCLOCK_BEGIN(bIsPrintingTiming);
-		for(size_t t = 0; t < uNrOfTestingValues; t++)
-		{
-			vector<size_t> vuBase;
-			size_t uIndex = 0;
-			if( iIsVerbose )
-				printf("B(");
-
-			for(size_t 
-				d = 0, uDimLengthProduct = 1; 
-				d < uNrOfDims; 
-				uDimLengthProduct *= vuDimLengths[d], d++)
+			vector<size_t> vuDimLengths;
+			size_t uNrOfValues = 1;	
+			for(size_t d = 0; d < uNrOfDims; d++)
 			{
-				size_t uPos = uWinSize + rand() % (vuDimLengths[d] - uWinSize);
-				vuBase.push_back(uPos);
-				uIndex += uPos * uDimLengthProduct;
+				size_t uDimLength = (size_t)nin->axis[d].size;
+				vuDimLengths.push_back( uDimLength );
+				uNrOfValues *= uDimLength;
+			}
+
+			cSimpleNDFile._SetHistogram(dValueMin, dValueMax);
+
+			// decide the threshld to filter numerical error
+			double dThreshold = cSimpleNDFile.DGetThreshold();
+
+			LIBCLOCK_END(bIsPrintingTiming);
+
+			LIBCLOCK_BEGIN(bIsPrintingTiming);
+			for(size_t t = 0; t < uNrOfTestingValues; t++)
+			{
+				vector<size_t> vuBase;
+				size_t uIndex = 0;
+				if( iIsVerbose )
+					printf("B(");
+
+				for(size_t 
+					d = 0, uDimLengthProduct = 1; 
+					d < uNrOfDims; 
+					uDimLengthProduct *= vuDimLengths[d], d++)
+				{
+					size_t uPos = uWinSize + rand() % (vuDimLengths[d] - uWinSize);
+					vuBase.push_back(uPos);
+					uIndex += uPos * uDimLengthProduct;
+
+					if( iIsVerbose )
+						printf("%3d,", (int)uPos);
+				}
+				vector< pair<WaveletSAT::typeBin, WaveletSAT::typeSum> > vuBins;
+				cSimpleNDFile._MapValueToBins(vuBase, vdData[uIndex], vuBins);
+
+				size_t uValueBin = vuBins[0].first;
+				if( iIsVerbose )
+					printf(")=\t%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
+
+				vector<WaveletSAT::typeSum> vdH;
+
+				vdH.resize(uNrOfBins);
+
+				vector<size_t> vuOffset;
+				vuOffset.resize(uNrOfDims);
+				for(size_t d = 0; d < uNrOfDims; d++)
+					vuOffset[d] = vuBase[d] - uWinSize;
+				cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
+
+				double dError = 0.0;
+				for(size_t b = 0; b < uNrOfBins; b++)
+					if(b == uValueBin)
+						dError += pow(1.0 - vdH[b], 2.0);
+					else
+						dError += pow(vdH[b], 2.0);
 
 				if( iIsVerbose )
-					printf("%3d,", (int)uPos);
+				{
+					printf("H:");
+					for(size_t b = 0; b < uNrOfBins; b++)
+						if( fabs(vdH[b]) > dThreshold )
+						  printf( "\t\t%d:%+.2f\n", (unsigned int)b, vdH[b]);
+					printf("E:%f\n", dError);
+				}
 			}
-			vector< pair<WaveletSAT::typeBin, WaveletSAT::typeSum> > vuBins;
-			cSimpleNDFile._MapValueToBins(vuBase, vdData[uIndex], vuBins);
 
-			size_t uValueBin = vuBins[0].first;
-			if( iIsVerbose )
-				printf(")=\t%d,\n", (int)uValueBin);	// vdData[uIndex]);	// 
-
-			vector<WaveletSAT::typeSum> vdH;
-
-			vdH.resize(uNrOfBins);
-
-			vector<size_t> vuOffset;
-			vuOffset.resize(uNrOfDims);
-			for(size_t d = 0; d < uNrOfDims; d++)
-				vuOffset[d] = vuBase[d] - uWinSize;
-			cSimpleNDFile._GetRegionSums(vuOffset, vuBase, vdH);
-
-			double dError = 0.0;
-			for(size_t b = 0; b < uNrOfBins; b++)
-				if(b == uValueBin)
-					dError += pow(1.0 - vdH[b], 2.0);
-				else
-					dError += pow(vdH[b], 2.0);
-
-			if( iIsVerbose )
-			{
-				printf("H:");
-				for(size_t b = 0; b < uNrOfBins; b++)
-					if( fabs(vdH[b]) > dThreshold )
-					  printf( "\t\t%d:%+.2f\n", (unsigned int)b, vdH[b]);
-				printf("E:%f\n", dError);
-			}
+			LIBCLOCK_END(bIsPrintingTiming);
+			long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
+			long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
+			long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
 		}
+	}	
 
-		LIBCLOCK_END(bIsPrintingTiming);
-		long lAccumNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.ACCUM_NR_OF_IO_REQUESTS,	&lAccumNrOfIORequests);	LOG_VAR(lAccumNrOfIORequests);
-		long lMaxNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MAX_NR_OF_IO_REQUESTS,		&lMaxNrOfIORequests);	LOG_VAR(lMaxNrOfIORequests);
-		long lMinNrOfIORequests;		cSimpleNDFile._GetInteger(cSimpleNDFile.MIN_NR_OF_IO_REQUESTS,		&lMinNrOfIORequests);	LOG_VAR(lMinNrOfIORequests);
-	}
-	}	// ADD-By-LEETEN 02/19/2013
-
-	// ADD-BY-LEETEN 2013/12/01-BEGIN
     if( iIsComputingEntropy )
     {
 		ASSERT_OR_LOG(szEntropyFilepathPrefix, "");
@@ -624,7 +601,6 @@ main(int argn, char* argv[])
 			szEntropyFilepathPrefix
 			);
 	}
-	// ADD-BY-LEETEN 2013/12/01-END
 
 	LIBCLOCK_BEGIN(bIsPrintingTiming);
 	cSimpleNDFile._ShowStatistics();

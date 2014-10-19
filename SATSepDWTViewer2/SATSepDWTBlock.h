@@ -26,18 +26,15 @@ namespace SATSepDWT
 			MODE_SELECTED_BY_HIST = 0x0004,
 		};
 
-		// ADD-BY-LEETEN 05/07/2013-BEGIN
 		enum EFilterAction {
 			FILTER_ACTION_RENDER,
 			FILTER_ACTION_ASSIGN,
 			FILTER_ACTION_RESET,
 		};
-		// ADD-BY-LEETEN 05/07/2013-END
 
 		typedef double typeData;
 		static CSimpleNDFile<typeData>* pcSimpleND;
 
-		// ADD-BY-LEETEN 06/23/2013-BEGIN
 		static float4 f4PCPColor;
 		static 
 		void
@@ -92,7 +89,6 @@ namespace SATSepDWT
 		{
 			return vpcBlocksRenderedByPCP;
 		}
-		// ADD-BY-LEETEN 06/23/2013-END
 
 		static 
 		void
@@ -431,7 +427,6 @@ namespace SATSepDWT
 					);
 		}
 
-		// ADD-BY-LEETEN 06/23/2013-BEGIN
 		void
 		_RenderBlock
 		(
@@ -450,7 +445,6 @@ namespace SATSepDWT
 			glutWireCube(1.0);
 			glPopMatrix();
 		}
-		// ADD-BY-LEETEN 06/23/2013-END
 
 		void
 		_RenderBlock
@@ -523,7 +517,6 @@ namespace SATSepDWT
 			}
 		}
 
-		// ADD-BY-LEETEN 06/23/2013-BEGIN
 		void
 		_RenderHistogram
 		(
@@ -578,7 +571,6 @@ namespace SATSepDWT
 			glPopAttrib();
 				// GL_LINE_BIT |
 		}
-		// ADD-BY-LEETEN 06/23/2013-END
 
 		void
 		_RenderHistogram
@@ -633,7 +625,6 @@ namespace SATSepDWT
 				}
 		}
 
-		// ADD-BY-LEETEN 05/07/2013-BEGIN
 		bool
 		BFilterPaths
 		(
@@ -677,11 +668,9 @@ namespace SATSepDWT
 					glVertex2f((float)this->uLevel, (float)this->dDistFromParent);
 					glEnd();
 					
-					// ADD-BY-LEETEN 06/23/2013-BEGIN
 					// save this node
 					if(uFilterLevel == this->uLevel )
 						_AddBlockRenderedByPCP(this);
-					// ADD-BY-LEETEN 06/23/2013-END
 				} break;
 				case FILTER_ACTION_ASSIGN:
 				{
@@ -698,7 +687,6 @@ namespace SATSepDWT
 
 			return bIsDescentIn;
 		}
-		// ADD-BY-LEETEN 05/07/2013-END
 
 		CBlock()
 		{
