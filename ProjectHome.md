@@ -1,0 +1,3 @@
+This is the implementation of WaveletSAT, an algorithm to compress integral histograms. As integral histograms are efficient to query region histograms in images, it will be challenging to support large images, videos, and 3D volumes because of the storage. WaveletSAT is designed to compress the integral histogram. More detail can be seen in our IEEE Vis 2013 paper.
+
+The documents will be maintained [here](https://sites.google.com/site/wikiforrecheliusprojects/wavelet-sat).
