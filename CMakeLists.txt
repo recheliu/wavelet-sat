@@ -114,7 +114,9 @@ endif()
 	endif()	
 
 	# Only build the python binding if the SAT is not written to file.
-	add_subdirectory(python)		
+	# MOD-BY-LEETEN 2015/04/29:	add_subdirectory(python)		
+	# TODO: Use numpy to re-implement the python binding.
+	# MOD-BY-LEETEN 2015/04/29-END
 endif()	
 
 add_subdirectory(WaveletSAT)
