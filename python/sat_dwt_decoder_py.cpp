@@ -3,7 +3,20 @@
 #include <list>
 #include <vector>
 using namespace std;
+// ADD-BY-LEETEN 2015/04/30-BEGIN
+// Do not enable debug mode for Python 
+// since python27_d.lib might be unavailable.
+#if	defined(_DEBUG)
+	#define WITH_DEBUG	
+	#undef _DEBUG
+#endif
+// ADD-BY-LEETEN 2015/04/30-END
 #include <Python.h>	// ADD-BY-LEETEN 2013/09/16
+// ADD-BY-LEETEN 2015/04/30-BEGIN
+#if	defined(WITH_DEBUG)
+	#define _DEBUG
+#endif
+// ADD-BY-LEETEN 2015/04/30-END
 #include <boost/python.hpp>
 #include "boost/python/class.hpp" 
 #include <boost/python/module.hpp>

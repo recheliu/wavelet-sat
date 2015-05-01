@@ -31,22 +31,24 @@ if( NOT DEFINED WIN32 )
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c++0x -O3")
 endif()
 
-set(WITH_BOOST	OFF	CACHE 	BOOL "Is Boost used?")	
-set(BOOST_INC_DIR 	"/usr/local/include" 	CACHE PATH "The path to Boost headers.")	
-set(BOOST_LIB_DIR 	"/usr/local/lib" 		CACHE PATH "The path to Boost libraries.")	
-if( WITH_BOOST )
-	add_definitions(
-		-DWITH_BOOST
-	)
-	include_directories(
-		${BOOST_INC_DIR}
-	)
+# # DEL-BY-LEETEN 2015/04/30-BEGIN
+# set(WITH_BOOST	OFF	CACHE 	BOOL "Is Boost used?")	
+# set(BOOST_INC_DIR 	"/usr/local/include" 	CACHE PATH "The path to Boost headers.")	
+# set(BOOST_LIB_DIR 	"/usr/local/lib" 		CACHE PATH "The path to Boost libraries.")	
+# if( WITH_BOOST )
+	# add_definitions(
+		# -DWITH_BOOST
+	# )
+	# include_directories(
+		# ${BOOST_INC_DIR}
+	# )
 
-	link_directories(
-		${BOOST_LIB_DIR}
-	)
+	# link_directories(
+		# ${BOOST_LIB_DIR}
+	# )
 
-endif()
+# endif()
+# # DEL-BY-LEETEN 2015/04/30-END
 
 set(WITH_NETCDF	ON	CACHE 	BOOL "Is NetCDF used?"	FORCE)	
 set(WITH_NETCDF4	ON	CACHE 	BOOL "Is NetCDF4 used?")	
@@ -117,6 +119,13 @@ endif()
 	# MOD-BY-LEETEN 2015/04/29:	add_subdirectory(python)		
 	# TODO: Use numpy to re-implement the python binding.
 	# MOD-BY-LEETEN 2015/04/29-END
+	
+	# ADD-BY-LEETEN 2015/04/30-BEGIN
+	set(WITH_PYTHON	OFF	CACHE 	BOOL "Building the python binding?")	
+	IF(WITH_PYTHON)
+		add_subdirectory(python)		
+	ENDIF()
+	# ADD-BY-LEETEN 2015/04/30-END
 endif()	
 
 add_subdirectory(WaveletSAT)

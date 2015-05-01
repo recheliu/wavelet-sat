@@ -2,12 +2,14 @@ SET(MODULE_NAME	sat_dwt_decoder)
 PROJECT(${MODULE_NAME}_py)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-IF(NOT CMAKE_BUILD_TYPE)
-  # SET(CMAKE_BUILD_TYPE "DEBUG")
-  SET(CMAKE_BUILD_TYPE "RELEASE")
-  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
-  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
-ENDIF()
+# # DEL-BY-LEETEN 2015/04/30-BEGIN
+# IF(NOT CMAKE_BUILD_TYPE)
+  # # SET(CMAKE_BUILD_TYPE "DEBUG")
+  # SET(CMAKE_BUILD_TYPE "RELEASE")
+  # #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
+  # #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
+# ENDIF()
+# # DEL-BY-LEETEN 2015/04/30-END
 
 FIND_PACKAGE(ThirdPartyLib)
 
@@ -20,10 +22,12 @@ ELSE()
   MESSAGE(FATAL_ERROR "Unable to find PythonLibs.")
 ENDIF()
 
-set(BOOST_ROOT			"D:/boost_1_54_0"			CACHE 	PATH "The path of Boost.")
-set(BOOST_INCLUDEDIR	"D:/boost_1_54_0/include"	CACHE 	PATH "The path to the headers of Boost.")
-set(BOOST_LIBRARYDIR	"D:/boost_1_54_0/stage/lib" CACHE 	PATH "The path to the libraries of Boost.")
-set(BOOST_VERSION		"1.54"						CACHE	STRING "The version of Boost")
+# # DEL-BY-LEETEN 2015/04/30-BEGIN
+# set(BOOST_ROOT			"D:/boost_1_54_0"			CACHE 	PATH "The path of Boost.")
+# set(BOOST_INCLUDEDIR	"D:/boost_1_54_0/include"	CACHE 	PATH "The path to the headers of Boost.")
+# set(BOOST_LIBRARYDIR	"D:/boost_1_54_0/stage/lib" CACHE 	PATH "The path to the libraries of Boost.")
+# set(BOOST_VERSION		"1.54"						CACHE	STRING "The version of Boost")
+# # DEL-BY-LEETEN 2015/04/30-END
 
 FIND_PACKAGE(Boost)
 IF(Boost_FOUND)
